@@ -4,6 +4,7 @@ namespace Syringe\Component\DI;
 
 use Syringe\Component\DI\Exception\BuildObjectException;
 use Syringe\Component\DI\Exception\BuildServiceException;
+use Syringe\Component\DI\Exception\IncorrectSyntheticServiceException;
 use Syringe\Component\DI\Exception\UndefinedParameterException;
 use Syringe\Component\DI\Exception\UndefinedServiceException;
 use Syringe\Component\DI\Exception\UndefinedTagException;
@@ -11,21 +12,22 @@ use Syringe\Component\DI\Keeper;
 
 /**
  * Container
- * @todo Aliasses - Алиасы для сервисов
- * @todo Триггеры - Вызов метода до или после метода.
- * @todo Syntetic Service - Опеределение сервиса во время работы
- * @todo Наследование - Наследование конфигураций
- * @todo Аннотации - изучить возможности использования
- * @todo Private Field Injection - внедрение зависимости в не публичное свойство
+ * done Aliases - Алиасы для сервисов
+ * done Триггеры - Вызов метода до или после создания сервиса
+ * done Synthetic Service - Определение сервиса во время работы
+ * done Private Field Injection - внедрение зависимости в не публичное свойство
+ * @todo Private services - Сервисы, которые нельзя получить из контейнера
  *
  * Container services
  * @todo Lazy Load Proxy - Ленивая загрузка сервиса
- * @todo Debug times - Отследивание таймингов вызова
+ * @todo Debug times - Отслеживание таймингов вызова
  * @todo Debug Dependency Statistics - Количество зависимостей у сервисов. Количество ссылок на сервис. Количество запросов на использование контейнера.
  *
  * Container building
+ * done Наследование - Наследование конфигураций
  * @todo phar archive - Phar консольное приложение сборки контейнера
  * @todo Composer integration - определение зависимости на уровне контейнера
+ * @todo Аннотации - изучить возможности использования
  *
  * Container integration
  * @todo Sf2 integration
@@ -37,13 +39,14 @@ class Container
     const SCOPE_SINGLETON = 'singleton';
     const SCOPE_FACTORY   = 'factory';
     const SCOPE_PROTOTYPE = 'prototype';
+    const SCOPE_SYNTHETIC = 'synthetic';
 
     const SERVICE_CONTAINER_ID = 'service_container';
 
     /**
      * @var array
      */
-    protected $requiredSections = ['parameters', 'services', 'tags'];
+    protected $requiredSections = ['parameters', 'services', 'tags', 'aliases'];
 
     /**
      * @var array
@@ -73,12 +76,13 @@ class Container
 
     protected function init()
     {
-        $serviceBuilder = new ServiceBuilder(new ObjectBuilder(), $this);
+        $serviceBuilder = new ServiceFactory($this);
 
         $this->builders = [
             self::SCOPE_SINGLETON => new Keeper\Singleton($serviceBuilder),
             self::SCOPE_PROTOTYPE => new Keeper\Prototype($serviceBuilder),
             self::SCOPE_FACTORY   => new Keeper\Factory($serviceBuilder),
+            self::SCOPE_SYNTHETIC => new Keeper\Synthetic(),
         ];
     }
 
@@ -113,7 +117,22 @@ class Container
      */
     public function has($id)
     {
-        return array_key_exists(strtolower($id), $this->configuration['services']);
+        $id = strtolower($id);
+
+        if (self::SERVICE_CONTAINER_ID == $id) {
+            return true;
+        }
+
+        if (array_key_exists($id, $this->configuration['services'])) {
+            return true;
+        }
+
+        if (array_key_exists($id, $this->configuration['aliases']) &&
+            $this->has($this->configuration['aliases'][$id])) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -131,11 +150,7 @@ class Container
             return $this;
         }
 
-        if (!$this->has($id)) {
-            throw new UndefinedServiceException(sprintf("Service '%s' is not found", $id));
-        }
-
-        $serviceConfiguration = $this->configuration['services'][$id];
+        $serviceConfiguration = $this->getServiceDefinition($id);
 
         $scope = isset($serviceConfiguration['scope']) ? $serviceConfiguration['scope'] : self::SCOPE_SINGLETON;
 
@@ -166,7 +181,7 @@ class Container
     /**
      * @param string $name
      * @return Object[]
-     * @throws Exception\UndefinedTagException if tag is not found
+     * @throws UndefinedTagException if tag is not found
      */
     public function getServicesByTag($name)
     {
@@ -185,6 +200,26 @@ class Container
         return $services;
     }
 
+    /**
+     * @param string $id
+     * @param Object $service
+     * @throws IncorrectSyntheticServiceException if incorrect object class
+     */
+    public function setSyntheticService($id, $service)
+    {
+        $id = strtolower($id);
+
+        $serviceClass = $this->getServiceDefinition($id)['class'];
+
+        if (!($service instanceof $serviceClass)) {
+            throw new IncorrectSyntheticServiceException(sprintf(
+                "Synthetic injection error for '%s': Object class '%s' does not math for '%s'",
+                $id, get_class($service), $serviceClass
+            ));
+        }
+
+        $this->builders[self::SCOPE_SYNTHETIC]->setService($id, $service);
+    }
 
     /**
      * @param string $scope
@@ -198,5 +233,23 @@ class Container
         }
 
         return $this->builders[$scope];
+    }
+
+    /**
+     * @param string $id
+     * @return array
+     * @throws UndefinedServiceException if service is not found
+     */
+    protected function getServiceDefinition($id)
+    {
+        if (array_key_exists($id, $this->configuration['services'])) {
+            return $this->configuration['services'][$id];
+        }
+
+        if (array_key_exists($id, $this->configuration['aliases'])) {
+            return $this->getServiceDefinition($this->configuration['aliases'][$id]);
+        }
+
+        throw new UndefinedServiceException(sprintf("Service '%s' is not found", $id));
     }
 }
