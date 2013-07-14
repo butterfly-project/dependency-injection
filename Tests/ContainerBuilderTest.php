@@ -42,7 +42,7 @@ class ContainerConfigurationBuilderTest extends \PHPUnit_Framework_TestCase
                 'tags'  => ['tag1'],
             ],
             'serivce.simple.inheritor' => [
-                'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceStubInheritor'
+                'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceStubInheritor',
                 'parent' => 'service.simple',
             ],
         ],
