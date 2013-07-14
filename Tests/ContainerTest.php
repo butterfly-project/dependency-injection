@@ -14,152 +14,6 @@ use Syringe\Component\DI\Tests\Stubs\UseTriggerService;
 
 class ContainerTest extends \PHPUnit_Framework_TestCase
 {
-    /**
-     * @var array
-     */
-    protected $parameters = [
-        'parameters' => [
-            'parameter1' => 'a',
-        ],
-        'services'   => [
-            'service.simple'                => [
-                'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
-                'arguments' => [1, 2]
-            ],
-            'service.incorrect'             => [
-                'arguments' => [1, 2]
-            ],
-            'undefined_class_service'       => [
-                'class' => 'UndefinedClass',
-            ],
-            'service.static_factory_output' => [
-                'factoryStaticMethod' => ['Syringe\Component\DI\Tests\Stubs\FactoryService', 'createInstance'],
-                'arguments'           => [1, 2],
-            ],
-            'service.factory'               => [
-                'class' => 'Syringe\Component\DI\Tests\Stubs\FactoryService',
-            ],
-            'service.factory_output'        => [
-                'factoryMethod' => ['@service.factory', 'create'],
-                'arguments'     => [1, 2],
-            ],
-            'service.scope.singleton'       => [
-                'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
-                'scope' => Container::SCOPE_SINGLETON,
-            ],
-            'service.scope.factory'         => [
-                'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
-                'scope' => Container::SCOPE_FACTORY,
-            ],
-            'service.scope.prototype'       => [
-                'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
-                'scope' => Container::SCOPE_PROTOTYPE,
-            ],
-            'service.scope.undefined'       => [
-                'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
-                'scope' => 'undefined_scope',
-            ],
-            'service.constructor_injection' => [
-                'class'     => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
-                'arguments' => ['@service.simple']
-            ],
-            'service.setter_injection'      => [
-                'class' => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
-                'calls' => [
-                    ['setInternalService', ['@service.simple']],
-                ]
-            ],
-            'service.property_injection'    => [
-                'class'      => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
-                'properties' => [
-                    'internalService' => '@service.simple',
-                ]
-            ],
-            'service.private_property_injection'    => [
-                'class'      => 'Syringe\Component\DI\Tests\Stubs\PrivatePropertyServiceStub',
-                'properties' => [
-                    'internalService' => '@service.simple',
-                ]
-            ],
-            'service.tag_dependencies' => [
-                'class' => 'Syringe\Component\DI\Tests\Stubs\FactoryOutputService',
-                'arguments' => ['1', '#tag1'],
-            ],
-            'service.tag_dependencies.undefined_tag' => [
-                'class' => 'Syringe\Component\DI\Tests\Stubs\FactoryOutputService',
-                'arguments' => ['1', '#tag123'],
-            ],
-            'service.trigger' => [
-                'class' => 'Syringe\Component\DI\Tests\Stubs\TriggerService',
-                'arguments' => ['initial'],
-            ],
-            'service.use_trigger'                => [
-                'class'     => 'Syringe\Component\DI\Tests\Stubs\UseTriggerService',
-                'arguments' => ['@service.trigger'],
-                'preTriggers' => [
-                    ['service' => '@service.trigger', 'method' => 'setA', 'arguments' => ['pre']],
-                ],
-                'postTriggers' => [
-                    ['service' => '@service.trigger', 'method' => 'setA', 'arguments' => ['post']],
-                ],
-            ],
-            'service.use_static_trigger'                => [
-                'class'     => 'Syringe\Component\DI\Tests\Stubs\UseStaticTriggerService',
-                'preTriggers' => [
-                    ['class' => 'Syringe\Component\DI\Tests\Stubs\StaticTriggerService', 'method' => 'setA', 'arguments' => ['pre']],
-                ],
-                'postTriggers' => [
-                    ['class' => 'Syringe\Component\DI\Tests\Stubs\StaticTriggerService', 'method' => 'setA', 'arguments' => ['post']],
-                ],
-            ],
-            'service.incorrect_trigger_type'    => [
-                'class'     => 'Syringe\Component\DI\Tests\Stubs\UseStaticTriggerService',
-                'preTriggers' => [
-                    ['method' => 'setA', 'arguments' => ['pre']],
-                ],
-            ],
-            'service.trigger.unexists_class'    => [
-                'class'     => 'Syringe\Component\DI\Tests\Stubs\UseStaticTriggerService',
-                'preTriggers' => [
-                    ['class' => 'UnexistsClass', 'method' => 'setA', 'arguments' => ['pre']],
-                ],
-            ],
-            'service.trigger.unexists_method'    => [
-                'class'     => 'Syringe\Component\DI\Tests\Stubs\UseStaticTriggerService',
-                'preTriggers' => [
-                    ['class' => 'Syringe\Component\DI\Tests\Stubs\StaticTriggerService', 'method' => 'unexists_method', 'arguments' => ['pre']],
-                ],
-            ],
-            'service.dependence_for_synthetic_service' => [
-                'class'     => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
-                'arguments' => ['@service.synthetic']
-            ],
-            'service.synthetic' => [
-                'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
-                'scope'     => 'synthetic'
-            ],
-        ],
-        'tags' => [
-            'tag1' => ['@service.simple', '@service.factory_output']
-        ],
-        'aliases' => [
-            'service.simple.alias' => 'service.simple',
-        ],
-    ];
-
-    /**
-     * @var Container
-     */
-    protected $container;
-
-    protected function setUp()
-    {
-        $this->container = new Container($this->parameters);
-
-        ServiceInstanceCounter::$countCreateInstances = 0;
-        ServiceInstanceCounter::$countCloneInstances  = 0;
-    }
-
     public function getDataForTestCreateContainerIfIncorrectConfiguration()
     {
         return [
@@ -183,17 +37,47 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
     public function testHasParameter()
     {
-        $this->assertTrue($this->container->hasParameter('parameter1'));
+        $configuration = [
+            'parameters' => [
+                'parameter1' => 'a',
+            ],
+            'services'   => [],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $this->assertTrue($container->hasParameter('parameter1'));
     }
 
     public function testHasParameterIfNoParameter()
     {
-        $this->assertFalse($this->container->hasParameter('undefined_parameter'));
+        $configuration = [
+            'parameters' => [
+                'parameter1' => 'a',
+            ],
+            'services'   => [],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $this->assertFalse($container->hasParameter('undefined_parameter'));
     }
 
     public function testGetParameter()
     {
-        $this->assertEquals($this->parameters['parameters']['parameter1'], $this->container->getParameter('parameter1'));
+        $configuration = [
+            'parameters' => [
+                'parameter1' => 'a',
+            ],
+            'services'   => [],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $this->assertEquals('a', $container->getParameter('parameter1'));
     }
 
     /**
@@ -201,27 +85,79 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetParameterIfNoParameter()
     {
-        $this->container->getParameter('undefined_parameter');
+        $configuration = [
+            'parameters' => [
+                'parameter1' => 'a',
+            ],
+            'services'   => [],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $container->getParameter('undefined_parameter');
     }
 
     public function testHasService()
     {
-        $this->assertTrue($this->container->has('service.simple'));
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.simple' => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => [1, 2]
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $this->assertTrue($container->has('service.simple'));
     }
 
     public function testHasServiceIfNoService()
     {
-        $this->assertFalse($this->container->has('undefined_service'));
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.simple' => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => [1, 2]
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $this->assertFalse($container->has('undefined_service'));
     }
 
     public function testHasServiceContainerService()
     {
-        $this->assertTrue($this->container->has(Container::SERVICE_CONTAINER_ID));
+        $configuration = [
+            'parameters' => [],
+            'services'   => [],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $this->assertTrue($container->has(Container::SERVICE_CONTAINER_ID));
     }
 
     public function testGetServiceContainerService()
     {
-        $service = $this->container->get(Container::SERVICE_CONTAINER_ID);
+        $configuration = [
+            'parameters' => [],
+            'services'   => [],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $service = $container->get(Container::SERVICE_CONTAINER_ID);
 
         $this->assertInstanceOf('\Syringe\Component\DI\Container', $service);
     }
@@ -231,7 +167,15 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetServiceIfNoService()
     {
-        $this->container->get('undefined_service');
+        $configuration = [
+            'parameters' => [],
+            'services'   => [],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $container->get('undefined_service');
     }
 
     /**
@@ -239,7 +183,19 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetServiceIfIncorrectConfiguration()
     {
-        $this->container->get('service.incorrect');
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.incorrect' => [
+                    'arguments' => [1, 2]
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $container->get('service.incorrect');
     }
 
     /**
@@ -247,13 +203,38 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetServiceIfNoClassService()
     {
-        $this->container->get('undefined_class_service');
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'undefined_class_service' => [
+                    'class' => 'UndefinedClass',
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $container->get('undefined_class_service');
     }
 
     public function testGetServiceThroughStaticFactoryMethod()
     {
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.static_factory_output' => [
+                    'factoryStaticMethod' => ['Syringe\Component\DI\Tests\Stubs\FactoryService', 'createInstance'],
+                    'arguments'           => [1, 2],
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
         /** @var FactoryOutputService $service */
-        $service = $this->container->get('service.static_factory_output');
+        $service = $container->get('service.static_factory_output');
 
         $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\FactoryOutputService', $service);
         $this->assertEquals(1, $service->getA());
@@ -262,8 +243,24 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
     public function testGetServiceThroughFactory()
     {
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.factory'        => [
+                    'class' => 'Syringe\Component\DI\Tests\Stubs\FactoryService',
+                ],
+                'service.factory_output' => [
+                    'factoryMethod' => ['@service.factory', 'create'],
+                    'arguments'     => [1, 2],
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
         /** @var FactoryOutputService $service */
-        $service = $this->container->get('service.factory_output');
+        $service = $container->get('service.factory_output');
 
         $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\FactoryOutputService', $service);
         $this->assertEquals(1, $service->getA());
@@ -272,47 +269,79 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
     public function testGetServiceWithSingletonScope()
     {
-        $this->assertEquals(0, ServiceInstanceCounter::$countCreateInstances);
+        ServiceInstanceCounter::$countCreateInstances = 0;
+        $configuration                                = [
+            'parameters' => [],
+            'services'   => [
+                'service.scope.singleton' => [
+                    'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
+                    'scope' => Container::SCOPE_SINGLETON,
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container                                    = new Container($configuration);
 
         /** @var ServiceInstanceCounter $service */
-        $service = $this->container->get('service.scope.singleton');
+        $container->get('service.scope.singleton');
 
         $this->assertEquals(1, ServiceInstanceCounter::$countCreateInstances);
 
         /** @var ServiceInstanceCounter $service2 */
-        $service2 = $this->container->get('service.scope.singleton');
+        $container->get('service.scope.singleton');
 
         $this->assertEquals(1, ServiceInstanceCounter::$countCreateInstances);
     }
 
     public function testGetServiceWithFactoryScope()
     {
-        $this->assertEquals(0, ServiceInstanceCounter::$countCreateInstances);
+        ServiceInstanceCounter::$countCreateInstances = 0;
+        $configuration                                = [
+            'parameters' => [],
+            'services'   => [
+                'service.scope.factory' => [
+                    'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
+                    'scope' => Container::SCOPE_FACTORY,
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container                                    = new Container($configuration);
 
-        /** @var ServiceInstanceCounter $service */
-        $service = $this->container->get('service.scope.factory');
+        $container->get('service.scope.factory');
 
         $this->assertEquals(1, ServiceInstanceCounter::$countCreateInstances);
 
-        /** @var ServiceInstanceCounter $service2 */
-        $service2 = $this->container->get('service.scope.factory');
+        $container->get('service.scope.factory');
 
         $this->assertEquals(2, ServiceInstanceCounter::$countCreateInstances);
     }
 
     public function testGetServiceWithPrototypeScope()
     {
-        $this->assertEquals(0, ServiceInstanceCounter::$countCreateInstances);
-        $this->assertEquals(0, ServiceInstanceCounter::$countCloneInstances);
+        ServiceInstanceCounter::$countCreateInstances = 0;
+        ServiceInstanceCounter::$countCloneInstances  = 0;
+        $configuration                                = [
+            'parameters' => [],
+            'services'   => [
+                'service.scope.prototype' => [
+                    'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
+                    'scope' => Container::SCOPE_PROTOTYPE,
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container                                    = new Container($configuration);
 
-        /** @var ServiceInstanceCounter $service */
-        $service = $this->container->get('service.scope.prototype');
+        $container->get('service.scope.prototype');
 
         $this->assertEquals(1, ServiceInstanceCounter::$countCreateInstances);
         $this->assertEquals(0, ServiceInstanceCounter::$countCloneInstances);
 
-        /** @var ServiceInstanceCounter $service2 */
-        $service2 = $this->container->get('service.scope.prototype');
+        $container->get('service.scope.prototype');
 
         $this->assertEquals(1, ServiceInstanceCounter::$countCreateInstances);
         $this->assertEquals(1, ServiceInstanceCounter::$countCloneInstances);
@@ -323,59 +352,196 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetServiceWithUndefinedScope()
     {
-        $this->container->get('service.scope.undefined');
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.scope.undefined' => [
+                    'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
+                    'scope' => 'undefined_scope',
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $container->get('service.scope.undefined');
     }
 
     public function testConstructorInjection()
     {
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.simple'                => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => [1, 2]
+                ],
+                'service.constructor_injection' => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
+                    'arguments' => ['@service.simple']
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
         /** @var ComplexServiceStub $service */
-        $service = $this->container->get('service.constructor_injection');
+        $service = $container->get('service.constructor_injection');
 
         $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
 
     public function testSetterInjection()
     {
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.simple'           => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => [1, 2]
+                ],
+                'service.setter_injection' => [
+                    'class' => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
+                    'calls' => [
+                        ['setInternalService', ['@service.simple']],
+                    ]
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
         /** @var ComplexServiceStub $service */
-        $service = $this->container->get('service.setter_injection');
+        $service = $container->get('service.setter_injection');
 
         $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
 
     public function testPropertyInjection()
     {
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.simple'             => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => [1, 2]
+                ],
+                'service.property_injection' => [
+                    'class'      => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
+                    'properties' => [
+                        'internalService' => '@service.simple',
+                    ]
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
         /** @var ComplexServiceStub $service */
-        $service = $this->container->get('service.property_injection');
+        $service = $container->get('service.property_injection');
 
         $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
 
     public function testPrivatePropertyInjection()
     {
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.simple'                     => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => [1, 2]
+                ],
+                'service.private_property_injection' => [
+                    'class'      => 'Syringe\Component\DI\Tests\Stubs\PrivatePropertyServiceStub',
+                    'properties' => [
+                        'internalService' => '@service.simple',
+                    ]
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
         /** @var PrivatePropertyServiceStub $service */
-        $service = $this->container->get('service.private_property_injection');
+        $service = $container->get('service.private_property_injection');
 
         $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
 
     public function testHasTag()
     {
-        $this->assertTrue($this->container->hasTag('tag1'));
+        $configuration = [
+            'parameters' => [],
+            'services'   => [],
+            'tags'       => [
+                'tag1' => ['@service.simple', '@service.factory_output']
+            ],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $this->assertTrue($container->hasTag('tag1'));
     }
 
     public function testHasTagIfNoTag()
     {
-        $this->assertFalse($this->container->hasTag('undefined_tag'));
+        $configuration = [
+            'parameters' => [],
+            'services'   => [],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $this->assertFalse($container->hasTag('undefined_tag'));
     }
 
     public function testGetTagList()
     {
-        $this->assertEquals(['tag1'], $this->container->getTagsList());
+        $configuration = [
+            'parameters' => [],
+            'services'   => [],
+            'tags'       => [
+                'tag1' => ['@service.simple', '@service.factory_output']
+            ],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $this->assertEquals(['tag1'], $container->getTagsList());
     }
 
     public function testGetServicesByTag()
     {
-        $servicesByTag = $this->container->getServicesByTag('tag1');
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.simple'         => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => [1, 2]
+                ],
+                'service.factory'        => [
+                    'class' => 'Syringe\Component\DI\Tests\Stubs\FactoryService',
+                ],
+                'service.factory_output' => [
+                    'factoryMethod' => ['@service.factory', 'create'],
+                    'arguments'     => [1, 2],
+                ],
+            ],
+            'tags'       => [
+                'tag1' => ['@service.simple', '@service.factory_output']
+            ],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $servicesByTag = $container->getServicesByTag('tag1');
 
         $this->assertCount(2, $servicesByTag);
     }
@@ -385,13 +551,47 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetServicesByTagIfNoTag()
     {
-        $this->container->getServicesByTag('undefined_tag');
+        $configuration = [
+            'parameters' => [],
+            'services'   => [],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $container->getServicesByTag('undefined_tag');
     }
 
     public function testTagDependency()
     {
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.simple'           => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => [1, 2]
+                ],
+                'service.factory'          => [
+                    'class' => 'Syringe\Component\DI\Tests\Stubs\FactoryService',
+                ],
+                'service.factory_output'   => [
+                    'factoryMethod' => ['@service.factory', 'create'],
+                    'arguments'     => [1, 2],
+                ],
+                'service.tag_dependencies' => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\FactoryOutputService',
+                    'arguments' => ['1', '#tag1'],
+                ],
+            ],
+            'tags'       => [
+                'tag1' => ['@service.simple', '@service.factory_output']
+            ],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
         /** @var FactoryOutputService $service */
-        $service = $this->container->get('service.tag_dependencies');
+        $service = $container->get('service.tag_dependencies');
 
         $this->assertCount(2, $service->getB());
     }
@@ -401,29 +601,95 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testTagDependencyIfUndefinedTag()
     {
-        $this->container->get('service.tag_dependencies.undefined_tag');
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.tag_dependencies.undefined_tag' => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\FactoryOutputService',
+                    'arguments' => ['1', '#tag123'],
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $container->get('service.tag_dependencies.undefined_tag');
     }
 
     public function testHasServiceByAlias()
     {
-        $this->assertTrue($this->container->has('service.simple.alias'));
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.simple' => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => [1, 2]
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [
+                'service.simple.alias' => 'service.simple',
+            ],
+        ];
+        $container     = new Container($configuration);
+
+        $this->assertTrue($container->has('service.simple.alias'));
     }
 
     public function testGetServiceByAlias()
     {
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.simple' => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => [1, 2]
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [
+                'service.simple.alias' => 'service.simple',
+            ],
+        ];
+        $container     = new Container($configuration);
+
         /** @var ServiceStub $service */
-        $service = $this->container->get('service.simple.alias');
+        $service = $container->get('service.simple.alias');
 
         $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service);
     }
 
     public function testTriggers()
     {
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.trigger'     => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\TriggerService',
+                    'arguments' => ['initial'],
+                ],
+                'service.use_trigger' => [
+                    'class'        => 'Syringe\Component\DI\Tests\Stubs\UseTriggerService',
+                    'arguments'    => ['@service.trigger'],
+                    'preTriggers'  => [
+                        ['service' => '@service.trigger', 'method' => 'setA', 'arguments' => ['pre']],
+                    ],
+                    'postTriggers' => [
+                        ['service' => '@service.trigger', 'method' => 'setA', 'arguments' => ['post']],
+                    ],
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
         /** @var TriggerService $triggerService */
-        $triggerService = $this->container->get('service.trigger');
+        $triggerService = $container->get('service.trigger');
 
         /** @var UseTriggerService $useTriggerService */
-        $useTriggerService = $this->container->get('service.use_trigger');
+        $useTriggerService = $container->get('service.use_trigger');
 
         $this->assertEquals('pre', $useTriggerService->getPreA());
         $this->assertEquals('post', $triggerService->getA());
@@ -431,10 +697,34 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
     public function testStaticTriggers()
     {
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.use_static_trigger' => [
+                    'class'        => 'Syringe\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                    'preTriggers'  => [
+                        [
+                            'class'     => 'Syringe\Component\DI\Tests\Stubs\StaticTriggerService', 'method' => 'setA',
+                            'arguments' => ['pre']
+                        ],
+                    ],
+                    'postTriggers' => [
+                        [
+                            'class'     => 'Syringe\Component\DI\Tests\Stubs\StaticTriggerService', 'method' => 'setA',
+                            'arguments' => ['post']
+                        ],
+                    ],
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
         StaticTriggerService::setA('initial');
 
         /** @var UseTriggerService $useTriggerService */
-        $useTriggerService = $this->container->get('service.use_static_trigger');
+        $useTriggerService = $container->get('service.use_static_trigger');
 
         $this->assertEquals('pre', $useTriggerService->getPreA());
         $this->assertEquals('post', StaticTriggerService::getA());
@@ -445,7 +735,22 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testStaticTriggersIfUnexistingClass()
     {
-        $this->container->get('service.trigger.unexists_class');
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.trigger.unexists_class' => [
+                    'class'       => 'Syringe\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                    'preTriggers' => [
+                        ['class' => 'UnexistsClass', 'method' => 'setA', 'arguments' => ['pre']],
+                    ],
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $container->get('service.trigger.unexists_class');
     }
 
     /**
@@ -453,7 +758,25 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testStaticTriggersIfUnexistingMethod()
     {
-        $this->container->get('service.trigger.unexists_method');
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.trigger.unexists_method' => [
+                    'class'       => 'Syringe\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                    'preTriggers' => [
+                        [
+                            'class'  => 'Syringe\Component\DI\Tests\Stubs\StaticTriggerService',
+                            'method' => 'unexists_method', 'arguments' => ['pre']
+                        ],
+                    ],
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $container->get('service.trigger.unexists_method');
     }
 
     /**
@@ -461,17 +784,49 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetServiceIfIncorrectTriggerType()
     {
-        $this->container->get('service.incorrect_trigger_type');
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.incorrect_trigger_type' => [
+                    'class'       => 'Syringe\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                    'preTriggers' => [
+                        ['method' => 'setA', 'arguments' => ['pre']],
+                    ],
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $container->get('service.incorrect_trigger_type');
     }
 
     public function testUseSyntheticService()
     {
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.synthetic'                        => [
+                    'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'scope' => 'synthetic'
+                ],
+                'service.dependence_for_synthetic_service' => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
+                    'arguments' => ['@service.synthetic']
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
         $syntheticService = new ServiceStub(1, 2);
 
-        $this->container->setSyntheticService('service.synthetic', $syntheticService);
+        $container->setSyntheticService('service.synthetic', $syntheticService);
 
         /** @var ComplexServiceStub $service */
-        $service = $this->container->get('service.dependence_for_synthetic_service');
+        $service = $container->get('service.dependence_for_synthetic_service');
         $this->assertEquals($syntheticService, $service->getInternalService());
     }
 
@@ -480,7 +835,20 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testSetSyntheticServiceIfIncorrectClass()
     {
-        $this->container->setSyntheticService('service.synthetic', new ServiceInstanceCounter());
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.synthetic' => [
+                    'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'scope' => 'synthetic'
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $container->setSyntheticService('service.synthetic', new ServiceInstanceCounter());
     }
 
     /**
@@ -488,6 +856,23 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testSetSyntheticServiceIfSyntheticServiceIsNotFound()
     {
-        $this->container->get('service.dependence_for_synthetic_service');
+        $configuration = [
+            'parameters' => [],
+            'services'   => [
+                'service.synthetic'                        => [
+                    'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'scope' => 'synthetic'
+                ],
+                'service.dependence_for_synthetic_service' => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
+                    'arguments' => ['@service.synthetic']
+                ],
+            ],
+            'tags'       => [],
+            'aliases'    => [],
+        ];
+        $container     = new Container($configuration);
+
+        $container->get('service.dependence_for_synthetic_service');
     }
 }
