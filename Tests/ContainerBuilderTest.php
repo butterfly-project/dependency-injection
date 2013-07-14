@@ -19,6 +19,7 @@ class ContainerConfigurationBuilderTest extends \PHPUnit_Framework_TestCase
                     'a' => [1, 2, 3],
                 ],
                 'tags'       => ['tag1'],
+                'alias'      => 'service.simple.alias',
             ],
 
             'service.injected_parameters'   => [
@@ -39,6 +40,10 @@ class ContainerConfigurationBuilderTest extends \PHPUnit_Framework_TestCase
                     ['setInternalService', ['@service.simple']],
                 ],
                 'tags'  => ['tag1'],
+            ],
+            'serivce.simple.inheritor' => [
+                'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceStubInheritor'
+                'parent' => 'service.simple',
             ],
         ],
     ];
@@ -68,7 +73,6 @@ class ContainerConfigurationBuilderTest extends \PHPUnit_Framework_TestCase
                 'properties' => [
                     'a' => [1, 2, 3],
                 ],
-                'tags'       => ['tag1'],
             ],
 
             'service.injected_parameters'   => [
@@ -88,11 +92,20 @@ class ContainerConfigurationBuilderTest extends \PHPUnit_Framework_TestCase
                 'calls' => [
                     ['setInternalService', ['@service.simple']],
                 ],
-                'tags'  => ['tag1'],
+            ],
+            'serivce.simple.inheritor' => [
+                'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceStubInheritor',
+                'arguments'  => [1, '2'],
+                'properties' => [
+                    'a' => [1, 2, 3],
+                ],
             ],
         ],
         'tags' => [
             'tag1' => ['@service.simple', '@service.setter_injection'],
+        ],
+        'aliases' => [
+            'service.simple.alias' => 'service.simple',
         ],
     ];
 

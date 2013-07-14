@@ -42,6 +42,7 @@ class ContainerConfigurationBuilder
             'parameters' => [],
             'services'   => [],
             'tags'       => [],
+            'aliases'    => [],
         ];
 
         $containerConfiguration['parameters'] = $parameterBag->all();
@@ -50,11 +51,29 @@ class ContainerConfigurationBuilder
         unset($containerConfiguration['parameters']['services']);
 
         foreach ($containerConfiguration['services'] as $serviceId => $serviceConfiguration) {
+            if (isset($serviceConfiguration['parent'])) {
+                $parentConfiguration = $containerConfiguration['services'][$serviceConfiguration['parent']];
+                unset($serviceConfiguration['parent']);
+                $containerConfiguration['services'][$serviceId] = array_replace_recursive(
+                    $parentConfiguration,
+                    $serviceConfiguration
+                );
+            }
+
             if (isset($serviceConfiguration['tags'])) {
                 $tags = (array)$serviceConfiguration['tags'];
                 foreach ($tags as $tag) {
                     $containerConfiguration['tags'][$tag][] = '@' . $serviceId;
                 }
+                unset($containerConfiguration['services'][$serviceId]['tags']);
+            }
+
+            if (isset($serviceConfiguration['alias'])) {
+                $aliases = (array)$serviceConfiguration['alias'];
+                foreach ($aliases as $alias) {
+                    $containerConfiguration['aliases'][$alias] = $serviceId;
+                }
+                unset($containerConfiguration['services'][$serviceId]['alias']);
             }
         }
 
