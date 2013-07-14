@@ -146,6 +146,14 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
                     ['class' => 'Syringe\Component\DI\Tests\Stubs\StaticTriggerService', 'method' => 'unexists_method', 'arguments' => ['pre']],
                 ],
             ],
+            'service.dependence_for_synthetic_service' => [
+                'class'     => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
+                'arguments' => ['@service.synthetic']
+            ],
+            'service.synthetic' => [
+                'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                'scope'     => 'synthetic'
+            ],
         ],
         'tags' => [
             'tag1' => ['@service.simple', '@service.factory_output']
@@ -465,5 +473,32 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGetServiceIfIncorrectTriggerType()
     {
         $this->container->get('service.incorrect_trigger_type');
+    }
+
+    public function testUseSyntheticService()
+    {
+        $syntheticService = new ServiceStub(1, 2);
+
+        $this->container->setSyntheticService('service.synthetic', $syntheticService);
+
+        /** @var ComplexServiceStub $service */
+        $service = $this->container->get('service.dependence_for_synthetic_service');
+        $this->assertEquals($syntheticService, $service->getInternalService());
+    }
+
+    /**
+     * @expectedException \Syringe\Component\DI\Exception\IncorrectSyntheticServiceException
+     */
+    public function testSetSyntheticServiceIfIncorrectClass()
+    {
+        $this->container->setSyntheticService('service.synthetic', new ServiceInstanceCounter());
+    }
+
+    /**
+     * @expectedException \Syringe\Component\DI\Exception\BuildServiceException
+     */
+    public function testSetSyntheticServiceIfSyntheticServiceIsNotFound()
+    {
+        $this->container->get('service.dependence_for_synthetic_service');
     }
 }

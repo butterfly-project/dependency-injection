@@ -4,6 +4,7 @@ namespace Syringe\Component\DI;
 
 use Syringe\Component\DI\Exception\BuildObjectException;
 use Syringe\Component\DI\Exception\BuildServiceException;
+use Syringe\Component\DI\Exception\IncorrectSyntheticServiceException;
 use Syringe\Component\DI\Exception\UndefinedParameterException;
 use Syringe\Component\DI\Exception\UndefinedServiceException;
 use Syringe\Component\DI\Exception\UndefinedTagException;
@@ -13,7 +14,7 @@ use Syringe\Component\DI\Keeper;
  * Container
  * done Aliases - Алиасы для сервисов
  * done Триггеры - Вызов метода до или после создания сервиса
- * @todo Syntetic Service - Опеределение сервиса во время работы
+ * done Synthetic Service - Определение сервиса во время работы
  * @todo Наследование - Наследование конфигураций
  * @todo Аннотации - изучить возможности использования
  * @todo Private Field Injection - внедрение зависимости в не публичное свойство
@@ -37,6 +38,7 @@ class Container
     const SCOPE_SINGLETON = 'singleton';
     const SCOPE_FACTORY   = 'factory';
     const SCOPE_PROTOTYPE = 'prototype';
+    const SCOPE_SYNTHETIC = 'synthetic';
 
     const SERVICE_CONTAINER_ID = 'service_container';
 
@@ -79,6 +81,7 @@ class Container
             self::SCOPE_SINGLETON => new Keeper\Singleton($serviceBuilder),
             self::SCOPE_PROTOTYPE => new Keeper\Prototype($serviceBuilder),
             self::SCOPE_FACTORY   => new Keeper\Factory($serviceBuilder),
+            self::SCOPE_SYNTHETIC => new Keeper\Synthetic(),
         ];
     }
 
@@ -194,6 +197,27 @@ class Container
         }
 
         return $services;
+    }
+
+    /**
+     * @param string $id
+     * @param Object $service
+     * @throws IncorrectSyntheticServiceException if incorrect object class
+     */
+    public function setSyntheticService($id, $service)
+    {
+        $id = strtolower($id);
+
+        $serviceClass = $this->getServiceDefinition($id)['class'];
+
+        if (!($service instanceof $serviceClass)) {
+            throw new IncorrectSyntheticServiceException(sprintf(
+                "Synthetic injection error for '%s': Object class '%s' does not math for '%s'",
+                $id, get_class($service), $serviceClass
+            ));
+        }
+
+        $this->builders[self::SCOPE_SYNTHETIC]->setService($id, $service);
     }
 
     /**
