@@ -9,14 +9,14 @@ abstract class AbstractKeeper
     /**
      * @var ServiceFactory
      */
-    private $serviceBuilder;
+    private $serviceFactory;
 
     /**
-     * @param ServiceFactory $serviceBuilder
+     * @param ServiceFactory $serviceFactory
      */
-    public function __construct(ServiceFactory $serviceBuilder)
+    public function __construct(ServiceFactory $serviceFactory)
     {
-        $this->serviceBuilder = $serviceBuilder;
+        $this->serviceFactory = $serviceFactory;
     }
 
     /**
@@ -32,6 +32,6 @@ abstract class AbstractKeeper
      */
     protected function build(array $configuration)
     {
-        return $this->serviceBuilder->build($configuration);
+        return $this->serviceFactory->create($configuration);
     }
 }

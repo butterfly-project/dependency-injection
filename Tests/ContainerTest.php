@@ -7,6 +7,9 @@ use Syringe\Component\DI\Tests\Stubs\ComplexServiceStub;
 use Syringe\Component\DI\Tests\Stubs\FactoryOutputService;
 use Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter;
 use Syringe\Component\DI\Tests\Stubs\ServiceStub;
+use Syringe\Component\DI\Tests\Stubs\StaticTriggerService;
+use Syringe\Component\DI\Tests\Stubs\TriggerService;
+use Syringe\Component\DI\Tests\Stubs\UseTriggerService;
 
 /**
  * Class ContainerTest
@@ -43,6 +46,9 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         'services'   => [
             'service.simple'                => [
                 'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => [1, 2]
+            ],
+            'service.incorrect'             => [
                 'arguments' => [1, 2]
             ],
             'undefined_class_service'       => [
@@ -98,6 +104,47 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
             'service.tag_dependencies.undefined_tag' => [
                 'class' => 'Syringe\Component\DI\Tests\Stubs\FactoryOutputService',
                 'arguments' => ['1', '#tag123'],
+            ],
+            'service.trigger' => [
+                'class' => 'Syringe\Component\DI\Tests\Stubs\TriggerService',
+                'arguments' => ['initial'],
+            ],
+            'service.use_trigger'                => [
+                'class'     => 'Syringe\Component\DI\Tests\Stubs\UseTriggerService',
+                'arguments' => ['@service.trigger'],
+                'preTriggers' => [
+                    ['service' => '@service.trigger', 'method' => 'setA', 'arguments' => ['pre']],
+                ],
+                'postTriggers' => [
+                    ['service' => '@service.trigger', 'method' => 'setA', 'arguments' => ['post']],
+                ],
+            ],
+            'service.use_static_trigger'                => [
+                'class'     => 'Syringe\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                'preTriggers' => [
+                    ['class' => 'Syringe\Component\DI\Tests\Stubs\StaticTriggerService', 'method' => 'setA', 'arguments' => ['pre']],
+                ],
+                'postTriggers' => [
+                    ['class' => 'Syringe\Component\DI\Tests\Stubs\StaticTriggerService', 'method' => 'setA', 'arguments' => ['post']],
+                ],
+            ],
+            'service.incorrect_trigger_type'    => [
+                'class'     => 'Syringe\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                'preTriggers' => [
+                    ['method' => 'setA', 'arguments' => ['pre']],
+                ],
+            ],
+            'service.trigger.unexists_class'    => [
+                'class'     => 'Syringe\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                'preTriggers' => [
+                    ['class' => 'UnexistsClass', 'method' => 'setA', 'arguments' => ['pre']],
+                ],
+            ],
+            'service.trigger.unexists_method'    => [
+                'class'     => 'Syringe\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                'preTriggers' => [
+                    ['class' => 'Syringe\Component\DI\Tests\Stubs\StaticTriggerService', 'method' => 'unexists_method', 'arguments' => ['pre']],
+                ],
             ],
         ],
         'tags' => [
@@ -193,6 +240,14 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGetServiceIfNoService()
     {
         $this->container->get('undefined_service');
+    }
+
+    /**
+     * @expectedException \Syringe\Component\DI\Exception\BuildServiceException
+     */
+    public function testGetServiceIfIncorrectConfiguration()
+    {
+        $this->container->get('service.incorrect');
     }
 
     /**
@@ -363,5 +418,52 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $service = $this->container->get('service.simple.alias');
 
         $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service);
+    }
+
+    public function testTriggers()
+    {
+        /** @var TriggerService $triggerService */
+        $triggerService = $this->container->get('service.trigger');
+
+        /** @var UseTriggerService $useTriggerService */
+        $useTriggerService = $this->container->get('service.use_trigger');
+
+        $this->assertEquals('pre', $useTriggerService->getPreA());
+        $this->assertEquals('post', $triggerService->getA());
+    }
+
+    public function testStaticTriggers()
+    {
+        StaticTriggerService::setA('initial');
+
+        /** @var UseTriggerService $useTriggerService */
+        $useTriggerService = $this->container->get('service.use_static_trigger');
+
+        $this->assertEquals('pre', $useTriggerService->getPreA());
+        $this->assertEquals('post', StaticTriggerService::getA());
+    }
+
+    /**
+     * @expectedException \Syringe\Component\DI\Exception\BuildServiceException
+     */
+    public function testStaticTriggersIfUnexistingClass()
+    {
+        $this->container->get('service.trigger.unexists_class');
+    }
+
+    /**
+     * @expectedException \Syringe\Component\DI\Exception\BuildServiceException
+     */
+    public function testStaticTriggersIfUnexistingMethod()
+    {
+        $this->container->get('service.trigger.unexists_method');
+    }
+
+    /**
+     * @expectedException \Syringe\Component\DI\Exception\BuildServiceException
+     */
+    public function testGetServiceIfIncorrectTriggerType()
+    {
+        $this->container->get('service.incorrect_trigger_type');
     }
 }

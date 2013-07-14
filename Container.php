@@ -11,8 +11,8 @@ use Syringe\Component\DI\Keeper;
 
 /**
  * Container
- * done Aliasses - Алиасы для сервисов
- * @todo Триггеры - Вызов метода до или после метода.
+ * done Aliases - Алиасы для сервисов
+ * done Триггеры - Вызов метода до или после создания сервиса
  * @todo Syntetic Service - Опеределение сервиса во время работы
  * @todo Наследование - Наследование конфигураций
  * @todo Аннотации - изучить возможности использования
@@ -73,7 +73,7 @@ class Container
 
     protected function init()
     {
-        $serviceBuilder = new ServiceFactory(new ObjectBuilder(), $this);
+        $serviceBuilder = new ServiceFactory($this);
 
         $this->builders = [
             self::SCOPE_SINGLETON => new Keeper\Singleton($serviceBuilder),

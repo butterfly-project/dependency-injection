@@ -2,72 +2,163 @@
 
 namespace Syringe\Component\DI;
 
+use Syringe\Component\DI\Exception\BuildObjectException;
+
 class ServiceFactory
 {
-    /**
-     * @var ObjectBuilder
-     */
-    protected $objectBuilder;
-
     /**
      * @var Container
      */
     protected $container;
 
     /**
-     * @param ObjectBuilder $objectBuilder
      * @param Container $container
      */
-    public function __construct(ObjectBuilder $objectBuilder, Container $container)
+    public function __construct(Container $container)
     {
-        $this->objectBuilder = $objectBuilder;
-        $this->container     = $container;
+        $this->container = $container;
     }
 
     /**
      * @param array $configuration
      * @return Object
-     * @throws Exception\BuildObjectException if class is not found
-     * @throws Exception\BuildObjectException if factory class is not found
-     * @throws Exception\BuildObjectException if factory method is not found
-     * @throws Exception\BuildObjectException if object's method is not found
-     * @throws Exception\BuildObjectException if object's property is not found
+     * @throws BuildObjectException if impossible to create a service
+     * @throws BuildObjectException if class is not found
+     * @throws BuildObjectException if factory class is not found
+     * @throws BuildObjectException if factory method is not found
+     * @throws BuildObjectException if object's method is not found
+     * @throws BuildObjectException if object's property is not found
+     * @throws BuildObjectException if trigger type is not found
+     * @throws BuildObjectException if trigger class is not found
+     * @throws BuildObjectException if trigger method is not found
      */
-    public function build(array $configuration)
+    public function create(array $configuration)
     {
-        $objectBuilder = clone $this->objectBuilder;
+        $objectBuilder = $this->createObjectBuilder();
 
-        if (isset($configuration['class'])) {
-            $dependencies = !empty($configuration['arguments']) ? $configuration['arguments'] : [];
-
-            $objectBuilder->nativeCreate($configuration['class'], $this->resolveDependencies($dependencies));
-        } elseif (isset($configuration['factoryStaticMethod'])) {
-            list ($className, $methodName) = $configuration['factoryStaticMethod'];
-            $dependencies = !empty($configuration['arguments']) ? $configuration['arguments'] : [];
-
-            $objectBuilder->staticFactoryMethodCreate($className, $methodName, $this->resolveDependencies($dependencies));
-        } elseif (isset($configuration['factoryMethod'])) {
-            list ($factoryServiceId, $methodName) = $configuration['factoryMethod'];
-            $factoryService = $this->container->get(substr($factoryServiceId, 1));
-            $dependencies   = !empty($configuration['arguments']) ? $configuration['arguments'] : [];
-
-            $objectBuilder->factoryMethodCreate($factoryService, $methodName, $this->resolveDependencies($dependencies));
+        if (isset($configuration['preTriggers'])) {
+            $this->runTriggers($configuration['preTriggers']);
         }
 
+        $this->createService($objectBuilder, $configuration);
+
         if (isset($configuration['calls'])) {
-            foreach ($configuration['calls'] as $callConfiguration) {
-                list($methodName, $dependencies) = $callConfiguration;
-                $objectBuilder->callObjectMethod($methodName, $this->resolveDependencies($dependencies));
-            }
+            $this->callsMethods($objectBuilder, $configuration['calls']);
         }
 
         if (isset($configuration['properties'])) {
-            foreach ($configuration['properties'] as $propertyName => $argument) {
-                $objectBuilder->setObjectProperty($propertyName, $this->resolveDependence($argument));
-            }
+            $this->initProperties($objectBuilder, $configuration['properties']);
+        }
+
+        if (isset($configuration['postTriggers'])) {
+            $this->runTriggers($configuration['postTriggers']);
         }
 
         return $objectBuilder->getObject();
+    }
+
+    /**
+     * @param ObjectBuilder $objectBuilder
+     * @param array $configuration
+     * @throws BuildObjectException if impossible to create a service
+     */
+    protected function createService(ObjectBuilder $objectBuilder, array $configuration)
+    {
+        $dependencies = !empty($configuration['arguments']) ? $configuration['arguments'] : [];
+        $arguments    = $this->resolveDependencies($dependencies);
+
+        if (isset($configuration['class'])) {
+            $objectBuilder->nativeCreate($configuration['class'], $arguments);
+        } elseif (isset($configuration['factoryStaticMethod'])) {
+            list ($className, $methodName) = $configuration['factoryStaticMethod'];
+            $objectBuilder->staticFactoryMethodCreate($className, $methodName, $arguments);
+        } elseif (isset($configuration['factoryMethod'])) {
+            list ($factoryServiceId, $methodName) = $configuration['factoryMethod'];
+            $factoryService = $this->container->get(substr($factoryServiceId, 1));
+            $objectBuilder->factoryMethodCreate($factoryService, $methodName, $arguments);
+        } else {
+            throw new BuildObjectException('Impossible to create a service');
+        }
+    }
+
+    /**
+     * @param ObjectBuilder $objectBuilder
+     * @param array $calls
+     */
+    protected function callsMethods(ObjectBuilder $objectBuilder, array $calls)
+    {
+        foreach ($calls as $callConfiguration) {
+            list($methodName, $dependencies) = $callConfiguration;
+            $objectBuilder->callObjectMethod($methodName, $this->resolveDependencies($dependencies));
+        }
+    }
+
+    /**
+     * @param ObjectBuilder $objectBuilder
+     * @param array $properties
+     */
+    protected function initProperties(ObjectBuilder $objectBuilder, array $properties)
+    {
+        foreach ($properties as $propertyName => $argument) {
+            $objectBuilder->setObjectProperty($propertyName, $this->resolveDependence($argument));
+        }
+    }
+
+    /**
+     * @param array $triggers
+     * @throws BuildObjectException if impossible to run a trigger
+     * @throws BuildObjectException if trigger class is not found
+     * @throws BuildObjectException if trigger method is not found
+     */
+    protected function runTriggers(array $triggers)
+    {
+        foreach ($triggers as $trigger) {
+            if (isset($trigger['service'])) {
+                $this->runServiceTrigger($trigger);
+            } elseif (isset($trigger['class'])) {
+                $this->runStaticTrigger($trigger);
+            } else {
+                throw new BuildObjectException(sprintf("Impossible to run a trigger"));
+            }
+        }
+    }
+
+    /**
+     * @param array $triggerConfiguration
+     * @throws BuildObjectException if object's method is not found
+     */
+    protected function runServiceTrigger(array $triggerConfiguration)
+    {
+        $service   = $this->resolveDependence($triggerConfiguration['service']);
+        $arguments = $this->resolveDependencies($triggerConfiguration['arguments']);
+
+        $this
+            ->createObjectBuilder($service)
+            ->callObjectMethod($triggerConfiguration['method'], $arguments);
+    }
+
+    /**
+     * @param array $triggerConfiguration
+     * @throws BuildObjectException if trigger class is not found
+     * @throws BuildObjectException if trigger method is not found
+     */
+    protected function runStaticTrigger(array $triggerConfiguration)
+    {
+        if (!class_exists($triggerConfiguration['class'])) {
+            throw new BuildObjectException(sprintf("Trigger class '%s' is not found", $triggerConfiguration['class']));
+        }
+        if (!method_exists($triggerConfiguration['class'], $triggerConfiguration['method'])) {
+            throw new BuildObjectException(sprintf(
+                "Method '%s' for trigger class '%s' is not found",
+                $triggerConfiguration['class'],
+                $triggerConfiguration['method']
+            ));
+        }
+
+        $callback  = [$triggerConfiguration['class'], $triggerConfiguration['method']];
+        $arguments = $this->resolveDependencies($triggerConfiguration['arguments']);
+
+        call_user_func_array($callback, $arguments);
     }
 
     /**
@@ -107,5 +198,13 @@ class ServiceFactory
                 return $dependence;
                 break;
         }
+    }
+
+    /**
+     * @param Object|null $object
+     */
+    protected function createObjectBuilder($object = null)
+    {
+        return new ObjectBuilder($object);
     }
 }

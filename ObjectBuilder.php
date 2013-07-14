@@ -12,10 +12,18 @@ class ObjectBuilder
     protected $object;
 
     /**
+     * @param Object|null $object
+     */
+    public function __construct($object = null)
+    {
+        $this->object = $object;
+    }
+
+    /**
      * @param string $className
      * @param array $arguments
      * @return $this
-     * @throws Exception\BuildObjectException if class is not found
+     * @throws BuildObjectException if class is not found
      */
     public function nativeCreate($className, array $arguments = [])
     {
@@ -37,8 +45,8 @@ class ObjectBuilder
      * @param string $methodName
      * @param array $arguments
      * @return $this
-     * @throws Exception\BuildObjectException if factory class is not found
-     * @throws Exception\BuildObjectException if factory method is not found
+     * @throws BuildObjectException if factory class is not found
+     * @throws BuildObjectException if factory method is not found
      */
     public function staticFactoryMethodCreate($factoryClassName, $methodName, array $arguments = [])
     {
@@ -62,7 +70,7 @@ class ObjectBuilder
      * @param string $methodName
      * @param array $arguments
      * @return $this
-     * @throws Exception\BuildObjectException if factory method is not found
+     * @throws BuildObjectException if factory method is not found
      */
     public function factoryMethodCreate($factory, $methodName, array $arguments = [])
     {
@@ -81,7 +89,7 @@ class ObjectBuilder
      * @param string $methodName
      * @param array $arguments
      * @return $this
-     * @throws Exception\BuildObjectException if object's method is not found
+     * @throws BuildObjectException if object's method is not found
      */
     public function callObjectMethod($methodName, array $arguments = [])
     {
@@ -100,7 +108,7 @@ class ObjectBuilder
      * @param string $propertyName
      * @param mixed $value
      * @return $this
-     * @throws Exception\BuildObjectException if object's property is not found
+     * @throws BuildObjectException if object's property is not found
      */
     public function setObjectProperty($propertyName, $value)
     {

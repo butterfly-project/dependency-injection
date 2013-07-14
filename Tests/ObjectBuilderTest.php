@@ -120,7 +120,7 @@ class ObjectBuilderTest extends \PHPUnit_Framework_TestCase
     {
         $this
             ->objectBuilder
-            ->nativeCreate('\Syringe\Component\DI\Tests\ServiceStub')
+            ->nativeCreate('\Syringe\Component\DI\Tests\Stubs\ServiceStub')
             ->callObjectMethod('setG', [1]);
     }
 
@@ -144,7 +144,7 @@ class ObjectBuilderTest extends \PHPUnit_Framework_TestCase
     {
         $this
             ->objectBuilder
-            ->nativeCreate('\Syringe\Component\DI\Tests\ServiceStub')
+            ->nativeCreate('\Syringe\Component\DI\Tests\Stubs\ServiceStub')
             ->setObjectProperty('undefined_property', [1]);
     }
 }
