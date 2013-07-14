@@ -1,16 +1,16 @@
 <?php
 
-namespace Syringe\Tests;
+namespace Syringe\Component\DI\Tests;
 
-use Syringe\Container;
-use Syringe\Tests\Stubs\ComplexServiceStub;
-use Syringe\Tests\Stubs\FactoryOutputService;
-use Syringe\Tests\Stubs\ServiceInstanceCounter;
-use Syringe\Tests\Stubs\ServiceStub;
+use Syringe\Component\DI\Container;
+use Syringe\Component\DI\Tests\Stubs\ComplexServiceStub;
+use Syringe\Component\DI\Tests\Stubs\FactoryOutputService;
+use Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter;
+use Syringe\Component\DI\Tests\Stubs\ServiceStub;
 
 /**
  * Class ContainerTest
- * @package Syringe\Tests
+ * @package Syringe\Component\DI\Tests
  *
  * Tests:
  * 1. Проверить наличие параметра
@@ -42,57 +42,57 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         ],
         'services'   => [
             'service.simple'                => [
-                'class'     => 'Syringe\Tests\Stubs\ServiceStub',
+                'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
                 'arguments' => [1, 2]
             ],
             'undefined_class_service'       => [
                 'class' => 'UndefinedClass',
             ],
             'service.static_factory_output' => [
-                'factoryStaticMethod' => ['Syringe\Tests\Stubs\FactoryService', 'createInstance'],
+                'factoryStaticMethod' => ['Syringe\Component\DI\Tests\Stubs\FactoryService', 'createInstance'],
                 'arguments'           => [1, 2],
             ],
             'service.factory'               => [
-                'class' => 'Syringe\Tests\Stubs\FactoryService',
+                'class' => 'Syringe\Component\DI\Tests\Stubs\FactoryService',
             ],
             'service.factory_output'        => [
                 'factoryMethod' => ['@service.factory', 'create'],
                 'arguments'     => [1, 2],
             ],
             'service.scope.singleton'       => [
-                'class' => 'Syringe\Tests\Stubs\ServiceInstanceCounter',
+                'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
                 'scope' => Container::SCOPE_SINGLETON
             ],
             'service.scope.factory'         => [
-                'class' => 'Syringe\Tests\Stubs\ServiceInstanceCounter',
+                'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
                 'scope' => Container::SCOPE_FACTORY
             ],
             'service.scope.prototype'       => [
-                'class' => 'Syringe\Tests\Stubs\ServiceInstanceCounter',
+                'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
                 'scope' => Container::SCOPE_PROTOTYPE
             ],
             'service.constructor_injection' => [
-                'class'     => 'Syringe\Tests\Stubs\ComplexServiceStub',
+                'class'     => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
                 'arguments' => ['@service.simple']
             ],
             'service.setter_injection'      => [
-                'class' => 'Syringe\Tests\Stubs\ComplexServiceStub',
+                'class' => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
                 'calls' => [
                     ['setInternalService', ['@service.simple']],
                 ]
             ],
             'service.property_injection'    => [
-                'class'      => 'Syringe\Tests\Stubs\ComplexServiceStub',
+                'class'      => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
                 'properties' => [
                     'internalService' => '@service.simple',
                 ]
             ],
             'service.tag_dependencies' => [
-                'class' => 'Syringe\Tests\Stubs\FactoryOutputService',
+                'class' => 'Syringe\Component\DI\Tests\Stubs\FactoryOutputService',
                 'arguments' => ['1', '#tag1'],
             ],
             'service.tag_dependencies.undefined_tag' => [
-                'class' => 'Syringe\Tests\Stubs\FactoryOutputService',
+                'class' => 'Syringe\Component\DI\Tests\Stubs\FactoryOutputService',
                 'arguments' => ['1', '#tag123'],
             ],
         ],
@@ -150,7 +150,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \Syringe\Exception\UndefinedParameterException
+     * @expectedException \Syringe\Component\DI\Exception\UndefinedParameterException
      */
     public function testGetParameterIfNoParameter()
     {
@@ -172,13 +172,13 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         /** @var ServiceStub $service */
         $service = $this->container->get('service.simple');
 
-        $this->assertInstanceOf('\Syringe\Tests\Stubs\ServiceStub', $service);
+        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service);
         $this->assertEquals(1, $service->getB());
         $this->assertEquals(2, $service->getC());
     }
 
     /**
-     * @expectedException \Syringe\Exception\UndefinedServiceException
+     * @expectedException \Syringe\Component\DI\Exception\UndefinedServiceException
      */
     public function testGetServiceIfNoService()
     {
@@ -186,7 +186,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \Syringe\Exception\BuildServiceException
+     * @expectedException \Syringe\Component\DI\Exception\BuildServiceException
      */
     public function testGetServiceIfNoClassService()
     {
@@ -198,7 +198,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         /** @var FactoryOutputService $service */
         $service = $this->container->get('service.static_factory_output');
 
-        $this->assertInstanceOf('\Syringe\Tests\Stubs\FactoryOutputService', $service);
+        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\FactoryOutputService', $service);
         $this->assertEquals(1, $service->getA());
         $this->assertEquals(2, $service->getB());
     }
@@ -208,7 +208,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         /** @var FactoryOutputService $service */
         $service = $this->container->get('service.factory_output');
 
-        $this->assertInstanceOf('\Syringe\Tests\Stubs\FactoryOutputService', $service);
+        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\FactoryOutputService', $service);
         $this->assertEquals(1, $service->getA());
         $this->assertEquals(2, $service->getB());
     }
@@ -266,8 +266,8 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         /** @var ComplexServiceStub $service */
         $service = $this->container->get('service.constructor_injection');
 
-        $this->assertInstanceOf('\Syringe\Tests\Stubs\ComplexServiceStub', $service);
-        $this->assertInstanceOf('\Syringe\Tests\Stubs\ServiceStub', $service->getInternalService());
+        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ComplexServiceStub', $service);
+        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
 
     public function testSetterInjection()
@@ -275,8 +275,8 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         /** @var ComplexServiceStub $service */
         $service = $this->container->get('service.setter_injection');
 
-        $this->assertInstanceOf('\Syringe\Tests\Stubs\ComplexServiceStub', $service);
-        $this->assertInstanceOf('\Syringe\Tests\Stubs\ServiceStub', $service->getInternalService());
+        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ComplexServiceStub', $service);
+        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
 
     public function testPropertyInjection()
@@ -284,8 +284,8 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         /** @var ComplexServiceStub $service */
         $service = $this->container->get('service.property_injection');
 
-        $this->assertInstanceOf('\Syringe\Tests\Stubs\ComplexServiceStub', $service);
-        $this->assertInstanceOf('\Syringe\Tests\Stubs\ServiceStub', $service->getInternalService());
+        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ComplexServiceStub', $service);
+        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
 
     public function testHasTag()
@@ -311,7 +311,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \Syringe\Exception\UndefinedTagException
+     * @expectedException \Syringe\Component\DI\Exception\UndefinedTagException
      */
     public function testGetServicesByTagIfNoTag()
     {
@@ -327,7 +327,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \Syringe\Exception\UndefinedTagException
+     * @expectedException \Syringe\Component\DI\Exception\UndefinedTagException
      */
     public function testTagDependencyIfUndefinedTag()
     {

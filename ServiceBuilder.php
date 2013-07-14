@@ -1,6 +1,6 @@
 <?php
 
-namespace Syringe;
+namespace Syringe\Component\DI;
 
 class ServiceBuilder
 {

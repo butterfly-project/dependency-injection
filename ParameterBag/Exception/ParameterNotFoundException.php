@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Syringe\ParameterBag\Exception;
+namespace Syringe\Component\DI\ParameterBag\Exception;
 
 /**
  * This exception is thrown when a non-existent parameter is used.

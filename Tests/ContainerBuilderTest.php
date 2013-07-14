@@ -1,8 +1,8 @@
 <?php
 
-namespace Syringe\Tests;
+namespace Syringe\Component\DI\Tests;
 
-use Syringe\ContainerConfigurationBuilder;
+use Syringe\Component\DI\ContainerConfigurationBuilder;
 
 class ContainerConfigurationBuilderTest extends \PHPUnit_Framework_TestCase
 {
@@ -13,7 +13,7 @@ class ContainerConfigurationBuilderTest extends \PHPUnit_Framework_TestCase
         'parameter_complex' => '%parameter_string%/%parameter_string2%',
         'services'   => [
             'service.simple'                => [
-                'class'      => 'Syringe\Tests\Stubs\ServiceStub',
+                'class'      => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
                 'arguments'  => [1, '2'],
                 'properties' => [
                     'a' => [1, 2, 3],
@@ -22,7 +22,7 @@ class ContainerConfigurationBuilderTest extends \PHPUnit_Framework_TestCase
             ],
 
             'service.injected_parameters'   => [
-                'class'      => 'Syringe\Tests\Stubs\ServiceStub',
+                'class'      => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
                 'arguments'  => ['%parameter_string%', '%parameter_complex%'],
                 'properties' => [
                     'a' => '%parameter_array%',
@@ -30,11 +30,11 @@ class ContainerConfigurationBuilderTest extends \PHPUnit_Framework_TestCase
             ],
 
             'service.constructor_injection' => [
-                'class'     => 'Syringe\Tests\Stubs\ComplexServiceStub',
+                'class'     => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
                 'arguments' => ['@service.simple'],
             ],
             'service.setter_injection'      => [
-                'class' => 'Syringe\Tests\Stubs\ComplexServiceStub',
+                'class' => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
                 'calls' => [
                     ['setInternalService', ['@service.simple']],
                 ],
@@ -63,7 +63,7 @@ class ContainerConfigurationBuilderTest extends \PHPUnit_Framework_TestCase
         ],
         'services'   => [
             'service.simple'                => [
-                'class'      => 'Syringe\Tests\Stubs\ServiceStub',
+                'class'      => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
                 'arguments'  => [1, '2'],
                 'properties' => [
                     'a' => [1, 2, 3],
@@ -72,7 +72,7 @@ class ContainerConfigurationBuilderTest extends \PHPUnit_Framework_TestCase
             ],
 
             'service.injected_parameters'   => [
-                'class'      => 'Syringe\Tests\Stubs\ServiceStub',
+                'class'      => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
                 'arguments'  => ['abz', 'abz/b22222'],
                 'properties' => [
                     'a' => [1, 2, 3],
@@ -80,11 +80,11 @@ class ContainerConfigurationBuilderTest extends \PHPUnit_Framework_TestCase
             ],
 
             'service.constructor_injection' => [
-                'class'     => 'Syringe\Tests\Stubs\ComplexServiceStub',
+                'class'     => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
                 'arguments' => ['@service.simple'],
             ],
             'service.setter_injection'      => [
-                'class' => 'Syringe\Tests\Stubs\ComplexServiceStub',
+                'class' => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
                 'calls' => [
                     ['setInternalService', ['@service.simple']],
                 ],

@@ -1,8 +1,8 @@
 <?php
 
-namespace Syringe\Keeper;
+namespace Syringe\Component\DI\Keeper;
 
-use Syringe\ServiceBuilder;
+use Syringe\Component\DI\ServiceBuilder;
 
 abstract class AbstractKeeper
 {
