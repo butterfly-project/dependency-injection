@@ -5,35 +5,13 @@ namespace Syringe\Component\DI\Tests;
 use Syringe\Component\DI\Container;
 use Syringe\Component\DI\Tests\Stubs\ComplexServiceStub;
 use Syringe\Component\DI\Tests\Stubs\FactoryOutputService;
+use Syringe\Component\DI\Tests\Stubs\PrivatePropertyServiceStub;
 use Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter;
 use Syringe\Component\DI\Tests\Stubs\ServiceStub;
 use Syringe\Component\DI\Tests\Stubs\StaticTriggerService;
 use Syringe\Component\DI\Tests\Stubs\TriggerService;
 use Syringe\Component\DI\Tests\Stubs\UseTriggerService;
 
-/**
- * Class ContainerTest
- * @package Syringe\Component\DI\Tests
- *
- * Tests:
- * 1. Проверить наличие параметра
- * 2. Получить параметр
- *
- * 3. Проверить наличие сервиса
- * 4. Поднять сервис
- * 4а. Поднять через фабричный статический метод
- * 4б. Поднять через фабрику
- *
- * 5. Поднятие сервиса в режиме синглтона
- * 6. Поднятие сервиса в режиме фабрики (каждый запрос - новый инстанс)
- * 7. Поднятие сервиса в режиме прототипа (один инстанс - на каждый запрос клонирование)
- *
- * 8. Внедрение зависимости через конструктор
- * 9. Внедрение зависимости через метод
- * 10. Внедрение зависимости через публичное свойство
- *
- * 11. Внедрение зависимости по тегу
- */
 class ContainerTest extends \PHPUnit_Framework_TestCase
 {
     /**
@@ -93,6 +71,12 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
             ],
             'service.property_injection'    => [
                 'class'      => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
+                'properties' => [
+                    'internalService' => '@service.simple',
+                ]
+            ],
+            'service.private_property_injection'    => [
+                'class'      => 'Syringe\Component\DI\Tests\Stubs\PrivatePropertyServiceStub',
                 'properties' => [
                     'internalService' => '@service.simple',
                 ]
@@ -347,7 +331,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         /** @var ComplexServiceStub $service */
         $service = $this->container->get('service.constructor_injection');
 
-        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ComplexServiceStub', $service);
         $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
 
@@ -356,7 +339,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         /** @var ComplexServiceStub $service */
         $service = $this->container->get('service.setter_injection');
 
-        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ComplexServiceStub', $service);
         $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
 
@@ -365,7 +347,14 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         /** @var ComplexServiceStub $service */
         $service = $this->container->get('service.property_injection');
 
-        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ComplexServiceStub', $service);
+        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
+    }
+
+    public function testPrivatePropertyInjection()
+    {
+        /** @var PrivatePropertyServiceStub $service */
+        $service = $this->container->get('service.private_property_injection');
+
         $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
 

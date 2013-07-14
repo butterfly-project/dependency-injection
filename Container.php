@@ -15,9 +15,7 @@ use Syringe\Component\DI\Keeper;
  * done Aliases - Алиасы для сервисов
  * done Триггеры - Вызов метода до или после создания сервиса
  * done Synthetic Service - Определение сервиса во время работы
- * @todo Наследование - Наследование конфигураций
- * @todo Аннотации - изучить возможности использования
- * @todo Private Field Injection - внедрение зависимости в не публичное свойство
+ * done Private Field Injection - внедрение зависимости в не публичное свойство
  *
  * Container services
  * @todo Lazy Load Proxy - Ленивая загрузка сервиса
@@ -27,6 +25,8 @@ use Syringe\Component\DI\Keeper;
  * Container building
  * @todo phar archive - Phar консольное приложение сборки контейнера
  * @todo Composer integration - определение зависимости на уровне контейнера
+ * @todo Наследование - Наследование конфигураций
+ * @todo Аннотации - изучить возможности использования
  *
  * Container integration
  * @todo Sf2 integration

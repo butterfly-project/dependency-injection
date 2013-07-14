@@ -112,13 +112,18 @@ class ObjectBuilder
      */
     public function setObjectProperty($propertyName, $value)
     {
-        if (!property_exists($this->object, $propertyName)) {
+        if (array_key_exists($propertyName, get_object_vars($this->object))) {
+            $this->object->$propertyName = $value;
+        } elseif (property_exists($this->object, $propertyName)) {
+            $propertyReflection = new \ReflectionProperty($this->object, $propertyName);
+            $propertyReflection->setAccessible(true);
+            $propertyReflection->setValue($this->object, $value);
+            $propertyReflection->setAccessible(false);
+        } else {
             throw new BuildObjectException(
                 sprintf("Property '%s' for object '%s' is not found", $propertyName, get_class($this->object))
             );
         }
-
-        $this->object->$propertyName = $value;
 
         return $this;
     }
