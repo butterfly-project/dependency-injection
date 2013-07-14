@@ -1,6 +1,6 @@
 <?php
 
-namespace Syringe\Tests\Stubs;
+namespace Syringe\Component\DI\Tests\Stubs;
 
 class ServiceStub
 {

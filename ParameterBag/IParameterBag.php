@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Syringe\ParameterBag;
+namespace Syringe\Component\DI\ParameterBag;
 
-use Syringe\ParameterBag\Exception\ParameterNotFoundException;
+use Syringe\Component\DI\ParameterBag\Exception\ParameterNotFoundException;
 
 /**
  * IParameterBag.

@@ -1,8 +1,8 @@
 <?php
 
-namespace Syringe;
+namespace Syringe\Component\DI;
 
-use Syringe\ParameterBag\ParameterBag;
+use Syringe\Component\DI\ParameterBag\ParameterBag;
 
 class ContainerConfigurationBuilder
 {

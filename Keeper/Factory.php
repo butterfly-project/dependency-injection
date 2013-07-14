@@ -1,6 +1,6 @@
 <?php
 
-namespace Syringe\Keeper;
+namespace Syringe\Component\DI\Keeper;
 
 class Factory extends AbstractKeeper
 {

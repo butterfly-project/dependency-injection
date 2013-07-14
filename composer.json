@@ -1,0 +1,23 @@
+{
+    "name": "syringe/dependency-injection",
+    "type": "library",
+    "description": "Syringe Dependency Injection Component",
+    "keywords": ["DI", "IoC", "Container", "Dependency Injection"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Marat Fakhertdinov",
+            "email": "marat.fakhertdinov@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.3"
+    },
+    "autoload": {
+        "psr-0": {
+            "Syringe\\Component\\DI\\": ""
+        }
+    },
+    "target-dir": "Syringe/Component/DI",
+    "minimum-stability": "dev"
+}

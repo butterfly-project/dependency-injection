@@ -1,8 +1,8 @@
 <?php
 
-namespace Syringe;
+namespace Syringe\Component\DI;
 
-use Syringe\Exception\BuildObjectException;
+use Syringe\Component\DI\Exception\BuildObjectException;
 
 class ObjectBuilder
 {

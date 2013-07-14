@@ -1,13 +1,13 @@
 <?php
 
-namespace Syringe;
+namespace Syringe\Component\DI;
 
-use Syringe\Exception\BuildObjectException;
-use Syringe\Exception\BuildServiceException;
-use Syringe\Exception\UndefinedParameterException;
-use Syringe\Exception\UndefinedServiceException;
-use Syringe\Exception\UndefinedTagException;
-use Syringe\Keeper;
+use Syringe\Component\DI\Exception\BuildObjectException;
+use Syringe\Component\DI\Exception\BuildServiceException;
+use Syringe\Component\DI\Exception\UndefinedParameterException;
+use Syringe\Component\DI\Exception\UndefinedServiceException;
+use Syringe\Component\DI\Exception\UndefinedTagException;
+use Syringe\Component\DI\Keeper;
 
 /**
  * Container

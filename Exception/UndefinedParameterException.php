@@ -1,6 +1,6 @@
 <?php
 
-namespace Syringe\Exception;
+namespace Syringe\Component\DI\Exception;
 
 class UndefinedParameterException extends \InvalidArgumentException
 {

@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Syringe;
+namespace Syringe\Component\DI;
 
 /**
  * IContainerAware should be implemented by classes that depends on a Container.
