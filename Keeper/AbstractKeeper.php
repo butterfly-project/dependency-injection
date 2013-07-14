@@ -2,19 +2,19 @@
 
 namespace Syringe\Component\DI\Keeper;
 
-use Syringe\Component\DI\ServiceBuilder;
+use Syringe\Component\DI\ServiceFactory;
 
 abstract class AbstractKeeper
 {
     /**
-     * @var ServiceBuilder
+     * @var ServiceFactory
      */
     private $serviceBuilder;
 
     /**
-     * @param ServiceBuilder $serviceBuilder
+     * @param ServiceFactory $serviceBuilder
      */
-    public function __construct(ServiceBuilder $serviceBuilder)
+    public function __construct(ServiceFactory $serviceBuilder)
     {
         $this->serviceBuilder = $serviceBuilder;
     }

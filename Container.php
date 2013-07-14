@@ -11,7 +11,7 @@ use Syringe\Component\DI\Keeper;
 
 /**
  * Container
- * @todo Aliasses - Алиасы для сервисов
+ * done Aliasses - Алиасы для сервисов
  * @todo Триггеры - Вызов метода до или после метода.
  * @todo Syntetic Service - Опеределение сервиса во время работы
  * @todo Наследование - Наследование конфигураций
@@ -43,7 +43,7 @@ class Container
     /**
      * @var array
      */
-    protected $requiredSections = ['parameters', 'services', 'tags'];
+    protected $requiredSections = ['parameters', 'services', 'tags', 'aliases'];
 
     /**
      * @var array
@@ -73,7 +73,7 @@ class Container
 
     protected function init()
     {
-        $serviceBuilder = new ServiceBuilder(new ObjectBuilder(), $this);
+        $serviceBuilder = new ServiceFactory(new ObjectBuilder(), $this);
 
         $this->builders = [
             self::SCOPE_SINGLETON => new Keeper\Singleton($serviceBuilder),
@@ -113,7 +113,22 @@ class Container
      */
     public function has($id)
     {
-        return array_key_exists(strtolower($id), $this->configuration['services']);
+        $id = strtolower($id);
+
+        if (self::SERVICE_CONTAINER_ID == $id) {
+            return true;
+        }
+
+        if (array_key_exists($id, $this->configuration['services'])) {
+            return true;
+        }
+
+        if (array_key_exists($id, $this->configuration['aliases']) &&
+            $this->has($this->configuration['aliases'][$id])) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -131,11 +146,7 @@ class Container
             return $this;
         }
 
-        if (!$this->has($id)) {
-            throw new UndefinedServiceException(sprintf("Service '%s' is not found", $id));
-        }
-
-        $serviceConfiguration = $this->configuration['services'][$id];
+        $serviceConfiguration = $this->getServiceDefinition($id);
 
         $scope = isset($serviceConfiguration['scope']) ? $serviceConfiguration['scope'] : self::SCOPE_SINGLETON;
 
@@ -166,7 +177,7 @@ class Container
     /**
      * @param string $name
      * @return Object[]
-     * @throws Exception\UndefinedTagException if tag is not found
+     * @throws UndefinedTagException if tag is not found
      */
     public function getServicesByTag($name)
     {
@@ -185,7 +196,6 @@ class Container
         return $services;
     }
 
-
     /**
      * @param string $scope
      * @return Keeper\AbstractKeeper
@@ -198,5 +208,23 @@ class Container
         }
 
         return $this->builders[$scope];
+    }
+
+    /**
+     * @param string $id
+     * @return array
+     * @throws UndefinedServiceException if service is not found
+     */
+    protected function getServiceDefinition($id)
+    {
+        if (array_key_exists($id, $this->configuration['services'])) {
+            return $this->configuration['services'][$id];
+        }
+
+        if (array_key_exists($id, $this->configuration['aliases'])) {
+            return $this->getServiceDefinition($this->configuration['aliases'][$id]);
+        }
+
+        throw new UndefinedServiceException(sprintf("Service '%s' is not found", $id));
     }
 }

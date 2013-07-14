@@ -61,15 +61,19 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
             ],
             'service.scope.singleton'       => [
                 'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
-                'scope' => Container::SCOPE_SINGLETON
+                'scope' => Container::SCOPE_SINGLETON,
             ],
             'service.scope.factory'         => [
                 'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
-                'scope' => Container::SCOPE_FACTORY
+                'scope' => Container::SCOPE_FACTORY,
             ],
             'service.scope.prototype'       => [
                 'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
-                'scope' => Container::SCOPE_PROTOTYPE
+                'scope' => Container::SCOPE_PROTOTYPE,
+            ],
+            'service.scope.undefined'       => [
+                'class' => 'Syringe\Component\DI\Tests\Stubs\ServiceInstanceCounter',
+                'scope' => 'undefined_scope',
             ],
             'service.constructor_injection' => [
                 'class'     => 'Syringe\Component\DI\Tests\Stubs\ComplexServiceStub',
@@ -99,6 +103,9 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         'tags' => [
             'tag1' => ['@service.simple', '@service.factory_output']
         ],
+        'aliases' => [
+            'service.simple.alias' => 'service.simple',
+        ],
     ];
 
     /**
@@ -118,9 +125,10 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         return [
             [[]],
-            [['parameters', 'services']],
-            [['parameters', 'tags']],
-            [['services', 'tags']],
+            [['parameters' => [], 'services' => [], 'aliases' => []]],
+            [['parameters' => [], 'tags' => [], 'aliases' => []]],
+            [['services' => [], 'tags' => [], 'aliases' => []]],
+            [['parameters' => [], 'services' => [], 'tags' => []]],
         ];
     }
 
@@ -167,14 +175,16 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($this->container->has('undefined_service'));
     }
 
-    public function testGetService()
+    public function testHasServiceContainerService()
     {
-        /** @var ServiceStub $service */
-        $service = $this->container->get('service.simple');
+        $this->assertTrue($this->container->has(Container::SERVICE_CONTAINER_ID));
+    }
 
-        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service);
-        $this->assertEquals(1, $service->getB());
-        $this->assertEquals(2, $service->getC());
+    public function testGetServiceContainerService()
+    {
+        $service = $this->container->get(Container::SERVICE_CONTAINER_ID);
+
+        $this->assertInstanceOf('\Syringe\Component\DI\Container', $service);
     }
 
     /**
@@ -261,6 +271,14 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, ServiceInstanceCounter::$countCloneInstances);
     }
 
+    /**
+     * @expectedException \Syringe\Component\DI\Exception\BuildServiceException
+     */
+    public function testGetServiceWithUndefinedScope()
+    {
+        $this->container->get('service.scope.undefined');
+    }
+
     public function testConstructorInjection()
     {
         /** @var ComplexServiceStub $service */
@@ -332,5 +350,18 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testTagDependencyIfUndefinedTag()
     {
         $this->container->get('service.tag_dependencies.undefined_tag');
+    }
+
+    public function testHasServiceByAlias()
+    {
+        $this->assertTrue($this->container->has('service.simple.alias'));
+    }
+
+    public function testGetServiceByAlias()
+    {
+        /** @var ServiceStub $service */
+        $service = $this->container->get('service.simple.alias');
+
+        $this->assertInstanceOf('\Syringe\Component\DI\Tests\Stubs\ServiceStub', $service);
     }
 }

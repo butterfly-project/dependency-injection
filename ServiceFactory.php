@@ -2,7 +2,7 @@
 
 namespace Syringe\Component\DI;
 
-class ServiceBuilder
+class ServiceFactory
 {
     /**
      * @var ObjectBuilder
