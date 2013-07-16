@@ -46,12 +46,13 @@ class Container
     /**
      * @var array
      */
-    protected $requiredSections = ['parameters', 'services', 'tags', 'aliases'];
-
-    /**
-     * @var array
-     */
-    protected $configuration;
+    protected $configuration = [
+        'parameters' => [],
+        'interfaces' => [],
+        'services'   => [],
+        'tags'       => [],
+        'aliases'    => [],
+    ];
 
     /**
      * @var Keeper\AbstractKeeper[]
@@ -60,23 +61,17 @@ class Container
 
     /**
      * @param array $configuration
-     * @throws \InvalidArgumentException if not required sections
      */
     public function __construct(array $configuration)
     {
-        $noSections = array_diff($this->requiredSections, array_keys($configuration));
-        if (!empty($noSections)) {
-            throw new \InvalidArgumentException(sprintf("Sections '%s' is required", implode(', ', $noSections)));
-        }
-
-        $this->configuration = $configuration;
+        $this->configuration = array_merge($this->configuration, $configuration);
 
         $this->init();
     }
 
     protected function init()
     {
-        $serviceBuilder = new ServiceFactory($this);
+        $serviceBuilder = new ServiceFactory($this, $this->configuration['interfaces']);
 
         $this->builders = [
             self::SCOPE_SINGLETON => new Keeper\Singleton($serviceBuilder),
