@@ -12,11 +12,18 @@ class ServiceFactory
     protected $container;
 
     /**
-     * @param Container $container
+     * @var array
      */
-    public function __construct(Container $container)
+    protected $interfaces;
+
+    /**
+     * @param Container $container
+     * @param array $interfaces
+     */
+    public function __construct(Container $container, array $interfaces = [])
     {
-        $this->container = $container;
+        $this->container  = $container;
+        $this->interfaces = $interfaces;
     }
 
     /**
@@ -54,7 +61,23 @@ class ServiceFactory
             $this->runTriggers($configuration['postTriggers']);
         }
 
-        return $objectBuilder->getObject();
+        $object = $objectBuilder->getObject();
+
+        $this->injectInterfaces($object);
+
+        return $object;
+    }
+
+    /**
+     * @param mixed $object
+     */
+    protected function injectInterfaces($object)
+    {
+        foreach ($this->interfaces as $interface => $serviceId) {
+            if ($object instanceof $interface) {
+                $this->container->get($serviceId)->inject($object);
+            }
+        }
     }
 
     /**

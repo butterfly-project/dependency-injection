@@ -19,5 +19,5 @@
         }
     },
     "target-dir": "Syringe/Component/DI",
-    "minimum-stability": "dev"
+    "minimum-stability": "master"
 }
