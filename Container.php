@@ -189,7 +189,7 @@ class Container
         $services = [];
 
         foreach ($this->configuration['tags'][$name] as $serviceId) {
-            $services[] = $this->get(substr($serviceId, 1));
+            $services[] = $this->get($serviceId);
         }
 
         return $services;
