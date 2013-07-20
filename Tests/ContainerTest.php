@@ -390,7 +390,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         $configuration = [
             'tags' => [
-                'tag1' => ['@service.simple', '@service.factory_output']
+                'tag1' => ['service.simple', 'service.factory_output']
             ],
         ];
         $container     = new Container($configuration);
@@ -410,7 +410,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         $configuration = [
             'tags' => [
-                'tag1' => ['@service.simple', '@service.factory_output']
+                'tag1' => ['service.simple', 'service.factory_output']
             ],
         ];
         $container     = new Container($configuration);
@@ -435,7 +435,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
                 ],
             ],
             'tags'     => [
-                'tag1' => ['@service.simple', '@service.factory_output']
+                'tag1' => ['service.simple', 'service.factory_output']
             ],
         ];
         $container     = new Container($configuration);
@@ -477,7 +477,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
                 ],
             ],
             'tags'     => [
-                'tag1' => ['@service.simple', '@service.factory_output']
+                'tag1' => ['service.simple', 'service.factory_output']
             ],
         ];
         $container     = new Container($configuration);
