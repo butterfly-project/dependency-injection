@@ -11,7 +11,8 @@
         }
     ],
     "require": {
-        "php": ">=5.3.3"
+        "php": ">=5.3.3",
+        "symfony/yaml": "v2.3.2"
     },
     "autoload": {
         "psr-0": {
