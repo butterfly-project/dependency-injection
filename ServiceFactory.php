@@ -225,6 +225,7 @@ class ServiceFactory
 
     /**
      * @param Object|null $object
+     * @return ObjectBuilder
      */
     protected function createObjectBuilder($object = null)
     {
