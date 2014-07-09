@@ -57,13 +57,13 @@ class ServiceFactory
             $this->initProperties($objectBuilder, $configuration['properties']);
         }
 
-        if (isset($configuration['postTriggers'])) {
-            $this->runTriggers($configuration['postTriggers']);
-        }
-
         $object = $objectBuilder->getObject();
 
         $this->injectInterfaces($object);
+
+        if (isset($configuration['postTriggers'])) {
+            $this->runTriggers($configuration['postTriggers']);
+        }
 
         return $object;
     }
