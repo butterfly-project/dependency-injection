@@ -585,13 +585,15 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
                     'class'        => 'Syringe\Component\DI\Tests\Stubs\UseStaticTriggerService',
                     'preTriggers'  => [
                         [
-                            'class'     => 'Syringe\Component\DI\Tests\Stubs\StaticTriggerService', 'method' => 'setA',
+                            'class'     => 'Syringe\Component\DI\Tests\Stubs\StaticTriggerService',
+                            'method'    => 'setA',
                             'arguments' => ['pre']
                         ],
                     ],
                     'postTriggers' => [
                         [
-                            'class'     => 'Syringe\Component\DI\Tests\Stubs\StaticTriggerService', 'method' => 'setA',
+                            'class'     => 'Syringe\Component\DI\Tests\Stubs\StaticTriggerService',
+                            'method'    => 'setA',
                             'arguments' => ['post']
                         ],
                     ],
