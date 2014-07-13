@@ -1,0 +1,4 @@
+services:
+  bar:
+    class: '\Syringe\Component\DI\Tests\Stubs\ServiceStub'
+    arguments: ['value1', 'value2']
