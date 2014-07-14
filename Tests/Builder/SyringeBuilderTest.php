@@ -1,6 +1,6 @@
 <?php
 
-namespace Syringe\Component\DI\Tests\Integration\Builder;
+namespace Syringe\Component\DI\Tests\Builder;
 
 use Syringe\Component\DI\Builder\SyringeBuilder;
 
@@ -8,7 +8,7 @@ class SyringeBuilderTest extends \PHPUnit_Framework_TestCase
 {
     public function getDataForTestBuild()
     {
-        $dir = __DIR__ . '/configs/';
+        $dir = __DIR__ . '/config/';
 
         return array(
             array(

@@ -1,0 +1,58 @@
+{
+    "parameters": {
+        "parameter.one": "value1",
+        "parameter.two": "value2",
+        "parameter.tree": "value3"
+    },
+    "interfaces": {
+        "Me\\IFooAware": "foo"
+    },
+    "services": {
+        "foo": {
+            "class": "Me\\Foo",
+            "tags": ["foobars"]
+        },
+        "bar": {
+            "class": "Me\\Bar",
+            "tags": ["foobars"]
+        },
+
+        "factory": {
+            "class": "Me\\Factory",
+            "arguments": ["%parameter.one%"],
+            "calls": [
+                ["setParameterTwo", ["%parameter.two%"]],
+                ["setParameterThree", ["%parameter.tree%"]]
+            ],
+            "properties": {
+                "foo": "@foo",
+                "foobars": "#foobars"
+            },
+            "alias": "factory.alias"
+        },
+
+        "from_factory": {
+
+            "factoryMethod": ["@factory", "create"],
+            "scope": "prototype"
+        },
+
+        "from_static_factory": {
+            "factoryStaticMethod": ["Me\\Factory", "create"],
+            "preTriggers": [
+                {
+                    "service": "@bar",
+                    "method": "beforeCreate",
+                    "arguments": ["value1"]
+                }
+            ],
+            "postTriggers": [
+                {
+                    "service": "@bar",
+                    "method": "afterCreate",
+                    "arguments": ["value2"]
+                }
+            ]
+        }
+    }
+}
