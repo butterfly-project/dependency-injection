@@ -6,60 +6,55 @@ use Syringe\Component\DI\Builder\SyringeBuilder;
 
 class SyringeBuilderTest extends \PHPUnit_Framework_TestCase
 {
-    public function getDataForTestBuild()
+    public function testBuild()
     {
-        $dir = __DIR__ . '/config/';
+        $dir    = __DIR__ . '/config/';
+        $input  = $dir . '/config_one.yml';
+        $output = $dir . '/config_one_result.php';
 
-        return array(
-            array(
-                $dir . '/config_one.yml',
-                $dir . '/config_one_result.php',
-                SyringeBuilder::MODE_ONE_CONFIG,
-                array(
-                    'parameters' => array(),
-                    'services'   => array(
-                        'foo' => array(
-                            'class' => '\Syringe\Component\DI\Tests\Stubs\ServiceStub',
-                        ),
-                    ),
-                    'aliases'    => array(),
-                    'tags'       => array(),
+        SyringeBuilder::build($input, $output);
+
+        $expected = array(
+            'parameters' => array(),
+            'services'   => array(
+                'foo' => array(
+                    'class' => '\Syringe\Component\DI\Tests\Stubs\ServiceStub',
                 ),
             ),
-
-            array(
-                $dir . '/config_multiple.php',
-                $dir . '/config_multiple_result.php',
-                SyringeBuilder::MODE_MULTIPLE_CONFIGS,
-                array(
-                    'parameters' => array(),
-                    'services'   => array(
-                        'foo' => array(
-                            'class' => '\Syringe\Component\DI\Tests\Stubs\ServiceStub',
-                        ),
-                        'bar' => array(
-                            'class' => '\Syringe\Component\DI\Tests\Stubs\ServiceStub',
-                            'arguments' => array('value1', 'value2'),
-                        ),
-                    ),
-                    'aliases'    => array(),
-                    'tags'       => array(),
-                ),
-            ),
+            'aliases'    => array(),
+            'tags'       => array(),
         );
+
+        $this->assertEquals($expected, require $output);
+
+        unlink($output);
     }
 
-    /**
-     * @param string $input
-     * @param string $output
-     * @param string $mode
-     * @param array $expected
-     *
-     * @dataProvider getDataForTestBuild
-     */
-    public function testBuild($input, $output, $mode, array $expected)
+    public function testBuildForIterator()
     {
-        SyringeBuilder::build($input, $output, $mode);
+        $dir    = __DIR__ . '/config/';
+        $inputConfigs  = array(
+            $dir . '/config_multiple_1.yml',
+            $dir . '/config_multiple_2.yml',
+        );
+        $output = $dir . '/config_one_result.php';
+
+        SyringeBuilder::buildForArray($inputConfigs, $output);
+
+        $expected = array(
+            'parameters' => array(),
+            'services'   => array(
+                'foo' => array(
+                    'class' => '\Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                ),
+                'bar' => array(
+                    'class' => '\Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => array('value1', 'value2'),
+                ),
+            ),
+            'aliases'    => array(),
+            'tags'       => array(),
+        );
 
         $this->assertEquals($expected, require $output);
 

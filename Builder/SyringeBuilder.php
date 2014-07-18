@@ -6,36 +6,49 @@ use Syringe\Component\DI\Container;
 
 class SyringeBuilder
 {
-    const MODE_ONE_CONFIG       = 'one_config';
-    const MODE_MULTIPLE_CONFIGS = 'multiple_configs';
-
-    protected static $availableAdapters = array(
-        self::MODE_ONE_CONFIG       => 'one_config.builder',
-        self::MODE_MULTIPLE_CONFIGS => 'multiple_configs.builder',
-    );
+    /**
+     * @param string $configPath
+     * @param string $output
+     */
+    public static function build($configPath, $output)
+    {
+        self::buildForArray(array($configPath), $output);
+    }
 
     /**
-     * @param string $input
+     * @param array $configsPaths
      * @param string $output
-     * @param string $mode
-     * @throws \InvalidArgumentException if output configuration file is not writable
-     * @throws \InvalidArgumentException if mode is not available
      */
-    public static function build($input, $output, $mode = self::MODE_ONE_CONFIG)
+    public static function buildForArray(array $configsPaths, $output)
     {
-        if (!self::isWritable($output)) {
-            throw new \InvalidArgumentException(sprintf("Output configuration file '%s' is not writable", $output));
-        }
+        self::dumpConfig(self::getCompiler()->compile($configsPaths), $output);
+    }
 
-        if (!isset(self::$availableAdapters[$mode])) {
-            throw new \InvalidArgumentException(sprintf("Mode %s is not available"));
-        }
-
+    /**
+     * @return ConfigCompiler
+     */
+    protected static function getCompiler()
+    {
         $containerConfig = require __DIR__ . '/config.php';
         $container       = new Container($containerConfig);
 
-        $builder = $container->get(self::$availableAdapters[$mode]);
-        $builder->run($input, $output);
+        return $container->get('config_compiler');
+    }
+
+    /**
+     * @param string $outputConfigFile
+     * @param array $configuration
+     * @throws \InvalidArgumentException if output configuration file is not writable
+     */
+    protected static function dumpConfig(array $configuration, $outputConfigFile)
+    {
+        if (!self::isWritable($outputConfigFile)) {
+            throw new \InvalidArgumentException(sprintf("Output configuration file '%s' is not writable", $outputConfigFile));
+        }
+
+        $data = sprintf("<?php return %s;", var_export($configuration, true));
+
+        file_put_contents($outputConfigFile, $data);
     }
 
     /**
