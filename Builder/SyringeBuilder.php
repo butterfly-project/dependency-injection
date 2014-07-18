@@ -2,10 +2,16 @@
 
 namespace Syringe\Component\DI\Builder;
 
+use Syringe\Component\DI\Builder\Parser\IParser;
 use Syringe\Component\DI\Container;
 
 class SyringeBuilder
 {
+    /**
+     * @var Container
+     */
+    protected static $container;
+
     /**
      * @param string $configPath
      * @param string $output
@@ -16,23 +22,48 @@ class SyringeBuilder
     }
 
     /**
-     * @param array $configsPaths
+     * @param array $configs
      * @param string $output
      */
-    public static function buildForArray(array $configsPaths, $output)
+    public static function buildForArray(array $configs, $output)
     {
-        self::dumpConfig(self::getCompiler()->compile($configsPaths), $output);
+        $builder = self::getBuilder();
+        $parser  = self::getParser();
+
+        foreach ($configs as $config) {
+            $builder->addConfiguration($parser->parse($config));
+        }
+
+        self::dumpConfig($builder->build(), $output);
     }
 
     /**
-     * @return ConfigCompiler
+     * @return Builder
      */
-    protected static function getCompiler()
+    protected static function getBuilder()
     {
-        $containerConfig = require __DIR__ . '/config.php';
-        $container       = new Container($containerConfig);
+        return self::getContainer()->get('builder');
+    }
 
-        return $container->get('config_compiler');
+    /**
+     * @return IParser
+     */
+    protected static function getParser()
+    {
+        return self::getContainer()->get('config_parser');
+    }
+
+    /**
+     * @return Container
+     */
+    protected static function getContainer()
+    {
+        if (null !== self::$container) {
+            $containerConfig = require __DIR__ . '/config.php';
+            self::$container = new Container($containerConfig);
+        }
+
+        return self::$container;
     }
 
     /**
