@@ -2,12 +2,8 @@
 
 return array(
     'services' => array(
-        'one_config.builder' => array(
-            'class' => 'Syringe\Component\DI\Builder\Adapter\OneConfigBuilder',
-            'arguments' => array('@builder', '@config_parser'),
-        ),
-        'multiple_configs.builder' => array(
-            'class' => 'Syringe\Component\DI\Builder\Adapter\MultipleConfigBuilder',
+        'config_compiler' => array(
+            'class' => 'Syringe\Component\DI\Builder\ConfigCompiler',
             'arguments' => array('@builder', '@config_parser'),
         ),
         'builder' => array(
