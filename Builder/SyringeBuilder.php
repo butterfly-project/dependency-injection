@@ -58,7 +58,7 @@ class SyringeBuilder
      */
     protected static function getContainer()
     {
-        if (null !== self::$container) {
+        if (null === self::$container) {
             $containerConfig = require __DIR__ . '/config.php';
             self::$container = new Container($containerConfig);
         }
