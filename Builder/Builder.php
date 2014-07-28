@@ -101,7 +101,7 @@ class Builder implements IConfigurationResolverAware
             $configuration = $this->resolver->resolve($configuration);
         }
 
-        $services = $configuration[self::SECTION_SERVICES];
+        $services = isset($configuration[self::SECTION_SERVICES]) ? $configuration[self::SECTION_SERVICES] : array();
         unset($configuration[self::SECTION_SERVICES]);
 
         return array(

@@ -179,4 +179,28 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals($this->expectedConfiguration, $configuration);
     }
+
+    public function testEmptyServiceBuild()
+    {
+        $containerBuilder = new Builder();
+
+        $containerBuilder->setResolver(new Resolver());
+        $containerBuilder->addServiceVisitor(new ConfigurationValidator($this->rightSections, $this->rightScopes));
+        $containerBuilder->addServiceVisitor(new ServiceCollector\ServiceCollector());
+        $containerBuilder->addServiceVisitor(new ServiceCollector\TagCollector());
+        $containerBuilder->addServiceVisitor(new ServiceCollector\AliasCollector());
+
+        $containerBuilder->addConfiguration(array());
+
+        $containerBuilder->build();
+        $configuration = $containerBuilder->build();
+
+        $expectedConfig = array(
+            'parameters' => array(),
+            'services'   => array(),
+            'tags'       => array(),
+            'aliases'    => array(),
+        );
+        $this->assertEquals($expectedConfig, $configuration);
+    }
 }
