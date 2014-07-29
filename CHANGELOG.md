@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+1.4.4
+-----
+
+Changes:
+ * Fix bug for di-interfaces section
+
 1.4.3
 -----
 
