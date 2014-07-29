@@ -21,6 +21,7 @@ class SyringeBuilderTest extends \PHPUnit_Framework_TestCase
                     'class' => '\Syringe\Component\DI\Tests\Stubs\ServiceStub',
                 ),
             ),
+            'interfaces' => array(),
             'aliases'    => array(),
             'tags'       => array(),
         );
@@ -52,6 +53,7 @@ class SyringeBuilderTest extends \PHPUnit_Framework_TestCase
                     'arguments' => array('value1', 'value2'),
                 ),
             ),
+            'interfaces' => array(),
             'aliases'    => array(),
             'tags'       => array(),
         );

@@ -14,6 +14,7 @@ use Syringe\Component\DI\Builder\ServiceCollector\IConfigurationCollector;
 class Builder implements IConfigurationResolverAware
 {
     const SECTION_SERVICES   = 'services';
+    const SECTION_INTERFACES = 'interfaces';
     const SECTION_PARAMETERS = 'parameters';
 
     /**
@@ -101,13 +102,27 @@ class Builder implements IConfigurationResolverAware
             $configuration = $this->resolver->resolve($configuration);
         }
 
-        $services = isset($configuration[self::SECTION_SERVICES]) ? $configuration[self::SECTION_SERVICES] : array();
+        $services   = $this->getSection($configuration, self::SECTION_SERVICES);
+        $interfaces = $this->getSection($configuration, self::SECTION_INTERFACES);
+
         unset($configuration[self::SECTION_SERVICES]);
+        unset($configuration[self::SECTION_INTERFACES]);
 
         return array(
             self::SECTION_PARAMETERS => $configuration,
             self::SECTION_SERVICES   => $services,
+            self::SECTION_INTERFACES => $interfaces,
         );
+    }
+
+    /**
+     * @param array $configuration
+     * @param string $name
+     * @return array
+     */
+    private function getSection(array $configuration, $name)
+    {
+        return isset($configuration[$name]) ? $configuration[$name] : array();
     }
 
     /**

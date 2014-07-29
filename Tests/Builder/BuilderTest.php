@@ -42,6 +42,9 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
         'parameter_string2' => 'b',
         'parameter_array'   => [1, 2, 3],
         'parameter_complex' => '%parameter_string%/%parameter_string2%',
+        'interfaces'        => [
+            'Syringe\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.simple',
+        ],
         'services'          => [
             'service.simple'                => [
                 'class'      => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
@@ -141,6 +144,9 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
         'aliases'    => [
             'service.simple.alias' => 'service.simple',
         ],
+        'interfaces' => [
+            'Syringe\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.simple'
+        ],
     ];
 
     public function testBuild()
@@ -200,6 +206,7 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
             'services'   => array(),
             'tags'       => array(),
             'aliases'    => array(),
+            'interfaces' => array(),
         );
         $this->assertEquals($expectedConfig, $configuration);
     }
