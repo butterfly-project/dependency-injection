@@ -53,7 +53,7 @@ class Resolver implements IConfigurationResolver
      * @return mixed  The parameter value
      * @throws ParameterNotFoundException if the parameter is not defined
      */
-    protected function get($name)
+    public function get($name)
     {
         $name = strtolower($name);
 
@@ -106,7 +106,7 @@ class Resolver implements IConfigurationResolver
      * @throws ParameterCircularReferenceException if a circular reference if detected
      * @throws \RuntimeException when a given parameter has a type problem.
      */
-    protected function resolveString($value, array $resolving = array())
+    public function resolveString($value, array $resolving = array())
     {
         // we do this to deal with non string values (Boolean, integer, ...)
         // as the preg_replace_callback throw an exception when trying

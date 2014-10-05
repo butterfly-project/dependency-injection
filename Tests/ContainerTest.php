@@ -445,6 +445,33 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(2, $servicesByTag);
     }
 
+    public function testGetServicesIdsByTag()
+    {
+        $configuration = [
+            'services' => [
+                'service.simple'         => [
+                    'class'     => 'Syringe\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => [1, 2]
+                ],
+                'service.factory'        => [
+                    'class' => 'Syringe\Component\DI\Tests\Stubs\FactoryService',
+                ],
+                'service.factory_output' => [
+                    'factoryMethod' => ['@service.factory', 'create'],
+                    'arguments'     => [1, 2],
+                ],
+            ],
+            'tags'     => [
+                'tag1' => ['service.simple', 'service.factory_output']
+            ],
+        ];
+        $container     = new Container($configuration);
+
+        $servicesByTag = $container->getServicesIdsByTag('tag1');
+
+        $this->assertEquals(['service.simple', 'service.factory_output'], $servicesByTag);
+    }
+
     /**
      * @expectedException \Syringe\Component\DI\Exception\UndefinedTagException
      */

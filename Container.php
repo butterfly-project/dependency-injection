@@ -46,13 +46,13 @@ class Container
     /**
      * @var array
      */
-    protected $configuration = [
-        'parameters' => [],
-        'interfaces' => [],
-        'services'   => [],
-        'tags'       => [],
-        'aliases'    => [],
-    ];
+    protected $configuration = array(
+        'parameters' => array(),
+        'interfaces' => array(),
+        'services'   => array(),
+        'tags'       => array(),
+        'aliases'    => array(),
+    );
 
     /**
      * @var Keeper\AbstractKeeper[]
@@ -73,12 +73,12 @@ class Container
     {
         $serviceBuilder = new ServiceFactory($this, $this->configuration['interfaces']);
 
-        $this->builders = [
+        $this->builders = array(
             self::SCOPE_SINGLETON => new Keeper\Singleton($serviceBuilder),
             self::SCOPE_PROTOTYPE => new Keeper\Prototype($serviceBuilder),
             self::SCOPE_FACTORY   => new Keeper\Factory($serviceBuilder),
             self::SCOPE_SYNTHETIC => new Keeper\Synthetic(),
-        ];
+        );
     }
 
     /**
@@ -180,19 +180,31 @@ class Container
      */
     public function getServicesByTag($name)
     {
+        $servicesIds = $this->getServicesIdsByTag($name);
+
+        $services = array();
+
+        foreach ($servicesIds as $serviceId) {
+            $services[] = $this->get($serviceId);
+        }
+
+        return $services;
+    }
+
+    /**
+     * @param string $name
+     * @return array
+     * @throws UndefinedTagException if tag is not found
+     */
+    public function getServicesIdsByTag($name)
+    {
         $name = strtolower($name);
 
         if (!$this->hasTag($name)) {
             throw new UndefinedTagException(sprintf("Tag '%s' is not found", $name));
         }
 
-        $services = [];
-
-        foreach ($this->configuration['tags'][$name] as $serviceId) {
-            $services[] = $this->get($serviceId);
-        }
-
-        return $services;
+        return $this->configuration['tags'][$name];
     }
 
     /**
@@ -204,7 +216,8 @@ class Container
     {
         $id = strtolower($id);
 
-        $serviceClass = $this->getServiceDefinition($id)['class'];
+        $serviceDefinition = $this->getServiceDefinition($id);
+        $serviceClass      = $serviceDefinition['class'];
 
         if (!($service instanceof $serviceClass)) {
             throw new IncorrectSyntheticServiceException(sprintf(

@@ -20,7 +20,7 @@ class ServiceFactory
      * @param Container $container
      * @param array $interfaces
      */
-    public function __construct(Container $container, array $interfaces = [])
+    public function __construct(Container $container, array $interfaces = array())
     {
         $this->container  = $container;
         $this->interfaces = $interfaces;
@@ -87,7 +87,7 @@ class ServiceFactory
      */
     protected function createService(ObjectBuilder $objectBuilder, array $configuration)
     {
-        $dependencies = !empty($configuration['arguments']) ? $configuration['arguments'] : [];
+        $dependencies = !empty($configuration['arguments']) ? $configuration['arguments'] : array();
         $arguments    = $this->resolveDependencies($dependencies);
 
         if (isset($configuration['class'])) {
@@ -178,7 +178,7 @@ class ServiceFactory
             ));
         }
 
-        $callback  = [$triggerConfiguration['class'], $triggerConfiguration['method']];
+        $callback  = array($triggerConfiguration['class'], $triggerConfiguration['method']);
         $arguments = $this->resolveDependencies($triggerConfiguration['arguments']);
 
         call_user_func_array($callback, $arguments);
@@ -190,7 +190,7 @@ class ServiceFactory
      */
     protected function resolveDependencies(array $dependencies)
     {
-        $resolvedDependencies = [];
+        $resolvedDependencies = array();
 
         foreach ($dependencies as $dependence) {
             $resolvedDependencies[] = $this->resolveDependence($dependence);
