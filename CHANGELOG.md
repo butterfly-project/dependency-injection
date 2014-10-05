@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+1.4.5
+-----
+
+Changes:
+ * Fix bug for incorrect Builder DI configuraton
+
 1.4.4
 -----
 

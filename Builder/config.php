@@ -9,8 +9,8 @@ return array(
         'builder' => array(
             'class' => 'Syringe\Component\DI\Builder\Builder',
             'calls' => array(
-                array('setResolver', ['@resolver']),
-                array('addServiceVisitors', ['#service_visitor']),
+                array('setResolver', array('@resolver')),
+                array('addServiceVisitors', array('#service_visitor')),
             ),
         ),
         'resolver' => array(
