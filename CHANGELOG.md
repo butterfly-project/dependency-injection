@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+1.4.6
+-----
+
+Changes:
+ * Make it possible to use php 5.3
+
 1.4.5
 -----
 
