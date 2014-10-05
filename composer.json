@@ -10,6 +10,9 @@
             "email": "marat.fakhertdinov@gmail.com"
         }
     ],
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*"
+    },
     "require": {
         "php": ">=5.3.3",
         "symfony/yaml": "v2.3.2"

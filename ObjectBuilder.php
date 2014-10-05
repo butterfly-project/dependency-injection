@@ -25,7 +25,7 @@ class ObjectBuilder
      * @return $this
      * @throws BuildObjectException if class is not found
      */
-    public function nativeCreate($className, array $arguments = [])
+    public function nativeCreate($className, array $arguments = array())
     {
         if (!class_exists($className)) {
             throw new BuildObjectException(sprintf("Class '%s' is not found", $className));
@@ -48,7 +48,7 @@ class ObjectBuilder
      * @throws BuildObjectException if factory class is not found
      * @throws BuildObjectException if factory method is not found
      */
-    public function staticFactoryMethodCreate($factoryClassName, $methodName, array $arguments = [])
+    public function staticFactoryMethodCreate($factoryClassName, $methodName, array $arguments = array())
     {
         if (!class_exists($factoryClassName)) {
             throw new BuildObjectException(sprintf("Factory class '%s' is not found", $factoryClassName));
@@ -60,7 +60,7 @@ class ObjectBuilder
             );
         }
 
-        $this->object = call_user_func_array([$factoryClassName, $methodName], $arguments);
+        $this->object = call_user_func_array(array($factoryClassName, $methodName), $arguments);
 
         return $this;
     }
@@ -72,7 +72,7 @@ class ObjectBuilder
      * @return $this
      * @throws BuildObjectException if factory method is not found
      */
-    public function factoryMethodCreate($factory, $methodName, array $arguments = [])
+    public function factoryMethodCreate($factory, $methodName, array $arguments = array())
     {
         if (!method_exists($factory, $methodName)) {
             throw new BuildObjectException(
@@ -80,7 +80,7 @@ class ObjectBuilder
             );
         }
 
-        $this->object = call_user_func_array([$factory, $methodName], $arguments);
+        $this->object = call_user_func_array(array($factory, $methodName), $arguments);
 
         return $this;
     }
@@ -91,7 +91,7 @@ class ObjectBuilder
      * @return $this
      * @throws BuildObjectException if object's method is not found
      */
-    public function callObjectMethod($methodName, array $arguments = [])
+    public function callObjectMethod($methodName, array $arguments = array())
     {
         if (!method_exists($this->object, $methodName)) {
             throw new BuildObjectException(
@@ -99,7 +99,7 @@ class ObjectBuilder
             );
         }
 
-        call_user_func_array([$this->object, $methodName], $arguments);
+        call_user_func_array(array($this->object, $methodName), $arguments);
 
         return $this;
     }

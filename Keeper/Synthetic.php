@@ -9,7 +9,7 @@ class Synthetic
     /**
      * @var array
      */
-    protected $services = [];
+    protected $services = array();
 
     /**
      * @param string $id
