@@ -19,7 +19,7 @@ class Sf2YamlParser implements IFileSupportedParser
             throw new \InvalidArgumentException(sprintf("This file format '%s' is not supported", $file));
         }
 
-        return Yaml::parse($file);
+        return (array)Yaml::parse($file);
     }
 
     /**
