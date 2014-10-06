@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+1.4.7
+-----
+
+Changes:
+ * Fix bug for parse empty Yaml configs
+
 1.4.6
 -----
 
