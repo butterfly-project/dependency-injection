@@ -1,4 +1,4 @@
-Syringe
+Butterfly
 =======
 
-Syringe IoC Container (DI)
+Butterfly IoC Container (DI)
