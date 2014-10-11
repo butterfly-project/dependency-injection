@@ -1,5 +1,5 @@
 {
-    "name": "butterfly-project/dependency-injection",
+    "name": "butterfly/dependency-injection",
     "type": "library",
     "description": "Butterfly. PHP Dependency Injection Component",
     "keywords": ["Dependency Injection", "DI", "IoC", "Container"],
