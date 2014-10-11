@@ -10,6 +10,11 @@ use Butterfly\Component\DI\Container;
 class DiConfig
 {
     /**
+     * @var Container
+     */
+    private static $container;
+
+    /**
      * @param array $config
      * @param string $outputPath
      */
@@ -35,9 +40,13 @@ class DiConfig
      */
     protected static function getContainer()
     {
-        $containerConfig = require __DIR__ . '/config.php';
+        if (null === self::$container) {
+            $containerConfig = require __DIR__ . '/config.php';
 
-        return new Container($containerConfig);
+            self::$container = new Container($containerConfig);
+        }
+
+        return self::$container;
     }
 
     /**
