@@ -11,9 +11,6 @@
 
 namespace Butterfly\Component\DI\Builder\ParameterResolver;
 
-use Butterfly\Component\DI\Builder\ParameterResolver\ParameterNotFoundException;
-use Butterfly\Component\DI\Builder\ParameterResolver\ParameterCircularReferenceException;
-
 /**
  * Source: Symfony 2 ParameterBag
  *
@@ -29,6 +26,9 @@ class Resolver implements IConfigurationResolver
 
     /**
      * Replaces parameter placeholders (%name%) by their values for all parameters.
+     *
+     * @param array $parameters
+     * @return array
      */
     public function resolve(array $parameters)
     {

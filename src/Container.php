@@ -206,7 +206,7 @@ class Container
 
     /**
      * @param string $id
-     * @param Object $service
+     * @param object $service
      * @throws IncorrectSyntheticServiceException if incorrect object class
      */
     public function setSyntheticService($id, $service)
@@ -223,7 +223,9 @@ class Container
             ));
         }
 
-        $this->builders[self::SCOPE_SYNTHETIC]->setService($id, $service);
+        /** @var Keeper\Synthetic $synteticKeeper */
+        $synteticKeeper = $this->getBuilder(self::SCOPE_SYNTHETIC);
+        $synteticKeeper->setService($id, $service);
     }
 
     /**

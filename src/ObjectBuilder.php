@@ -69,7 +69,7 @@ class ObjectBuilder
     }
 
     /**
-     * @param string $factory
+     * @param object $factory
      * @param string $methodName
      * @param array $arguments
      * @return $this

@@ -16,10 +16,9 @@ class Synthetic
 
     /**
      * @param string $id
-     * @param array $configuration
      * @return Object
      */
-    public function buildObject($id, array $configuration)
+    public function buildObject($id)
     {
         if (!array_key_exists($id, $this->services)) {
             throw new BuildServiceException(sprintf("Synthetic Service '%s' is not found", $id));
