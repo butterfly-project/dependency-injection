@@ -1,8 +1,8 @@
 {
-    "name": "syringe/dependency-injection",
+    "name": "butterfly-project/dependency-injection",
     "type": "library",
-    "description": "Syringe Dependency Injection Component",
-    "keywords": ["DI", "IoC", "Container", "Dependency Injection"],
+    "description": "Butterfly. PHP Dependency Injection Component",
+    "keywords": ["Dependency Injection", "DI", "IoC", "Container"],
     "license": "MIT",
     "authors": [
         {
@@ -14,14 +14,13 @@
         "phpunit/phpunit": "3.7.*"
     },
     "require": {
-        "php": ">=5.3.3",
-        "symfony/yaml": "v2.3.2"
+        "php": ">=5.3.3"
     },
     "autoload": {
-        "psr-0": {
-            "Syringe\\Component\\DI\\": ""
+        "psr-4": {
+            "Butterfly\\Component\\DI\\": "src/",
+            "Butterfly\\Component\\DI\\Tests\\": "tests/"
         }
     },
-    "target-dir": "Syringe/Component/DI",
     "minimum-stability": "dev"
 }
