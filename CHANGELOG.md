@@ -1,134 +1,162 @@
 CHANGELOG
 =========
 
+1.5.0
+-----
+
+Changes:
+
+ * Rename to 'Butterfly. PHP Configuration Component'
+ * Rename 'SyringeBuilder' to 'DiConfig' 
+ * Extract actions: parse and merge configuration to component 'butterfly-project/config' 
+
 1.4.7
 -----
 
 Changes:
+
  * Fix bug for parse empty Yaml configs
 
 1.4.6
 -----
 
 Changes:
+
  * Make it possible to use php 5.3
 
 1.4.5
 -----
 
 Changes:
+
  * Fix bug for incorrect Builder DI configuraton
 
 1.4.4
 -----
 
 Changes:
+
  * Fix bug for di-interfaces section
 
 1.4.3
 -----
 
-Изменения:
- * Рефакторинг SyringeBuilder
+Changes:
+
+ * SyringeBuilder refactoring
 
 1.4.2
 -----
 
-Изменения:
- * Изменена логика сборки конфигурации
+Changes:
+
+ * Change build config logic
 
 1.4.1
 -----
 
-Добавлен функционал:
- * Добавлен Json парсер
- * Парсеры покрыты тестами
+Added functionality:
+
+ * Added Json parser
+ * Added parser tests 
 
 1.4.0
 -----
 
-Добавлен функционал:
- * ContainerConfigurationBuilder заменен на SyringeBuilder с использованием адаптеров.
+Added functionality:
+
+ * ContainerConfigurationBuilder moved to SyringeBuilder with adapter uses.
 
 1.3.2
 -----
 
-Изменения:
- * Исправлен баг по порядку вызова postTrigger
+Changes:
+
+ * Fix bug for orders of call postTrigger
 
 1.3.1
 -----
 
-Добавлен функционал:
- * Автосборка конфигурации контейнера из php, yml файлов
+Added functionality:
+
+ * Autobuild container configuration from php, yml files
 
 1.3.0
 -----
 
-Изменения:
- * Добавлен IoC Builder
+Changes:
 
-Функционал Builder-а:
- * Шаблоны из параметров (Sf2 ParameterBag resolver)
- * Валидация конфигурации сервисов
- * Алиасы сервисов
- * Сборка тегов
- * Наследование конфигураций
- * Загрузка serviceVisitors массивом
+ * Added IoC Builder
+
+Added functionality:
+
+ * Templates vars (Sf2 ParameterBag resolver)
+ * Validation of Service configuration
+ * Services aliases
+ * Tag build
+ * Configuration inheritance
+ * ServiceVisitors load as list
 
 1.2.2
 -----
 
-Изменения:
- * Изменен синтаксис описания тега в конфигурации IoC
+Changes:
+
+ * Changet tag description syntax in IoC configuration
 
 1.2.1
 -----
 
-Изменения:
- * Исправлена конфигурация composer
+Changes:
+
+ * Fix composer configuration
 
 1.2.0
 -----
 
-Добавлен функционал:
- * Внедрение интерфейса
+Added functionality:
 
-Изменения:
- * Билдер конфигурации контейнера вынесен в отдельный проект SyringeBuilder
+ * Interface injection
+
+Changes:
+
+ * Configuration builder extract to SyringeBuilder project
 
 1.1.0
 -----
 
-Добавлен функционал:
- * Алиасы сервисов
- * Триггеры (обычные и статические). Вызов метода перед (pre) и после (post)
-   создания сервиса. В качестве тригеров возможны обычные и статические методы.
- * Синтетические сервисы
- * Внедрение зависимости в защищенные свойства объекта (private, protected)
- * Наследование конфигураций
+Added functionality:
+
+ * Service aliases
+ * Triggers (basic and static). Call methods before (pre) and after (post)
+   service created.
+ * Syntetic services
+ * Dependency injection in private and protected object properties
+ * Configuration inheritance
 
 1.0.1
 -----
 
-Изменения:
- * Подготовка к выкладке на Packagist.org
+Changes:
+
+ * Preparing to deploy in Packagist.org
 
 1.0.0
 -----
 
-Добавлен функционал:
- * Проверка наличия параметра
- * Получить параметр
- * Проверить наличие сервиса
- * Внедрение зависимости через конструктор
- * Внедрение зависимости через метод
- * Внедрение зависимости через публичное свойство
- * Внедрение зависимости по тегу
- * Получение сервиса
- * Получение сервиса через фабричный статический метод
- * Получение сервиса через фабрику
- * Получение сервиса в режиме синглтона
- * Получение сервиса в режиме фабрики (каждый запрос - новый инстанс)
- * Получение сервиса в режиме прототипа (каждый запрос - клонирование)
- * Получение списка сервисов по тегу
+Added functionality:
+
+ * Check parameter availabilty
+ * Get parameter
+ * Check service availabilty
+ * Dependency injection through constructor
+ * Dependency injection through method
+ * Dependency injection through public property
+ * Dependency injection for tag
+ * Get service
+ * Get service through static factory
+ * Get service through factory
+ * Get service as singleton mode
+ * Get service as new-instance mode
+ * Get service as prototype mode
+ * Get services list by tag
