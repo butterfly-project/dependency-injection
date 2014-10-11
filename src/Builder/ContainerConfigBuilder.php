@@ -11,7 +11,7 @@ use Butterfly\Component\DI\Builder\ServiceCollector\IConfigurationCollector;
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
-class Builder implements IConfigurationResolverAware
+class ContainerConfigBuilder implements IConfigurationResolverAware
 {
     const SECTION_SERVICES   = 'services';
     const SECTION_INTERFACES = 'interfaces';
@@ -62,9 +62,9 @@ class Builder implements IConfigurationResolverAware
      * @param array $configuration
      * @return $this
      */
-    public function addConfiguration(array $configuration)
+    public function setConfiguration(array $configuration)
     {
-        $this->configuration = array_replace_recursive($this->configuration, $configuration);
+        $this->configuration = $configuration;
 
         return $this;
     }
@@ -79,6 +79,7 @@ class Builder implements IConfigurationResolverAware
 
         $this->cleanVisitors($this->visitors);
         $this->runServiceVisits($this->visitors, $configuration);
+
         return array_merge($configuration, $this->resolveServiceConfiguration($this->visitors));
     }
 

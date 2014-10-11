@@ -4,6 +4,9 @@ namespace Butterfly\Component\DI\Tests\Stubs;
 
 use Butterfly\Component\DI\IInjector;
 
+/**
+ * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
+ */
 class ServiceFoo implements IInjector
 {
     /**

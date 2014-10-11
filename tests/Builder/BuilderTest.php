@@ -2,7 +2,7 @@
 
 namespace Butterfly\Component\DI\Tests\Builder;
 
-use Butterfly\Component\DI\Builder\Builder;
+use Butterfly\Component\DI\Builder\ContainerConfigBuilder;
 use Butterfly\Component\DI\Builder\ParameterResolver\Resolver;
 use Butterfly\Component\DI\Builder\ServiceVisitor\ConfigurationValidator;
 use Butterfly\Component\DI\Builder\ServiceCollector;
@@ -38,8 +38,8 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
 
 
     protected $configuration = array(
-        'parameter_string'  => 'a',
-        'parameter_string2' => 'b',
+        'parameter_string'  => 'abz',
+        'parameter_string2' => 'b22222',
         'parameter_array'   => array(1, 2, 3),
         'parameter_complex' => '%parameter_string%/%parameter_string2%',
         'interfaces'        => array(
@@ -80,14 +80,6 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
                 'parent' => 'service.simple',
             ),
         ),
-    );
-
-    /**
-     * @var array
-     */
-    protected $additionalConfiguration = array(
-        'parameter_string'  => 'abz',
-        'parameter_string2' => 'b22222',
     );
 
     /**
@@ -151,7 +143,7 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
 
     public function testBuild()
     {
-        $containerBuilder = new Builder();
+        $containerBuilder = new ContainerConfigBuilder();
 
         $containerBuilder->setResolver(new Resolver());
         $containerBuilder->addServiceVisitor(new ConfigurationValidator($this->rightSections, $this->rightScopes));
@@ -159,8 +151,7 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
         $containerBuilder->addServiceVisitor(new ServiceCollector\TagCollector());
         $containerBuilder->addServiceVisitor(new ServiceCollector\AliasCollector());
 
-        $containerBuilder->addConfiguration($this->configuration);
-        $containerBuilder->addConfiguration($this->additionalConfiguration);
+        $containerBuilder->setConfiguration($this->configuration);
 
         $configuration = $containerBuilder->build();
 
@@ -169,7 +160,7 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
 
     public function testDoubleBuild()
     {
-        $containerBuilder = new Builder();
+        $containerBuilder = new ContainerConfigBuilder();
 
         $containerBuilder->setResolver(new Resolver());
         $containerBuilder->addServiceVisitor(new ConfigurationValidator($this->rightSections, $this->rightScopes));
@@ -177,8 +168,7 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
         $containerBuilder->addServiceVisitor(new ServiceCollector\TagCollector());
         $containerBuilder->addServiceVisitor(new ServiceCollector\AliasCollector());
 
-        $containerBuilder->addConfiguration($this->configuration);
-        $containerBuilder->addConfiguration($this->additionalConfiguration);
+        $containerBuilder->setConfiguration($this->configuration);
 
         $containerBuilder->build();
         $configuration = $containerBuilder->build();
@@ -188,7 +178,7 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
 
     public function testEmptyServiceBuild()
     {
-        $containerBuilder = new Builder();
+        $containerBuilder = new ContainerConfigBuilder();
 
         $containerBuilder->setResolver(new Resolver());
         $containerBuilder->addServiceVisitor(new ConfigurationValidator($this->rightSections, $this->rightScopes));
@@ -196,7 +186,7 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
         $containerBuilder->addServiceVisitor(new ServiceCollector\TagCollector());
         $containerBuilder->addServiceVisitor(new ServiceCollector\AliasCollector());
 
-        $containerBuilder->addConfiguration(array());
+        $containerBuilder->setConfiguration(array());
 
         $containerBuilder->build();
         $configuration = $containerBuilder->build();

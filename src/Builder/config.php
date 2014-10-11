@@ -4,10 +4,10 @@ return array(
     'services' => array(
         'config_compiler' => array(
             'class' => 'Butterfly\Component\DI\Builder\ConfigCompiler',
-            'arguments' => array('@builder', '@config_parser'),
+            'arguments' => array('@builder'),
         ),
         'builder' => array(
-            'class' => 'Butterfly\Component\DI\Builder\Builder',
+            'class' => 'Butterfly\Component\DI\Builder\ContainerConfigBuilder',
             'calls' => array(
                 array('setResolver', array('@resolver')),
                 array('addServiceVisitors', array('#service_visitor')),
@@ -32,16 +32,6 @@ return array(
         'tag_collector' => array(
             'class' => 'Butterfly\Component\DI\Builder\ServiceCollector\TagCollector',
         ),
-        'config_parser' => array(
-            'class' => 'Butterfly\Component\DI\Builder\Parser\DelegatedParser',
-            'arguments' => array('#parser'),
-        ),
-        'php_parser' => array(
-            'class' => 'Butterfly\Component\DI\Builder\Parser\PhpParser',
-        ),
-        'yaml_parser' => array(
-            'class' => 'Butterfly\Component\DI\Builder\Parser\Sf2YamlParser',
-        ),
     ),
     'tags' => array(
         'service_visitor' => array(
@@ -49,10 +39,6 @@ return array(
             'service_collector',
             'alias_collector',
             'tag_collector',
-        ),
-        'parser' => array(
-            'php_parser',
-            'yaml_parser',
         ),
     ),
 );

@@ -4,6 +4,9 @@ namespace Butterfly\Component\DI\Keeper;
 
 use Butterfly\Component\DI\ServiceFactory;
 
+/**
+ * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
+ */
 abstract class AbstractKeeper
 {
     /**

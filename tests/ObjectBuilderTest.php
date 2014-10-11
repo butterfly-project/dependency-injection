@@ -7,6 +7,9 @@ use Butterfly\Component\DI\Tests\Stubs\FactoryOutputService;
 use Butterfly\Component\DI\Tests\Stubs\FactoryService;
 use Butterfly\Component\DI\Tests\Stubs\ServiceStub;
 
+/**
+ * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
+ */
 class ObjectBuilderTest extends \PHPUnit_Framework_TestCase
 {
     /**

@@ -2,6 +2,9 @@
 
 namespace Butterfly\Component\DI\Keeper;
 
+/**
+ * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
+ */
 class Prototype extends AbstractKeeper
 {
     /**

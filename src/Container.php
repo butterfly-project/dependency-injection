@@ -12,27 +12,24 @@ use Butterfly\Component\DI\Keeper;
 
 /**
  * Container
- * done Aliases - Алиасы для сервисов
- * done Триггеры - Вызов метода до или после создания сервиса
- * done Synthetic Service - Определение сервиса во время работы
- * done Private Field Injection - внедрение зависимости в не публичное свойство
- * @todo Private services - Сервисы, которые нельзя получить из контейнера
+ * done Aliases
+ * done Triggers
+ * done Synthetic Service
+ * done Private Field Injection
+ * @todo Private services
  *
  * Container services
- * @todo Lazy Load Proxy - Ленивая загрузка сервиса
- * @todo Debug times - Отслеживание таймингов вызова
- * @todo Debug Dependency Statistics - Количество зависимостей у сервисов. Количество ссылок на сервис. Количество запросов на использование контейнера.
+ * @todo Lazy Load Proxy
+ * @todo Debug times
+ * @todo Debug Dependency Statistics
  *
  * Container building
- * done Наследование - Наследование конфигураций
- * @todo phar archive - Phar консольное приложение сборки контейнера
- * @todo Composer integration - определение зависимости на уровне контейнера
- * @todo Аннотации - изучить возможности использования
+ * done Abstract Services
+ * @todo phar archive
+ * @todo Composer integration
+ * @todo Annotations
  *
- * Container integration
- * @todo Sf2 integration
- * @todo Yii integration
- * @todo Sf1 integration
+ * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
 class Container
 {

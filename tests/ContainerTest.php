@@ -14,6 +14,9 @@ use Butterfly\Component\DI\Tests\Stubs\StaticTriggerService;
 use Butterfly\Component\DI\Tests\Stubs\TriggerService;
 use Butterfly\Component\DI\Tests\Stubs\UseTriggerService;
 
+/**
+ * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
+ */
 class ContainerTest extends \PHPUnit_Framework_TestCase
 {
     public function testHasParameter()

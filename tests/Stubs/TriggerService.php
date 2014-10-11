@@ -2,7 +2,10 @@
 
 namespace Butterfly\Component\DI\Tests\Stubs;
 
-class TriggerService 
+/**
+ * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
+ */
+class TriggerService
 {
     protected $a;
 

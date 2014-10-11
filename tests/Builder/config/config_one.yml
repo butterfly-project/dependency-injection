@@ -1,3 +1,0 @@
-services:
-  foo:
-    class: '\Butterfly\Component\DI\Tests\Stubs\ServiceStub'

@@ -1,4 +1,0 @@
-services:
-  bar:
-    class: '\Butterfly\Component\DI\Tests\Stubs\ServiceStub'
-    arguments: ['value1', 'value2']

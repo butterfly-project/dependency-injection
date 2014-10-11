@@ -2,7 +2,10 @@
 
 namespace Butterfly\Component\DI\Tests\Stubs;
 
-interface IServiceFooAware 
+/**
+ * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
+ */
+interface IServiceFooAware
 {
     public function injectServiceFoo(ServiceFoo $service);
 }

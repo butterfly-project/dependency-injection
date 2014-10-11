@@ -4,6 +4,9 @@ namespace Butterfly\Component\DI;
 
 use Butterfly\Component\DI\Exception\BuildObjectException;
 
+/**
+ * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
+ */
 class ServiceFactory
 {
     /**

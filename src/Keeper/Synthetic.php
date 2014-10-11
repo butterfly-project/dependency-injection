@@ -4,6 +4,9 @@ namespace Butterfly\Component\DI\Keeper;
 
 use Butterfly\Component\DI\Exception\BuildServiceException;
 
+/**
+ * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
+ */
 class Synthetic
 {
     /**

@@ -2,43 +2,28 @@
 
 namespace Butterfly\Component\DI\Builder;
 
-use Butterfly\Component\DI\Builder\Parser\IParser;
 use Butterfly\Component\DI\Container;
 
-class ButterflyBuilder
+/**
+ * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
+ */
+class DiConfig
 {
     /**
-     * @var Container
+     * @param array $config
+     * @param string $outputPath
      */
-    protected static $container;
-
-    /**
-     * @param string $configPath
-     * @param string $output
-     */
-    public static function build($configPath, $output)
-    {
-        self::buildForArray(array($configPath), $output);
-    }
-
-    /**
-     * @param array $configs
-     * @param string $output
-     */
-    public static function buildForArray(array $configs, $output)
+    public static function build(array $config, $outputPath)
     {
         $builder = self::getBuilder();
-        $parser  = self::getParser();
 
-        foreach ($configs as $config) {
-            $builder->addConfiguration($parser->parse($config));
-        }
+        $builder->setConfiguration($config);
 
-        self::dumpConfig($builder->build(), $output);
+        self::dumpConfig($builder->build(), $outputPath);
     }
 
     /**
-     * @return Builder
+     * @return ContainerConfigBuilder
      */
     protected static function getBuilder()
     {
@@ -46,24 +31,13 @@ class ButterflyBuilder
     }
 
     /**
-     * @return IParser
-     */
-    protected static function getParser()
-    {
-        return self::getContainer()->get('config_parser');
-    }
-
-    /**
      * @return Container
      */
     protected static function getContainer()
     {
-        if (null === self::$container) {
-            $containerConfig = require __DIR__ . '/config.php';
-            self::$container = new Container($containerConfig);
-        }
+        $containerConfig = require __DIR__ . '/config.php';
 
-        return self::$container;
+        return new Container($containerConfig);
     }
 
     /**
