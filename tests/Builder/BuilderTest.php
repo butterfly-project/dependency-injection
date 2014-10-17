@@ -128,6 +128,9 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
                 'properties' => array(
                     'a' => array(1, 2, 3),
                 ),
+                'calls' => array(),
+                'preTriggers' => array(),
+                'postTriggers' => array(),
             ),
         ),
         'tags'       => array(
