@@ -50,19 +50,23 @@ class DiConfig
     }
 
     /**
-     * @param string $outputConfigFile
+     * @param string $outputPath
      * @param array $configuration
      * @throws \InvalidArgumentException if output configuration file is not writable
      */
-    protected static function dumpConfig(array $configuration, $outputConfigFile)
+    protected static function dumpConfig(array $configuration, $outputPath)
     {
-        if (!self::isWritable($outputConfigFile)) {
-            throw new \InvalidArgumentException(sprintf("Output configuration file '%s' is not writable", $outputConfigFile));
+        $tempPath = $outputPath . '.new';
+
+        if (!self::isWritable($outputPath) || !self::isWritable($tempPath)) {
+            throw new \InvalidArgumentException(sprintf("Output configuration file '%s' is not writable", $outputPath));
         }
 
         $data = sprintf("<?php return %s;", var_export($configuration, true));
 
-        file_put_contents($outputConfigFile, $data);
+        file_put_contents($tempPath, $data);
+
+        rename($tempPath, $outputPath);
     }
 
     /**
