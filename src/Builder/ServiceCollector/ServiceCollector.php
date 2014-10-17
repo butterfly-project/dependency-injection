@@ -13,6 +13,16 @@ class ServiceCollector implements IVisitor, IConfigurationCollector
     /**
      * @var array
      */
+    protected static $unionSectionKeys = array(
+        'calls',
+        'properties',
+        'preTriggers',
+        'postTriggers',
+    );
+
+    /**
+     * @var array
+     */
     protected $services = array();
 
     /**
@@ -82,9 +92,28 @@ class ServiceCollector implements IVisitor, IConfigurationCollector
             unset($parentConfiguration['tags']);
             unset($parentConfiguration['alias']);
 
-            $this->services[$serviceId] = array_replace_recursive($parentConfiguration, $configuration);
+            $this->services[$serviceId] = $this->doMergeConfiguration($parentConfiguration, $configuration);
         }
 
         unset($this->children);
+    }
+
+    /**
+     * @param array $parent
+     * @param array $current
+     * @return array
+     */
+    protected function doMergeConfiguration(array $parent, array $current)
+    {
+        $result = array_replace_recursive($parent, $current);
+
+        foreach (self::$unionSectionKeys as $sectionKey) {
+            $parentSection  = isset($parent[$sectionKey]) ? $parent[$sectionKey] : array();
+            $currentSection = isset($current[$sectionKey]) ? $current[$sectionKey] : array();
+
+            $result[$sectionKey] = array_merge($parentSection, $currentSection);
+        }
+
+        return $result;
     }
 }
