@@ -1,6 +1,28 @@
 CHANGELOG
 =========
 
+1.5.3
+-----
+
+Changes:
+
+ * Upgrade merge configurations algorithm with parent services
+ * Upgrade file dumper algorithm
+
+1.5.2
+-----
+
+Changes:
+
+ * Update DiConfig builder
+
+1.5.1
+-----
+
+Changes:
+
+ * Fix composer configuration
+
 1.5.0
 -----
 
