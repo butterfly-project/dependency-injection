@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+1.5.4
+-----
+
+Changes:
+
+ * Unlink file before builded configuration
+
 1.5.3
 -----
 
