@@ -172,8 +172,7 @@ class Container
 
     /**
      * @param string $name
-     * @return Object[]
-     * @throws UndefinedTagException if tag is not found
+     * @return object[]
      */
     public function getServicesByTag($name)
     {
@@ -191,17 +190,14 @@ class Container
     /**
      * @param string $name
      * @return array
-     * @throws UndefinedTagException if tag is not found
      */
     public function getServicesIdsByTag($name)
     {
         $name = strtolower($name);
 
-        if (!$this->hasTag($name)) {
-            throw new UndefinedTagException(sprintf("Tag '%s' is not found", $name));
-        }
-
-        return $this->configuration['tags'][$name];
+        return $this->hasTag($name)
+            ? $this->configuration['tags'][$name]
+            : array();
     }
 
     /**
