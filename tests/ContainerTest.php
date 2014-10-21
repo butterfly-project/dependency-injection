@@ -168,7 +168,9 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $configuration = array(
             'services' => array(
                 'service.static_factory_output' => array(
-                    'factoryStaticMethod' => array('Butterfly\Component\DI\Tests\Stubs\FactoryService', 'createInstance'),
+                    'factoryStaticMethod' => array(
+                        'Butterfly\Component\DI\Tests\Stubs\FactoryService', 'createInstance'
+                    ),
                     'arguments'           => array(1, 2),
                 ),
             ),
@@ -475,15 +477,12 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(array('service.simple', 'service.factory_output'), $servicesByTag);
     }
 
-    /**
-     * @expectedException \Butterfly\Component\DI\Exception\UndefinedTagException
-     */
     public function testGetServicesByTagIfNoTag()
     {
         $configuration = array();
         $container     = new Container($configuration);
 
-        $container->getServicesByTag('undefined_tag');
+        $this->assertEquals(array(), $container->getServicesByTag('undefined_tag'));
     }
 
     public function testTagDependency()
@@ -518,9 +517,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(2, $service->getB());
     }
 
-    /**
-     * @expectedException \Butterfly\Component\DI\Exception\UndefinedTagException
-     */
     public function testTagDependencyIfUndefinedTag()
     {
         $configuration = array(
@@ -533,7 +529,9 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         );
         $container     = new Container($configuration);
 
-        $container->get('service.tag_dependencies.undefined_tag');
+        $service = $container->get('service.tag_dependencies.undefined_tag');
+
+        $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\FactoryOutputService', $service);
     }
 
     public function testHasServiceByAlias()
