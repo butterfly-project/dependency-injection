@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+1.5.5
+-----
+
+Changes:
+
+ * Remove throw exception if undefined tag
+
 1.5.4
 -----
 
