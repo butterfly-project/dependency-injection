@@ -66,6 +66,10 @@ class DiConfig
 
         file_put_contents($tempPath, $data);
 
+        if (is_readable($outputPath)) {
+            unlink($outputPath);
+        }
+
         rename($tempPath, $outputPath);
     }
 
