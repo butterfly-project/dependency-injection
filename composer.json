@@ -1,7 +1,7 @@
 {
     "name": "butterfly/dependency-injection",
     "type": "library",
-    "description": "Butterfly. PHP Dependency Injection Component",
+    "description": "Butterfly PHP. Dependency Injection Component",
     "keywords": ["Dependency Injection", "DI", "IoC", "Container"],
     "license": "MIT",
     "authors": [
@@ -10,9 +10,6 @@
             "email": "marat.fakhertdinov@gmail.com"
         }
     ],
-    "require-dev": {
-        "phpunit/phpunit": "3.7.*"
-    },
     "require": {
         "php": ">=5.3.3"
     },
