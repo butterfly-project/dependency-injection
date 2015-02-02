@@ -1,17 +1,17 @@
 <?php
 
-namespace Butterfly\Component\DI\Tests\Builder;
+namespace Butterfly\Component\DI\Tests\Compiler;
 
-use Butterfly\Component\DI\Builder\ContainerConfigBuilder;
-use Butterfly\Component\DI\Builder\ParameterResolver\Resolver;
-use Butterfly\Component\DI\Builder\ServiceVisitor\ConfigurationValidator;
-use Butterfly\Component\DI\Builder\ServiceCollector;
+use Butterfly\Component\DI\Compiler\ConfigCompiler;
+use Butterfly\Component\DI\Compiler\ParameterResolver\Resolver;
+use Butterfly\Component\DI\Compiler\ServiceVisitor\ConfigurationValidator;
+use Butterfly\Component\DI\Compiler\ServiceCollector;
 use Butterfly\Component\DI\Container;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
-class BuilderTest extends \PHPUnit_Framework_TestCase
+class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
 {
     protected $rightSections = array(
         'class',
@@ -144,55 +144,31 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
         ),
     );
 
-    public function testBuild()
+    public function testCompileConfig()
     {
-        $containerBuilder = new ContainerConfigBuilder();
+        $compiler = $this->getConfigCompiler();
 
-        $containerBuilder->setResolver(new Resolver());
-        $containerBuilder->addServiceVisitor(new ConfigurationValidator($this->rightSections, $this->rightScopes));
-        $containerBuilder->addServiceVisitor(new ServiceCollector\ServiceCollector());
-        $containerBuilder->addServiceVisitor(new ServiceCollector\TagCollector());
-        $containerBuilder->addServiceVisitor(new ServiceCollector\AliasCollector());
-
-        $containerBuilder->setConfiguration($this->configuration);
-
-        $configuration = $containerBuilder->build();
+        $configuration = $compiler->compileConfig($this->configuration);
 
         $this->assertEquals($this->expectedConfiguration, $configuration);
     }
 
-    public function testDoubleBuild()
+    public function testDoubleCompileConfig()
     {
-        $containerBuilder = new ContainerConfigBuilder();
+        $compiler = $this->getConfigCompiler();
 
-        $containerBuilder->setResolver(new Resolver());
-        $containerBuilder->addServiceVisitor(new ConfigurationValidator($this->rightSections, $this->rightScopes));
-        $containerBuilder->addServiceVisitor(new ServiceCollector\ServiceCollector());
-        $containerBuilder->addServiceVisitor(new ServiceCollector\TagCollector());
-        $containerBuilder->addServiceVisitor(new ServiceCollector\AliasCollector());
-
-        $containerBuilder->setConfiguration($this->configuration);
-
-        $containerBuilder->build();
-        $configuration = $containerBuilder->build();
+        $compiler->compileConfig($this->configuration);
+        $configuration = $compiler->compileConfig($this->configuration);
 
         $this->assertEquals($this->expectedConfiguration, $configuration);
     }
 
-    public function testEmptyServiceBuild()
+    public function testEmptyServiceCompileConfig()
     {
-        $containerBuilder = new ContainerConfigBuilder();
+        $compiler = $this->getConfigCompiler();
 
-        $containerBuilder->setResolver(new Resolver());
-        $containerBuilder->addServiceVisitor(new ConfigurationValidator($this->rightSections, $this->rightScopes));
-        $containerBuilder->addServiceVisitor(new ServiceCollector\ServiceCollector());
-        $containerBuilder->addServiceVisitor(new ServiceCollector\TagCollector());
-        $containerBuilder->addServiceVisitor(new ServiceCollector\AliasCollector());
-
-        $containerBuilder->setConfiguration(array());
-
-        $containerBuilder->build();
-        $configuration = $containerBuilder->build();
+        $compiler->compileConfig(array());
+        $configuration = $compiler->compileConfig(array());
 
         $expectedConfig = array(
             'parameters' => array(),
@@ -202,5 +178,32 @@ class BuilderTest extends \PHPUnit_Framework_TestCase
             'interfaces' => array(),
         );
         $this->assertEquals($expectedConfig, $configuration);
+    }
+
+    /**
+     * @return ConfigCompiler
+     */
+    protected function getConfigCompiler()
+    {
+        return new ConfigCompiler(new Resolver(), array(
+            new ConfigurationValidator(),
+            new ServiceCollector\ServiceCollector(),
+            new ServiceCollector\TagCollector(),
+            new ServiceCollector\AliasCollector()
+        ));
+    }
+
+    public function testCreateInstance()
+    {
+        $compiler = ConfigCompiler::createInstance();
+
+        $this->assertInstanceOf('\Butterfly\Component\DI\Compiler\ConfigCompiler', $compiler);
+    }
+
+    public function testCompile()
+    {
+        $configuration = ConfigCompiler::compile($this->configuration);
+
+        $this->assertEquals($this->expectedConfiguration, $configuration);
     }
 }

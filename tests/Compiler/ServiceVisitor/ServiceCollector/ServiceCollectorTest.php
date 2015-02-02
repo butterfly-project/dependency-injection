@@ -1,8 +1,8 @@
 <?php
 
-namespace Butterfly\Component\DI\Tests\Builder\ServiceVisitor\ServiceCollector;
+namespace Butterfly\Component\DI\Tests\Compiler\ServiceVisitor\ServiceCollector;
 
-use Butterfly\Component\DI\Builder\ServiceCollector\ServiceCollector;
+use Butterfly\Component\DI\Compiler\ServiceCollector\ServiceCollector;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
@@ -105,7 +105,7 @@ class ServiceCollectorTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \Butterfly\Component\DI\Builder\ServiceVisitor\InvalidConfigurationException
+     * @expectedException \Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException
      */
     public function testVisitIfUndefinedParentService()
     {

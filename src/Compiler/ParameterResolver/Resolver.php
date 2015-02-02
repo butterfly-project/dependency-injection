@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Butterfly\Component\DI\Builder\ParameterResolver;
+namespace Butterfly\Component\DI\Compiler\ParameterResolver;
 
 /**
  * Source: Symfony 2 ParameterBag
@@ -17,7 +17,7 @@ namespace Butterfly\Component\DI\Builder\ParameterResolver;
  * @author Fabien Potencier <fabien@symfony.com>
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
-class Resolver implements IConfigurationResolver
+class Resolver
 {
     /**
      * @var array

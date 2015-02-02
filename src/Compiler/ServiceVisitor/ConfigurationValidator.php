@@ -1,6 +1,6 @@
 <?php
 
-namespace Butterfly\Component\DI\Builder\ServiceVisitor;
+namespace Butterfly\Component\DI\Compiler\ServiceVisitor;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
@@ -10,21 +10,40 @@ class ConfigurationValidator implements IVisitor
     /**
      * @var array
      */
-    protected $rightSections;
+    protected $rightSections = array(
+        'class',
+        'factoryMethod',
+        'factoryStaticMethod',
+        'scope',
+        'arguments',
+        'calls',
+        'properties',
+        'preTriggers',
+        'postTriggers',
+        'tags',
+        'alias',
+        'parent'
+    );
 
     /**
      * @var array
      */
-    protected $rightScopes;
+    protected $rightScopes = array('singleton', 'factory', 'prototype', 'synthetic');
 
     /**
      * @param array $rightSections
+     */
+    public function setRightSections($rightSections)
+    {
+        $this->rightSections = $rightSections;
+    }
+
+    /**
      * @param array $rightScopes
      */
-    public function __construct(array $rightSections, array $rightScopes)
+    public function setRightScopes($rightScopes)
     {
-        $this->rightScopes   = $rightScopes;
-        $this->rightSections = $rightSections;
+        $this->rightScopes = $rightScopes;
     }
 
     /**

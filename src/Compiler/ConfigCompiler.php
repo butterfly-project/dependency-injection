@@ -1,24 +1,24 @@
 <?php
 
-namespace Butterfly\Component\DI\Builder;
+namespace Butterfly\Component\DI\Compiler;
 
-use Butterfly\Component\DI\Builder\ParameterResolver\IConfigurationResolver;
-use Butterfly\Component\DI\Builder\ParameterResolver\IConfigurationResolverAware;
-use Butterfly\Component\DI\Builder\ServiceVisitor\InvalidConfigurationException;
-use Butterfly\Component\DI\Builder\ServiceVisitor\IVisitor;
-use Butterfly\Component\DI\Builder\ServiceCollector\IConfigurationCollector;
+use Butterfly\Component\DI\Compiler\ParameterResolver\Resolver;
+use Butterfly\Component\DI\Compiler\ServiceVisitor\ConfigurationValidator;
+use Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException;
+use Butterfly\Component\DI\Compiler\ServiceVisitor\IVisitor;
+use Butterfly\Component\DI\Compiler\ServiceCollector\IConfigurationCollector;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
-class ContainerConfigBuilder implements IConfigurationResolverAware
+class ConfigCompiler
 {
     const SECTION_SERVICES   = 'services';
     const SECTION_INTERFACES = 'interfaces';
     const SECTION_PARAMETERS = 'parameters';
 
     /**
-     * @var IConfigurationResolver
+     * @var Resolver
      */
     protected $resolver = null;
 
@@ -33,18 +33,36 @@ class ContainerConfigBuilder implements IConfigurationResolverAware
     protected $configuration = array();
 
     /**
-     * @param IConfigurationResolver $resolver
+     * @param array $configuration
+     * @return array
      */
-    public function setResolver(IConfigurationResolver $resolver)
+    public static function compile(array $configuration)
     {
-        $this->resolver = $resolver;
+        return static::createInstance()->compileConfig($configuration);
     }
 
     /**
-     * @param array $visitors
+     * @return static
      */
-    public function addServiceVisitors(array $visitors)
+    public static function createInstance()
     {
+        return new static(new Resolver(), array(
+                new ConfigurationValidator(),
+                new ServiceCollector\ServiceCollector(),
+                new ServiceCollector\TagCollector(),
+                new ServiceCollector\AliasCollector()
+            )
+        );
+    }
+
+    /**
+     * @param Resolver $resolver
+     * @param IVisitor[] $visitors
+     */
+    public function __construct(Resolver $resolver, array $visitors)
+    {
+        $this->resolver = $resolver;
+
         foreach ($visitors as $visitor) {
             $this->addServiceVisitor($visitor);
         }
@@ -60,22 +78,12 @@ class ContainerConfigBuilder implements IConfigurationResolverAware
 
     /**
      * @param array $configuration
-     * @return $this
-     */
-    public function setConfiguration(array $configuration)
-    {
-        $this->configuration = $configuration;
-
-        return $this;
-    }
-
-    /**
      * @return array
      * @throws InvalidConfigurationException if IoCC configuration is invalid
      */
-    public function build()
+    public function compileConfig(array $configuration)
     {
-        $configuration = $this->prepareConfiguration($this->configuration);
+        $configuration = $this->prepareConfiguration($configuration);
 
         $this->cleanVisitors($this->visitors);
         $this->runServiceVisits($this->visitors, $configuration);

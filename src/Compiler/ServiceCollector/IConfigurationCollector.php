@@ -1,8 +1,8 @@
 <?php
 
-namespace Butterfly\Component\DI\Builder\ServiceCollector;
+namespace Butterfly\Component\DI\Compiler\ServiceCollector;
 
-use Butterfly\Component\DI\Builder\ServiceVisitor\InvalidConfigurationException;
+use Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>

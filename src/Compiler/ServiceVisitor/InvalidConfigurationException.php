@@ -1,6 +1,6 @@
 <?php
 
-namespace Butterfly\Component\DI\Builder\ServiceVisitor;
+namespace Butterfly\Component\DI\Compiler\ServiceVisitor;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>

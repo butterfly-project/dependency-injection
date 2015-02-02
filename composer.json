@@ -18,6 +18,5 @@
             "Butterfly\\Component\\DI\\": "src/",
             "Butterfly\\Component\\DI\\Tests\\": "tests/"
         }
-    },
-    "minimum-stability": "dev"
+    }
 }

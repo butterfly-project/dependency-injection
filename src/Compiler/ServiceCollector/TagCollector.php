@@ -1,8 +1,8 @@
 <?php
 
-namespace Butterfly\Component\DI\Builder\ServiceCollector;
+namespace Butterfly\Component\DI\Compiler\ServiceCollector;
 
-use Butterfly\Component\DI\Builder\ServiceVisitor\IVisitor;
+use Butterfly\Component\DI\Compiler\ServiceVisitor\IVisitor;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>

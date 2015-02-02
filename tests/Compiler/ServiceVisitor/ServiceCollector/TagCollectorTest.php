@@ -1,8 +1,8 @@
 <?php
 
-namespace Butterfly\Component\DI\Tests\Builder\ServiceVisitor\ServiceCollector;
+namespace Butterfly\Component\DI\Tests\Compiler\ServiceVisitor\ServiceCollector;
 
-use Butterfly\Component\DI\Builder\ServiceCollector\TagCollector;
+use Butterfly\Component\DI\Compiler\ServiceCollector\TagCollector;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>

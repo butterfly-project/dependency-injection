@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Butterfly\Component\DI\Builder\ParameterResolver;
+namespace Butterfly\Component\DI\Compiler\ParameterResolver;
 
 /**
  * This exception is thrown when a circular reference in a parameter is detected.
