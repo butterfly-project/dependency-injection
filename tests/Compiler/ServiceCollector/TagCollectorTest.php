@@ -1,6 +1,6 @@
 <?php
 
-namespace Butterfly\Component\DI\Tests\Compiler\ServiceVisitor\ServiceCollector;
+namespace Butterfly\Component\DI\Tests\Compiler\ServiceCollector;
 
 use Butterfly\Component\DI\Compiler\ServiceCollector\TagCollector;
 
