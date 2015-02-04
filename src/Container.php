@@ -6,6 +6,7 @@ use Butterfly\Component\DI\Exception\BuildObjectException;
 use Butterfly\Component\DI\Exception\BuildServiceException;
 use Butterfly\Component\DI\Exception\IncorrectSyntheticServiceException;
 use Butterfly\Component\DI\Exception\UndefinedInstanceException;
+use Butterfly\Component\DI\Exception\UndefinedInterfaceException;
 use Butterfly\Component\DI\Exception\UndefinedParameterException;
 use Butterfly\Component\DI\Exception\UndefinedServiceException;
 use Butterfly\Component\DI\Exception\UndefinedTagException;
@@ -17,6 +18,7 @@ use Butterfly\Component\DI\Keeper;
  * done Triggers
  * done Synthetic Service
  * done Private Field Injection
+ * done Interface Injections
  * @todo Private services
  * @todo Depends-on http://docs.spring.io/spring/docs/current/spring-framework-reference/html/beans.html#beans-factory-dependson
  *
@@ -185,6 +187,30 @@ class Container
         } catch (BuildObjectException $e) {
             throw new BuildServiceException(sprintf("Failed to build service '%s': %s", $id, $e->getMessage()));
         }
+    }
+
+    /**
+     * @param string $id
+     * @return bool
+     */
+    public function hasInterface($id)
+    {
+        return array_key_exists($id, $this->configuration['interfaces']);
+    }
+
+    /**
+     * @param string $id
+     * @return Object
+     */
+    public function getInterface($id)
+    {
+        if (!$this->hasInterface($id)) {
+            throw new UndefinedInterfaceException(sprintf("Interface '%s' is not found", $id));
+        }
+
+        $serviceId = $this->configuration['interfaces'][$id];
+
+        return $this->getService($serviceId);
     }
 
     /**

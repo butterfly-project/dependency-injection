@@ -796,6 +796,76 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertNull($service->getInternalService());
     }
 
+    public function testHasInterface()
+    {
+        $configuration = array(
+            'interfaces' => array(
+                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
+            ),
+            'services'   => array(
+                'service.foo'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
+                ),
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertTrue($container->hasInterface('Butterfly\Component\DI\Tests\Stubs\IServiceFooAware'));
+    }
+
+    public function testHasInterfaceIfNotExists()
+    {
+        $configuration = array(
+            'services'   => array(
+                'service.foo'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
+                ),
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertFalse($container->hasInterface('undefined'));
+    }
+
+    public function testGetInterface()
+    {
+        $configuration = array(
+            'interfaces' => array(
+                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
+            ),
+            'services'   => array(
+                'service.foo'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
+                ),
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $interfaceImplement = $container->getInterface('Butterfly\Component\DI\Tests\Stubs\IServiceFooAware');
+        $this->assertInstanceOf('Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $interfaceImplement);
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Exception\UndefinedInterfaceException
+     */
+    public function testGetInterfaceIfNotExists()
+    {
+        $configuration = array(
+            'services'   => array(
+                'service.foo'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
+                ),
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $container->getInterface('undefined');
+    }
+
     public function testGet()
     {
         $configuration = array(
