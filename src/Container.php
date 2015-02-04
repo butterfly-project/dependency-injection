@@ -5,6 +5,7 @@ namespace Butterfly\Component\DI;
 use Butterfly\Component\DI\Exception\BuildObjectException;
 use Butterfly\Component\DI\Exception\BuildServiceException;
 use Butterfly\Component\DI\Exception\IncorrectSyntheticServiceException;
+use Butterfly\Component\DI\Exception\UndefinedInstanceException;
 use Butterfly\Component\DI\Exception\UndefinedParameterException;
 use Butterfly\Component\DI\Exception\UndefinedServiceException;
 use Butterfly\Component\DI\Exception\UndefinedTagException;
@@ -26,9 +27,8 @@ use Butterfly\Component\DI\Keeper;
  *
  * Container building
  * done Abstract Services
- * @todo phar archive
- * @todo Composer integration
- * @todo Annotations
+ * done Composer integration
+ * done Annotations
  *
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
@@ -81,6 +81,39 @@ class Container
 
     /**
      * @param string $id
+     * @return mixed
+     * @throws UndefinedInstanceException if instance is not found
+     */
+    public function get($id)
+    {
+        if ($this->hasParameter($id)) {
+            return $this->getParameter($id);
+        }
+
+        if ($this->hasService($id)) {
+            return $this->getService($id);
+        }
+
+        if ($this->hasTag($id)) {
+            return $this->getServicesByTag($id);
+        }
+
+        throw new UndefinedInstanceException(sprintf("Instance '%s' is not found", $id));
+    }
+
+    /**
+     * @param string $id
+     * @return bool
+     */
+    public function has($id)
+    {
+        return $this->hasParameter($id) ||
+               $this->hasService($id) ||
+               $this->hasTag($id);
+    }
+
+    /**
+     * @param string $id
      * @return bool
      */
     public function hasParameter($id)
@@ -108,7 +141,7 @@ class Container
      * @param string $id
      * @return bool
      */
-    public function has($id)
+    public function hasService($id)
     {
         $id = strtolower($id);
 
@@ -121,7 +154,7 @@ class Container
         }
 
         if (array_key_exists($id, $this->configuration['aliases']) &&
-            $this->has($this->configuration['aliases'][$id])) {
+            $this->hasService($this->configuration['aliases'][$id])) {
             return true;
         }
 
@@ -135,7 +168,7 @@ class Container
      * @throws BuildServiceException if scope is not found
      * @throws BuildServiceException if fail to build service
      */
-    public function get($id)
+    public function getService($id)
     {
         $id = strtolower($id);
 
@@ -182,7 +215,7 @@ class Container
         $services = array();
 
         foreach ($servicesIds as $serviceId) {
-            $services[] = $this->get($serviceId);
+            $services[] = $this->getService($serviceId);
         }
 
         return $services;

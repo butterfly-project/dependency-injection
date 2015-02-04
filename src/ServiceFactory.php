@@ -78,7 +78,7 @@ class ServiceFactory
     {
         foreach ($this->interfaces as $interface => $serviceId) {
             if ($object instanceof $interface) {
-                $this->container->get($serviceId)->inject($object);
+                $this->container->getService($serviceId)->inject($object);
             }
         }
     }
@@ -100,7 +100,7 @@ class ServiceFactory
             $objectBuilder->staticFactoryMethodCreate($className, $methodName, $arguments);
         } elseif (isset($configuration['factoryMethod'])) {
             list ($factoryServiceId, $methodName) = $configuration['factoryMethod'];
-            $factoryService = $this->container->get(substr($factoryServiceId, 1));
+            $factoryService = $this->container->getService(substr($factoryServiceId, 1));
             $objectBuilder->factoryMethodCreate($factoryService, $methodName, $arguments);
         } else {
             throw new BuildObjectException('Impossible to create a service');
@@ -215,7 +215,7 @@ class ServiceFactory
         $firstSymbol = substr($dependence, 0, 1);
         switch ($firstSymbol) {
             case '@':
-                return $this->container->get(substr($dependence, 1));
+                return $this->container->getService(substr($dependence, 1));
                 break;
             case '#':
                 return $this->container->getServicesByTag(substr($dependence, 1));
