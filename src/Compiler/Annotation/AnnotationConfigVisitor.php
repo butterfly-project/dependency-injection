@@ -17,12 +17,7 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
     /**
      * @var array
      */
-    protected $services;
-
-    public function __construct()
-    {
-        $this->clean();
-    }
+    protected $services = array();
 
     /**
      * @return array
@@ -49,102 +44,124 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
             return;
         }
 
-        $this->resolveService($className, $classAnnotations);
+        $this->convertAnnotationsToConfig($className, $classAnnotations);
     }
 
     /**
      * @param string $className
-     * @param array $classAnnotation
+     * @param array $classAnnotations
      */
-    protected function resolveService($className, array $classAnnotation)
+    protected function convertAnnotationsToConfig($className, array $classAnnotations)
     {
-        $configuration = array();
-
-        if (null !== $classAnnotation['class']['service']) {
-            $serviceName = $classAnnotation['class']['service'];
-            $configuration['alias'] = strtolower($className);
-        } else {
-            $serviceName = $className;
-        }
-
-        $serviceName = strtolower($serviceName);
-
-        $configuration['class'] = $className;
+        $config = array(
+            'class' => $className,
+        );
 
         $reflectionClass = new ReflectionClass($className);
 
-        foreach ($classAnnotation['properties'] as $propertyName => $propertyAnnotation) {
-            if (!array_key_exists('autowired', $propertyAnnotation)) {
-                continue;
-            }
+        list($arguments, $calls) = $this->getMethods($classAnnotations, $reflectionClass);
+        $config = $this->addSectionIfNotEmpty($config, 'arguments', $arguments);
+        $config = $this->addSectionIfNotEmpty($config, 'calls', $calls);
 
-            if (is_array($propertyAnnotation['autowired'])) {
-                throw new \RuntimeException(sprintf("Incorrect @autowired value in %s property. Expected service name (string type), array given.", $propertyName));
-            } elseif (null === $propertyAnnotation['autowired']) {
-                $namespace = $reflectionClass->getFullNamespace($propertyAnnotation['var']);
-                $innerServiceName = substr($namespace, 1);
-                $configuration['properties'][$propertyName] = strtolower($innerServiceName);
-            } else {
-                $words = explode(' ', $propertyAnnotation['autowired']);
-                $innerServiceName = reset($words);
-                $configuration['properties'][$propertyName] = $innerServiceName;
-            }
+        $config = $this->addSectionIfNotEmpty($config, 'properties', $this->getProperties($classAnnotations, $reflectionClass));
+        $config = $this->addSectionIfNotEmpty($config, 'alias', $this->getAliases($classAnnotations, $className));
+        $config = $this->addSectionIfNotEmpty($config, 'scope', $this->getScope($classAnnotations));
+        $config = $this->addSectionIfNotEmpty($config, 'tags', $this->getTags($classAnnotations));
+
+        $serviceName = $this->getServiceName($className, $classAnnotations);
+
+        $this->services[$serviceName] = $config;
+    }
+
+    /**
+     * @param array $config
+     * @param string $section
+     * @param mixed $value
+     * @return array
+     */
+    protected function addSectionIfNotEmpty(array $config, $section, $value)
+    {
+        if (!empty($value)) {
+            $config[$section] = $value;
         }
 
-        foreach ($classAnnotation['methods'] as $methodName => $methodAnnotation) {
+        return $config;
+    }
+
+    /**
+     * @param array $classAnnotations
+     * @param ReflectionClass $reflectionClass
+     * @return array
+     */
+    protected function getMethods(array $classAnnotations, ReflectionClass $reflectionClass)
+    {
+        $constructorArguments = array();
+        $calls = array();
+
+        foreach ($classAnnotations['methods'] as $methodName => $methodAnnotation) {
             if (!array_key_exists('autowired', $methodAnnotation)) {
                 continue;
             }
 
-            $arguments = null;
-            if (null === $methodAnnotation['autowired']) {
-                $reflectionMethod = $reflectionClass->getMethod($methodName);
+            $arguments = $this->getMethodArguments($methodName, $methodAnnotation, $reflectionClass);
 
-                $arguments = $this->getMethodTypesForNative($reflectionMethod->getParameters());
-
-                if (null === $arguments && !empty($methodAnnotation['param'])) {
-                    $arguments = array();
-                    foreach ($methodAnnotation['param'] as $value) {
-                        $words         = array_filter(explode(' ', $value));
-                        $shortType     = array_shift($words);
-                        $fullNamespace = strtolower($reflectionClass->getFullNamespace($shortType));
-                        $arguments[]   = '@' . substr($fullNamespace, 1);
-                    }
-                }
-            } elseif (is_array($methodAnnotation['autowired'])) {
-                $arguments = array();
-
-                foreach ($methodAnnotation['autowired'] as $dependency) {
-                    $arguments[] = ('%' != $dependency[0]) ? '@' . $dependency : $dependency;
-                }
+            if (null === $arguments) {
+                continue;
             }
+
+            if ('__construct' == $methodName) {
+                $constructorArguments = $arguments;
+            } else {
+                $calls[] = array($methodName, $arguments);
+            }
+        }
+
+        return array($constructorArguments, $calls);
+    }
+
+    /**
+     * @param string $methodName
+     * @param array $methodAnnotation
+     * @param ReflectionClass $reflectionClass
+     * @return array
+     */
+    protected function getMethodArguments($methodName, array $methodAnnotation, ReflectionClass $reflectionClass)
+    {
+        if (is_array($methodAnnotation['autowired'])) {
+            $arguments = array();
+
+            foreach ($methodAnnotation['autowired'] as $dependency) {
+                $arguments[] = ('%' != $dependency[0]) ? '@' . $dependency : $dependency;
+            }
+
+            return $arguments;
+        }
+
+        if (null === $methodAnnotation['autowired']) {
+            $parameters = $reflectionClass->getMethod($methodName)->getParameters();
+            $arguments  = $this->getMethodDependenciesForNative($parameters);
 
             if (null !== $arguments) {
-                if ('__construct' == $methodName) {
-                    $configuration['arguments'] = $arguments;
-                } else {
-                    $configuration['calls'][] = array($methodName, $arguments);
-                }
+                return $arguments;
             }
         }
 
-        if (!empty($classAnnotation['class']['scope'])) {
-            $configuration['scope'] = (string)$classAnnotation['class']['scope'];
+        if (!empty($methodAnnotation['param'])) {
+            $arguments = $this->getMethodDependenciesForPhpDoc($methodAnnotation['param'], $reflectionClass);
+
+            if (null !== $arguments) {
+                return $arguments;
+            }
         }
 
-
-        if (!empty($classAnnotation['class']['tags'])) {
-            $configuration['tags'] = (array)$classAnnotation['class']['tags'];
-        }
-
-        $this->services[$serviceName] = $configuration;
+        return null;
     }
 
     /**
      * @param \ReflectionParameter[] $reflectionParameters
      * @return array|null
      */
-    protected function getMethodTypesForNative(array $reflectionParameters)
+    protected function getMethodDependenciesForNative(array $reflectionParameters)
     {
         $arguments = array();
 
@@ -162,5 +179,126 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
         }
 
         return $arguments;
+    }
+
+    /**
+     * @param array $annotations
+     * @param ReflectionClass $reflectionClass
+     * @return array
+     */
+    protected function getMethodDependenciesForPhpDoc(array $annotations, ReflectionClass $reflectionClass)
+    {
+        $arguments = array();
+
+        foreach ($annotations as $value) {
+            $words         = array_filter(explode(' ', $value));
+            $shortType     = array_shift($words);
+            $fullNamespace = strtolower($reflectionClass->getFullNamespace($shortType));
+            $arguments[]   = '@' . substr($fullNamespace, 1);
+        }
+
+        return $arguments;
+    }
+
+    /**
+     * @param string $className
+     * @param array $classAnnotations
+     * @return mixed
+     */
+    protected function getServiceName($className, array $classAnnotations)
+    {
+        $serviceName = $className;
+
+        if (!empty($classAnnotations['class']['service'])) {
+            $serviceName = $classAnnotations['class']['service'];
+        }
+
+        return strtolower($serviceName);
+    }
+
+    /**
+     * @param array $classAnnotations
+     * @param ReflectionClass $reflectionClass
+     * @return array
+     */
+    protected function getProperties(array $classAnnotations, ReflectionClass $reflectionClass)
+    {
+        $properties = array();
+
+        foreach ($classAnnotations['properties'] as $propertyName => $propertyAnnotation) {
+            if (!array_key_exists('autowired', $propertyAnnotation)) {
+                continue;
+            }
+
+            $properties[$propertyName] = $this->getPropertyDependency($propertyName, $propertyAnnotation, $reflectionClass);
+        }
+
+        return $properties;
+    }
+
+    /**
+     * @param string $propertyName
+     * @param array $propertyAnnotation
+     * @param ReflectionClass $reflectionClass
+     * @return array
+     */
+    protected function getPropertyDependency($propertyName, array $propertyAnnotation, ReflectionClass $reflectionClass)
+    {
+        if (is_array($propertyAnnotation['autowired'])) {
+            throw new \RuntimeException(sprintf("Incorrect @autowired value in property '%s'. Expected service name (string type), array given.", $propertyName));
+        }
+
+        if (null === $propertyAnnotation['autowired'] && empty($propertyAnnotation['var'])) {
+            throw new \RuntimeException(sprintf("Impossible to obtain property type in property '%s'. Set type in phpDoc: '@var Type' or write dependency name in annotation: '@autowired service.name'", $propertyName));
+        }
+
+        if (null === $propertyAnnotation['autowired']) {
+            $namespace   = $reflectionClass->getFullNamespace($propertyAnnotation['var']);
+            $serviceName = substr($namespace, 1);
+            $property    = strtolower($serviceName);
+        } else {
+            $words    = explode(' ', $propertyAnnotation['autowired']);
+            $property = reset($words);
+        }
+
+        return $property;
+    }
+
+    /**
+     * @param array $classAnnotations
+     * @param string $className
+     * @return array
+     */
+    protected function getAliases(array $classAnnotations, $className)
+    {
+        $aliases = array();
+
+        if (null !== $classAnnotations['class']['service']) {
+            $aliases[] = strtolower($className);
+        }
+
+        return $aliases;
+    }
+
+    /**
+     * @param array $classAnnotations
+     * @return string|null
+     */
+    protected function getScope(array $classAnnotations)
+    {
+        return !empty($classAnnotations['class']['scope'])
+            ? (string)$classAnnotations['class']['scope']
+            : null;
+    }
+
+    /**
+     * @param array $classAnnotations
+     * @return array|null
+     */
+    protected function getTags(array $classAnnotations)
+    {
+        return !empty($classAnnotations['class']['tags'])
+            ? (array)$classAnnotations['class']['tags']
+            : null;
     }
 }
