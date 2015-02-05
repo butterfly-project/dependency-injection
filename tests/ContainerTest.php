@@ -904,6 +904,9 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testHas()
     {
         $configuration = array(
+            'interfaces' => array(
+                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
+            ),
             'parameters' => array(
                 'parameter1' => 'a',
             ),
@@ -922,6 +925,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($container->has('parameter1'));
         $this->assertTrue($container->has('service.foo'));
         $this->assertTrue($container->has('tag1'));
+        $this->assertTrue($container->has('Butterfly\Component\DI\Tests\Stubs\IServiceFooAware'));
     }
 
     /**

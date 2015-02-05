@@ -117,6 +117,7 @@ class Container
     {
         return $this->hasParameter($id) ||
                $this->hasService($id) ||
+               $this->hasInterface($id) ||
                $this->hasTag($id);
     }
 
