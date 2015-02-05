@@ -869,6 +869,9 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGet()
     {
         $configuration = array(
+            'interfaces' => array(
+                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
+            ),
             'parameters' => array(
                 'parameter1' => 'a',
             ),
@@ -884,8 +887,17 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $container = new Container($configuration);
 
+        // get parameter
         $this->assertEquals('a', $container->get('parameter1'));
+
+        // get service
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $container->get('service.foo'));
+
+        // get interface
+        $interface = 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware';
+        $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $container->get($interface));
+
+        // get tag
         $this->assertCount(1, $container->get('tag1'));
     }
 

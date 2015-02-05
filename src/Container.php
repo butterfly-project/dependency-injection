@@ -19,6 +19,8 @@ use Butterfly\Component\DI\Keeper;
  * done Synthetic Service
  * done Private Field Injection
  * done Interface Injections
+ * done Get interface
+ * @todo Interfaces aliases
  * @todo Private services
  * @todo Depends-on http://docs.spring.io/spring/docs/current/spring-framework-reference/html/beans.html#beans-factory-dependson
  *
@@ -47,11 +49,11 @@ class Container
      * @var array
      */
     protected $configuration = array(
-        'parameters' => array(),
+        'parameters'       => array(),
         'interfaces' => array(),
-        'services'   => array(),
-        'tags'       => array(),
-        'aliases'    => array(),
+        'services'         => array(),
+        'tags'             => array(),
+        'aliases'          => array(),
     );
 
     /**
@@ -94,6 +96,10 @@ class Container
 
         if ($this->hasService($id)) {
             return $this->getService($id);
+        }
+
+        if ($this->hasInterface($id)) {
+            return $this->getInterface($id);
         }
 
         if ($this->hasTag($id)) {
