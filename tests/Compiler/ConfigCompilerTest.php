@@ -36,7 +36,6 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
         Container::SCOPE_SYNTHETIC,
     );
 
-
     protected $configuration = array(
         'parameter_string'  => 'abz',
         'parameter_string2' => 'b22222',
@@ -44,6 +43,17 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
         'parameter_complex' => '%parameter_string%/%parameter_string2%',
         'interfaces'        => array(
             'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.simple',
+            'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware2' => array(
+                'service' => 'service.simple',
+                'alias' => 'foo.aware'
+            ),
+            'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3' => array(
+                'service' => 'service.simple',
+                'alias' => array(
+                    'foo.aware.1',
+                    'foo.aware.2',
+                ),
+            ),
         ),
         'services'          => array(
             'service.simple'                => array(
@@ -140,7 +150,14 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
             'service.simple.alias' => 'service.simple',
         ),
         'interfaces' => array(
-            'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.simple'
+            'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware'  => 'service.simple',
+            'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware2' => 'service.simple',
+            'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3' => 'service.simple',
+        ),
+        'interfaces_aliases' => array(
+            'foo.aware'   => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware2',
+            'foo.aware.1' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3',
+            'foo.aware.2' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3',
         ),
     );
 
@@ -171,11 +188,12 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
         $configuration = $compiler->compileConfig(array());
 
         $expectedConfig = array(
-            'parameters' => array(),
-            'services'   => array(),
-            'tags'       => array(),
-            'aliases'    => array(),
-            'interfaces' => array(),
+            'parameters'         => array(),
+            'services'           => array(),
+            'tags'               => array(),
+            'aliases'            => array(),
+            'interfaces'         => array(),
+            'interfaces_aliases' => array(),
         );
         $this->assertEquals($expectedConfig, $configuration);
     }

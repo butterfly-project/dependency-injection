@@ -20,7 +20,7 @@ use Butterfly\Component\DI\Keeper;
  * done Private Field Injection
  * done Interface Injections
  * done Get interface
- * @todo Interfaces aliases
+ * done Interfaces aliases
  * @todo Private services
  * @todo Depends-on http://docs.spring.io/spring/docs/current/spring-framework-reference/html/beans.html#beans-factory-dependson
  *
@@ -49,11 +49,12 @@ class Container
      * @var array
      */
     protected $configuration = array(
-        'parameters'       => array(),
-        'interfaces' => array(),
-        'services'         => array(),
-        'tags'             => array(),
-        'aliases'          => array(),
+        'parameters'         => array(),
+        'interfaces'         => array(),
+        'interfaces_aliases' => array(),
+        'services'           => array(),
+        'tags'               => array(),
+        'aliases'            => array(),
     );
 
     /**
@@ -202,22 +203,47 @@ class Container
      */
     public function hasInterface($id)
     {
-        return array_key_exists($id, $this->configuration['interfaces']);
+        if (array_key_exists($id, $this->configuration['interfaces'])) {
+            return true;
+        }
+
+        if (array_key_exists($id, $this->configuration['interfaces_aliases']) &&
+            $this->hasInterface($this->configuration['interfaces_aliases'][$id])) {
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
      * @param string $id
      * @return Object
+     * @throws UndefinedInterfaceException if interface is not found
      */
     public function getInterface($id)
     {
-        if (!$this->hasInterface($id)) {
-            throw new UndefinedInterfaceException(sprintf("Interface '%s' is not found", $id));
-        }
-
-        $serviceId = $this->configuration['interfaces'][$id];
+        $serviceId = $this->getInterfaceImplementation($id);
 
         return $this->getService($serviceId);
+    }
+
+    /**
+     * @param string $id
+     * @return string
+     * @throws UndefinedInterfaceException if interface is not found
+     */
+    protected function getInterfaceImplementation($id)
+    {
+        if (array_key_exists($id, $this->configuration['interfaces'])) {
+            return $this->configuration['interfaces'][$id];
+        }
+
+        if (array_key_exists($id, $this->configuration['interfaces_aliases'])) {
+            return $this->getInterfaceImplementation($this->configuration['interfaces_aliases'][$id]);
+        }
+
+        throw new UndefinedInterfaceException(sprintf("Interface '%s' is not found", $id));
     }
 
     /**

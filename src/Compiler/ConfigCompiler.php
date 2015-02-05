@@ -79,11 +79,13 @@ class ConfigCompiler
     /**
      * @param array $configuration
      * @return array
+     * @throws InvalidConfigurationException if incorrect interface configuration
      * @throws InvalidConfigurationException if IoCC configuration is invalid
      */
     public function compileConfig(array $configuration)
     {
         $configuration = $this->prepareConfiguration($configuration);
+        $configuration = $this->prepareInterfaceConfiguration($configuration);
 
         $this->cleanVisitors($this->visitors);
         $this->runServiceVisits($this->visitors, $configuration);
@@ -132,6 +134,66 @@ class ConfigCompiler
     private function getSection(array $configuration, $name)
     {
         return isset($configuration[$name]) ? $configuration[$name] : array();
+    }
+
+    /**
+     * @param array $configuration
+     * @return array
+     * @throws InvalidConfigurationException if incorrect interface configuration
+     */
+    protected function prepareInterfaceConfiguration(array $configuration)
+    {
+        $interfaces = array();
+        $aliases    = array();
+
+        foreach ($configuration['interfaces'] as $interfaceName => $interfaceConfig) {
+            $interfaces[$interfaceName] = $this->getInterfaceImplementation($interfaceName, $interfaceConfig);
+            $interfaceAliases           = $this->getInterfaceAliases($interfaceConfig);
+
+            foreach ($interfaceAliases as $interfaceAlias) {
+                $aliases[$interfaceAlias] = $interfaceName;
+            }
+        }
+
+        $configuration['interfaces']         = $interfaces;
+        $configuration['interfaces_aliases'] = $aliases;
+
+        return $configuration;
+    }
+
+    /**
+     * @param string $name
+     * @param mixed $config
+     * @return string
+     * @throws InvalidConfigurationException if incorrect interface configuration
+     */
+    protected function getInterfaceImplementation($name, $config)
+    {
+        if (!is_array($config)) {
+            return (string)$config;
+        }
+
+        if (!array_key_exists('service', $config)) {
+            throw new InvalidConfigurationException(sprintf(
+                "Incorrect '%s' interface configuration: no 'service' key in %s",
+                $name, var_export($config, true)
+            ));
+        }
+
+        return $config['service'];
+    }
+
+    /**
+     * @param mixed $config
+     * @return array
+     */
+    protected function getInterfaceAliases($config)
+    {
+        if (!is_array($config) || !array_key_exists('alias', $config)) {
+            return array();
+        }
+
+        return (array)$config['alias'];
     }
 
     /**

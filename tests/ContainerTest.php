@@ -573,6 +573,49 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceStub', $service);
     }
 
+    public function testHasInterfaceByAlias()
+    {
+        $configuration = array(
+            'interfaces' => array(
+                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
+            ),
+            'services'   => array(
+                'service.foo'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
+                ),
+            ),
+            'interfaces_aliases' => array(
+                'interface.alias' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware',
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertTrue($container->hasInterface('interface.alias'));
+        $this->assertFalse($container->hasInterface('interface.undefined_alias'));
+    }
+
+    public function testGetInterfaceByAlias()
+    {
+        $configuration = array(
+            'interfaces' => array(
+                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
+            ),
+            'services'   => array(
+                'service.foo'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
+                ),
+            ),
+            'interfaces_aliases' => array(
+                'interface.alias' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware',
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertInstanceOf('Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $container->getInterface('interface.alias'));
+    }
+
     public function testTriggers()
     {
         $configuration = array(
