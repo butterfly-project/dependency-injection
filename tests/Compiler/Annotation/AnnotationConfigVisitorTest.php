@@ -25,14 +25,6 @@ class AnnotationConfigVisitorTest extends \PHPUnit_Framework_TestCase
                 ),
             ))),
 
-            // Example 2. named service
-            array(__DIR__ . '/Stub/Annotation/Example2', array('services' => array(
-                'service.base' => array(
-                    'class' => "$baseNamespace\\Example2\\Service",
-                    'alias' => array("$lowerNamespace\\example2\\service"),
-                ),
-            ))),
-
             // Example 3. property for type
             array(__DIR__ . '/Stub/Annotation/Example3', array('services' => array(
                 "$lowerNamespace\\example3\\dira\\innerservice" => array(
@@ -120,29 +112,6 @@ class AnnotationConfigVisitorTest extends \PHPUnit_Framework_TestCase
                 ),
             ))),
 
-            // Example 8. tags
-            array(__DIR__ . '/Stub/Annotation/Example8', array('services' => array(
-                'service.base' => array(
-                    'class' => "$baseNamespace\\Example8\\Service",
-                    'alias' => array("$lowerNamespace\\example8\\service"),
-                    'tags' => array('tagA'),
-                ),
-                'service.base2' => array(
-                    'class' => "$baseNamespace\\Example8\\Service2",
-                    'alias' => array("$lowerNamespace\\example8\\service2"),
-                    'tags' => array('tagA', 'tagB'),
-                ),
-            ))),
-
-            // Example 9. scopes
-            array(__DIR__ . '/Stub/Annotation/Example9', array('services' => array(
-                'service.base' => array(
-                    'class' => "$baseNamespace\\Example9\\Service",
-                    'alias' => array("$lowerNamespace\\example9\\service"),
-                    'scope' => 'prototype',
-                ),
-            ))),
-
             // Example 10. constructor
             array(__DIR__ . '/Stub/Annotation/Example10', array('services' => array(
                 "$lowerNamespace\\example10\\dira\\innerservice" => array(
@@ -153,6 +122,57 @@ class AnnotationConfigVisitorTest extends \PHPUnit_Framework_TestCase
                     'alias' => array("$lowerNamespace\\example10\\service"),
                     'arguments' => array(
                         '@service.inner',
+                    ),
+                ),
+            ))),
+
+            // Example 11. annotation DI configuration
+            array(__DIR__ . '/Stub/Annotation/Example11', array('services' => array(
+                "$lowerNamespace\\example11\\dira\\innerservice" => array(
+                    'class' => "$baseNamespace\\Example11\\DirA\\InnerService",
+                ),
+                'service.base' => array(
+                    'class' => "$baseNamespace\\Example11\\Service",
+                    'arguments' => array(
+                        '@service.inner',
+                    ),
+                    'calls' => array(
+                        array('setParameterA', array('%parameter.a%')),
+                        array('setParameterB', array('%parameter.b%')),
+                    ),
+                    'properties' => array(
+                        'propertyA' => '%parameter_of_property.a%',
+                        'propertyB' => '%parameter_of_property.b%',
+                    ),
+                    'scope' => 'factory',
+                    'alias' => array(
+                        "$lowerNamespace\\example11\\service",
+                        "service.alias"
+                    ),
+                    'tags'        => array('service.tag'),
+                    'preTriggers' => array(
+                        array(
+                            'service'   => 'service.trigger',
+                            'method'    => 'beforeCreate',
+                            'arguments' => array('%parameter.a%'),
+                        ),
+                        array(
+                            'class'     => 'Me\Trigger',
+                            'method'    => 'beforeCreate',
+                            'arguments' => array('%parameter.a%'),
+                        ),
+                    ),
+                    'postTriggers' => array(
+                        array(
+                            'service'   => 'service.trigger',
+                            'method'    => 'afterCreate',
+                            'arguments' => array('%parameter.b%'),
+                        ),
+                        array(
+                            'class'     => 'Me\Trigger',
+                            'method'    => 'afterCreate',
+                            'arguments' => array('%parameter.b%'),
+                        ),
                     ),
                 ),
             ))),

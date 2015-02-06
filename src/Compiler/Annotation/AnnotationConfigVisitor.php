@@ -3,6 +3,7 @@
 namespace Butterfly\Component\DI\Compiler\Annotation;
 
 use Butterfly\Component\Annotations\Visitor\IAnnotationVisitor;
+use Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
@@ -44,14 +45,19 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
             return;
         }
 
-        $this->convertAnnotationsToConfig($className, $classAnnotations);
+        $config      = $this->convertAutowiredToConfig($className, $classAnnotations);
+        $config      = $this->convertAnnotationsToConfig($config, $className, $classAnnotations);
+        $serviceName = $this->getServiceName($className, $classAnnotations);
+
+        $this->services[$serviceName] = $config;
     }
 
     /**
      * @param string $className
      * @param array $classAnnotations
+     * @return array
      */
-    protected function convertAnnotationsToConfig($className, array $classAnnotations)
+    protected function convertAutowiredToConfig($className, array $classAnnotations)
     {
         $config = array(
             'class' => $className,
@@ -64,13 +70,30 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
         $config = $this->addSectionIfNotEmpty($config, 'calls', $calls);
 
         $config = $this->addSectionIfNotEmpty($config, 'properties', $this->getProperties($classAnnotations, $reflectionClass));
-        $config = $this->addSectionIfNotEmpty($config, 'alias', $this->getAliases($classAnnotations, $className));
+
+        return $config;
+    }
+
+    /**
+     * @param array $config
+     * @param string $className
+     * @param array $annotations
+     * @return array
+     */
+    protected function convertAnnotationsToConfig(array $config, $className, array $annotations)
+    {
+        $classAnnotations = $annotations['class'];
+
+        $config = $this->addSectionIfNotEmpty($config, 'arguments', $this->getServiceArguments($className, $classAnnotations));
+        $config = $this->addSectionIfNotEmpty($config, 'calls', $this->getServiceCalls($className, $classAnnotations));
+        $config = $this->addSectionIfNotEmpty($config, 'properties', $this->getServiceProperties($className, $classAnnotations));
+        $config = $this->addSectionIfNotEmpty($config, 'alias', $this->getServiceAliases($classAnnotations, $className));
+        $config = $this->addSectionIfNotEmpty($config, 'preTriggers', $this->getServiceTriggers('preTriggers', $classAnnotations, $className));
+        $config = $this->addSectionIfNotEmpty($config, 'postTriggers', $this->getServiceTriggers('postTriggers', $classAnnotations, $className));
         $config = $this->addSectionIfNotEmpty($config, 'scope', $this->getScope($classAnnotations));
         $config = $this->addSectionIfNotEmpty($config, 'tags', $this->getTags($classAnnotations));
 
-        $serviceName = $this->getServiceName($className, $classAnnotations);
-
-        $this->services[$serviceName] = $config;
+        return $config;
     }
 
     /**
@@ -86,6 +109,183 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
         }
 
         return $config;
+    }
+
+    /**
+     * @param string $className
+     * @param array $classAnnotations
+     * @return array
+     * @throws InvalidConfigurationException if invalid arguments annotation
+     */
+    protected function getServiceArguments($className, array $classAnnotations)
+    {
+        if (!array_key_exists('arguments', $classAnnotations)) {
+            return array();
+        }
+
+        if (!is_array($classAnnotations['arguments'])) {
+            throw new InvalidConfigurationException(sprintf(
+                "Invalid value of @arguments annotation in '%s' service. Expected array, given: %s",
+                $className, var_export($classAnnotations['arguments'], true)
+            ));
+        }
+
+        $arguments = array();
+
+        foreach ($classAnnotations['arguments'] as $dependency) {
+            $arguments[] = $this->formatDependency($dependency);
+        }
+
+        return $arguments;
+    }
+
+    /**
+     * @param string $className
+     * @param array $classAnnotations
+     * @return array
+     * @throws InvalidConfigurationException if invalid calls annotation
+     * @throws InvalidConfigurationException if invalid calls annotation
+     */
+    protected function getServiceCalls($className, array $classAnnotations)
+    {
+        if (!array_key_exists('calls', $classAnnotations)) {
+            return array();
+        }
+
+        $calls = array();
+
+        foreach ($classAnnotations['calls'] as $callConfig) {
+            if (!is_array($callConfig) || count($callConfig) != 2) {
+                throw new InvalidConfigurationException(sprintf(
+                    "Invalid value of @calls annotation in '%s' service. Expected array with 2 values, given: %s",
+                    $className, var_export($callConfig, true)
+                ));
+            }
+
+            list($method, $rawArguments) = $callConfig;
+
+            if (!is_array($rawArguments)) {
+                throw new InvalidConfigurationException(sprintf(
+                    "Invalid value of @calls annotation in '%s' service. Expected array arguments, given: %s",
+                    $className, var_export($rawArguments, true)
+                ));
+            }
+
+            $arguments = array();
+            foreach ($rawArguments as $rawArgument) {
+                $arguments[] = $this->formatDependency($rawArgument);
+            }
+
+            $calls[] = array($method, $arguments);
+        }
+
+        return $calls;
+    }
+
+    /**
+     * @param string $className
+     * @param array $classAnnotations
+     * @return array
+     */
+    protected function getServiceProperties($className, array $classAnnotations)
+    {
+        if (!array_key_exists('properties', $classAnnotations)) {
+            return array();
+        }
+
+        $properties = array();
+
+        foreach ($classAnnotations['properties'] as $propertyName => $propertyConfig) {
+            $properties[$propertyName] = $this->formatDependency($propertyConfig);
+        }
+
+
+        return $properties;
+    }
+
+    /**
+     * @param array $classAnnotations
+     * @param string $className
+     * @return array
+     */
+    protected function getServiceAliases(array $classAnnotations, $className)
+    {
+        $aliases = array();
+
+        if (null !== $classAnnotations['service']) {
+            $aliases[] = strtolower($className);
+        }
+
+        if (array_key_exists('alias', $classAnnotations)) {
+            $aliases = array_merge($aliases, (array)$classAnnotations['alias']);
+        }
+
+        return $aliases;
+    }
+
+    /**
+     * @param string $annotationName
+     * @param array $classAnnotations
+     * @param string $className
+     * @return array
+     */
+    protected function getServiceTriggers($annotationName, array $classAnnotations, $className)
+    {
+        if (!array_key_exists($annotationName, $classAnnotations)) {
+            return array();
+        }
+
+        $rawTriggers = $classAnnotations[$annotationName];
+
+        if (!is_array($rawTriggers)) {
+            throw new InvalidConfigurationException(sprintf(
+                "Invalid @%s annotation value in '%s'. Expected array, given: %s",
+                $annotationName, $className, var_export($rawTriggers, true)
+            ));
+        }
+
+        $triggers = array();
+
+        foreach ($rawTriggers as $rawTrigger) {
+            if (!is_array($rawTrigger)) {
+                throw new InvalidConfigurationException(sprintf(
+                    "Invalid @%s annotation value in '%s'. Expected array trigger configuration, given: %s",
+                    $annotationName, $className, var_export($rawTrigger, true)
+                ));
+            }
+
+            if (!array_key_exists('service', $rawTrigger) && !array_key_exists('class', $rawTrigger)) {
+                throw new InvalidConfigurationException(sprintf(
+                    "Invalid @%s annotation value in '%s'. Expected section 'class' or 'service' in trigger configuration, given: %s",
+                    $annotationName, $className, var_export($rawTrigger, true)
+                ));
+            }
+
+            if (!array_key_exists('method', $rawTrigger)) {
+                throw new InvalidConfigurationException(sprintf(
+                    "Invalid @%s annotation value in '%s'. Expected section 'method' in trigger configuration, given: %s",
+                    $annotationName, $className, var_export($rawTrigger, true)
+                ));
+            }
+
+            if (!array_key_exists('arguments', $rawTrigger) || !is_array($rawTrigger['arguments'])) {
+                throw new InvalidConfigurationException(sprintf(
+                    "Invalid @%s annotation value in '%s'. Expected section 'method' in trigger configuration, given: %s",
+                    $annotationName, $className, var_export($rawTrigger, true)
+                ));
+            }
+
+            $arguments = array();
+            foreach ($rawTrigger['arguments'] as $dependency) {
+                $arguments[] = $this->formatDependency($dependency);
+            }
+
+            $rawTrigger['arguments'] = $arguments;
+
+            $triggers[] = $rawTrigger;
+        }
+
+        return $triggers;
     }
 
     /**
@@ -131,7 +331,7 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
             $arguments = array();
 
             foreach ($methodAnnotation['autowired'] as $dependency) {
-                $arguments[] = ('%' != $dependency[0]) ? '@' . $dependency : $dependency;
+                $arguments[] = $this->formatDependency($dependency);
             }
 
             return $arguments;
@@ -266,28 +466,12 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
 
     /**
      * @param array $classAnnotations
-     * @param string $className
-     * @return array
-     */
-    protected function getAliases(array $classAnnotations, $className)
-    {
-        $aliases = array();
-
-        if (null !== $classAnnotations['class']['service']) {
-            $aliases[] = strtolower($className);
-        }
-
-        return $aliases;
-    }
-
-    /**
-     * @param array $classAnnotations
      * @return string|null
      */
     protected function getScope(array $classAnnotations)
     {
-        return !empty($classAnnotations['class']['scope'])
-            ? (string)$classAnnotations['class']['scope']
+        return !empty($classAnnotations['scope'])
+            ? (string)$classAnnotations['scope']
             : null;
     }
 
@@ -297,8 +481,17 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
      */
     protected function getTags(array $classAnnotations)
     {
-        return !empty($classAnnotations['class']['tags'])
-            ? (array)$classAnnotations['class']['tags']
+        return !empty($classAnnotations['tags'])
+            ? (array)$classAnnotations['tags']
             : null;
+    }
+
+    /**
+     * @param string $dependency
+     * @return string
+     */
+    protected function formatDependency($dependency)
+    {
+        return in_array($dependency[0], array('%', '#')) ? $dependency : '@' . $dependency;
     }
 }
