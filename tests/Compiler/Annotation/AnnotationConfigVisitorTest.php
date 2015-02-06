@@ -28,6 +28,7 @@ class AnnotationConfigVisitorTest extends \PHPUnit_Framework_TestCase
              * @scope
              * @alias
              * @tags
+             * @factory
              */
 
             // Example 1. common annotations
@@ -81,6 +82,31 @@ class AnnotationConfigVisitorTest extends \PHPUnit_Framework_TestCase
                 ),
             ))),
 
+            // Example 2. basic factory methods and static factory methods
+            array(__DIR__ . '/Stub/Annotation/Example2', array('services' => array(
+                'service.factory' => array(
+                    'class' => "$baseNamespace\\Annotation\\Example2\\Service",
+                    'alias' => array(
+                        "$lowerNamespace\\annotation\\example2\\service"
+                    ),
+                ),
+                'service.inner' => array(
+                    'factoryMethod' => array('@service.factory', 'createInnerService'),
+                    'arguments'     => array(),
+                ),
+                'service.inner2' => array(
+                    'factoryMethod' => array('@service.factory', 'createInnerService2'),
+                    'arguments'     => array('%parameter.a%', '%parameter.b%'),
+                ),
+                'service.inner3' => array(
+                    'factoryStaticMethod' => array("$baseNamespace\\Annotation\\Example2\\Service", 'createInnerService3'),
+                    'arguments'           => array(),
+                ),
+                'service.inner4' => array(
+                    'factoryStaticMethod' => array("$baseNamespace\\Annotation\\Example2\\Service", 'createInnerService4'),
+                    'arguments'           => array('%parameter.a%', '%parameter.b%'),
+                ),
+            ))),
 
             /**
              * autowired configuration:

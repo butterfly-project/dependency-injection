@@ -47,24 +47,30 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
             return;
         }
 
-        $config      = $this->convertAutowiredToConfig($className, $classAnnotations);
+        $reflectionClass = new ReflectionClass($className);
+
+        $config      = $this->convertAutowiredToConfig($className, $classAnnotations, $reflectionClass);
         $config      = $this->convertAnnotationsToConfig($config, $className, $classAnnotations);
 
         $this->services[$serviceName] = $config;
+
+        $servicesForFactories = $this->getServicesForFactories($serviceName, $reflectionClass, $classAnnotations['methods']);
+        foreach ($servicesForFactories as $name => $config) {
+            $this->services[$name] = $config;
+        }
     }
 
     /**
      * @param string $className
      * @param array $classAnnotations
+     * @param ReflectionClass $reflectionClass
      * @return array
      */
-    protected function convertAutowiredToConfig($className, array $classAnnotations)
+    protected function convertAutowiredToConfig($className, array $classAnnotations, ReflectionClass $reflectionClass)
     {
         $config = array(
             'class' => $className,
         );
-
-        $reflectionClass = new ReflectionClass($className);
 
         list($arguments, $calls) = $this->getMethods($classAnnotations, $reflectionClass);
         $config = $this->addSectionIfNotEmpty($config, 'arguments', $arguments);
@@ -95,6 +101,66 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
         $config = $this->addSectionIfNotEmpty($config, 'tags', $this->getTags($classAnnotations));
 
         return $config;
+    }
+
+    /**
+     * @param string $factoryServiceName
+     * @param ReflectionClass $reflectionClass
+     * @param array $methodsAnnotations
+     * @return array
+     */
+    protected function getServicesForFactories($factoryServiceName, ReflectionClass $reflectionClass, array $methodsAnnotations)
+    {
+        $classname = $reflectionClass->getName();
+
+        $services = array();
+
+        foreach ($methodsAnnotations as $methodName => $methodAnnotations) {
+            $reflectionMethod = $reflectionClass->getMethod($methodName);
+
+            if ($reflectionMethod->isConstructor() || !array_key_exists('factory', $methodAnnotations)) {
+                continue;
+            }
+
+            $annotation = $methodAnnotations['factory'];
+
+            if (null === $annotation) {
+                throw new InvalidConfigurationException(sprintf(
+                    "Incorrect @factory annotation value in %s. Expected string or array, given null",
+                    $classname
+                ));
+            }
+
+
+            $config = array();
+            if ($reflectionMethod->isStatic()) {
+                $config['factoryStaticMethod'] = array($classname, $methodName);
+            } else {
+                $config['factoryMethod'] = array('@' . $factoryServiceName, $methodName);
+            }
+
+            if (is_array($annotation)) {
+                if (empty($annotation['service']) || empty($annotation['arguments'])) {
+                    throw new InvalidConfigurationException(sprintf(
+                        "Incorrect @factory annotation value in %s. Expected 'service' and 'arguments' key in array, given %s",
+                        $classname, var_export($annotation, true)
+                    ));
+                }
+
+                $serviceName = $annotation['service'];
+                $arguments   = $annotation['arguments'];
+            } else {
+                $serviceName = $annotation;
+                $arguments = array();
+            }
+
+            $config['arguments'] = $arguments;
+
+            $services[$serviceName] = $config;
+        }
+
+
+        return $services;
     }
 
     /**
@@ -408,11 +474,13 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
      */
     protected function getServiceName($className, array $classAnnotations)
     {
-        $serviceName = $className;
-
-        if (!empty($classAnnotations['service'])) {
-            $serviceName = $classAnnotations['service'];
+        if (!array_key_exists('service', $classAnnotations)) {
+            return null;
         }
+
+        $serviceName = !empty($classAnnotations['service'])
+            ? $classAnnotations['service']
+            : $className;
 
         return strtolower($serviceName);
     }
