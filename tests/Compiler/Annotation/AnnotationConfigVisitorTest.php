@@ -13,126 +13,30 @@ class AnnotationConfigVisitorTest extends \PHPUnit_Framework_TestCase
 {
     public function getDataForTestExtractDiConfiguration()
     {
-        $baseNamespace  = 'Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Annotation';
+        $baseNamespace  = 'Butterfly\Component\DI\Tests\Compiler\Annotation\Stub';
         $lowerNamespace = strtolower($baseNamespace);
 
         return array(
 
-            // Example 1. not named service
+            /**
+             * annotations based configuration:
+             *
+             * @service
+             * @arguments
+             * @calls
+             * @properties
+             * @scope
+             * @alias
+             * @tags
+             */
+
+            // Example 1. common annotations
             array(__DIR__ . '/Stub/Annotation/Example1', array('services' => array(
-                "$lowerNamespace\\example1\\service" => array(
-                    'class' => "$baseNamespace\\Example1\\Service",
-                ),
-            ))),
-
-            // Example 3. property for type
-            array(__DIR__ . '/Stub/Annotation/Example3', array('services' => array(
-                "$lowerNamespace\\example3\\dira\\innerservice" => array(
-                    'class' => "$baseNamespace\\Example3\\DirA\\InnerService",
+                "$lowerNamespace\\annotation\\example1\\dira\\innerservice" => array(
+                    'class' => "$baseNamespace\\Annotation\\Example1\\DirA\\InnerService",
                 ),
                 'service.base' => array(
-                    'class' => "$baseNamespace\\Example3\\Service",
-                    'alias' => array("$lowerNamespace\\example3\\service"),
-                    'properties' => array(
-                        'inner' => "$lowerNamespace\\example3\\dira\\innerservice",
-                    ),
-                ),
-            ))),
-
-            // Example 4. property for annotation
-            array(__DIR__ . '/Stub/Annotation/Example4', array('services' => array(
-                'service.base' => array(
-                    'class' => "$baseNamespace\\Example4\\Service",
-                    'alias' => array("$lowerNamespace\\example4\\service"),
-                    'properties' => array(
-                        'innerService'  => "service.inner",
-                        'innerProperty' => "parameter.inner",
-                    ),
-                ),
-            ))),
-
-            // Example 5. methods for types
-            array(__DIR__ . '/Stub/Annotation/Example5', array('services' => array(
-                "$lowerNamespace\\example5\\dira\\innerservice" => array(
-                    'class' => "$baseNamespace\\Example5\\DirA\\InnerService",
-                ),
-                "$lowerNamespace\\example5\\dira\\inner2service" => array(
-                    'class' => "$baseNamespace\\Example5\\DirA\\Inner2Service",
-                ),
-                'service.base' => array(
-                    'class' => "$baseNamespace\\Example5\\Service",
-                    'alias' => array("$lowerNamespace\\example5\\service"),
-                    'calls' => array(
-                        array('init', array(
-                            "@$lowerNamespace\\example5\\dira\\innerservice",
-                            "@$lowerNamespace\\example5\\dira\\inner2service",
-                        )),
-                    ),
-                ),
-            ))),
-
-            // Example 6. methods for phpDoc types
-            array(__DIR__ . '/Stub/Annotation/Example6', array('services' => array(
-                "$lowerNamespace\\example6\\dira\\innerservice" => array(
-                    'class' => "$baseNamespace\\Example6\\DirA\\InnerService",
-                ),
-                "$lowerNamespace\\example6\\dira\\inner2service" => array(
-                    'class' => "$baseNamespace\\Example6\\DirA\\Inner2Service",
-                ),
-                'service.base' => array(
-                    'class' => "$baseNamespace\\Example6\\Service",
-                    'alias' => array("$lowerNamespace\\example6\\service"),
-                    'calls' => array(
-                        array('init', array(
-                            "@$lowerNamespace\\example6\\dira\\innerservice",
-                            "@$lowerNamespace\\example6\\dira\\inner2service",
-                        )),
-                    ),
-                ),
-            ))),
-
-            // Example 7. methods for autowired annotation
-            array(__DIR__ . '/Stub/Annotation/Example7', array('services' => array(
-                "$lowerNamespace\\example7\\dira\\innerservice" => array(
-                    'class' => "$baseNamespace\\Example7\\DirA\\InnerService",
-                ),
-                "$lowerNamespace\\example7\\dira\\inner2service" => array(
-                    'class' => "$baseNamespace\\Example7\\DirA\\Inner2Service",
-                ),
-                'service.base' => array(
-                    'class' => "$baseNamespace\\Example7\\Service",
-                    'alias' => array("$lowerNamespace\\example7\\service"),
-                    'calls' => array(
-                        array('init', array(
-                            "@service.inner",
-                            "@service.inner2",
-                            "%parameter.input%",
-                        )),
-                    ),
-                ),
-            ))),
-
-            // Example 10. constructor
-            array(__DIR__ . '/Stub/Annotation/Example10', array('services' => array(
-                "$lowerNamespace\\example10\\dira\\innerservice" => array(
-                    'class' => "$baseNamespace\\Example10\\DirA\\InnerService",
-                ),
-                'service.base' => array(
-                    'class' => "$baseNamespace\\Example10\\Service",
-                    'alias' => array("$lowerNamespace\\example10\\service"),
-                    'arguments' => array(
-                        '@service.inner',
-                    ),
-                ),
-            ))),
-
-            // Example 11. annotation DI configuration
-            array(__DIR__ . '/Stub/Annotation/Example11', array('services' => array(
-                "$lowerNamespace\\example11\\dira\\innerservice" => array(
-                    'class' => "$baseNamespace\\Example11\\DirA\\InnerService",
-                ),
-                'service.base' => array(
-                    'class' => "$baseNamespace\\Example11\\Service",
+                    'class' => "$baseNamespace\\Annotation\\Example1\\Service",
                     'arguments' => array(
                         '@service.inner',
                     ),
@@ -146,7 +50,7 @@ class AnnotationConfigVisitorTest extends \PHPUnit_Framework_TestCase
                     ),
                     'scope' => 'factory',
                     'alias' => array(
-                        "$lowerNamespace\\example11\\service",
+                        "$lowerNamespace\\annotation\\example1\\service",
                         "service.alias"
                     ),
                     'tags'        => array('service.tag'),
@@ -173,6 +77,122 @@ class AnnotationConfigVisitorTest extends \PHPUnit_Framework_TestCase
                             'method'    => 'afterCreate',
                             'arguments' => array('%parameter.b%'),
                         ),
+                    ),
+                ),
+            ))),
+
+
+            /**
+             * autowired configuration:
+             *
+             * @service
+             * @autowired
+             */
+
+            // Example 1. not named service
+            array(__DIR__ . '/Stub/Autowired/Example1', array('services' => array(
+                "$lowerNamespace\\autowired\\example1\\service" => array(
+                    'class' => "$baseNamespace\\Autowired\\Example1\\Service",
+                ),
+            ))),
+
+            // Example 2. property for type
+            array(__DIR__ . '/Stub/Autowired/Example2', array('services' => array(
+                "$lowerNamespace\\autowired\\example2\\dira\\innerservice" => array(
+                    'class' => "$baseNamespace\\Autowired\\Example2\\DirA\\InnerService",
+                ),
+                'service.base' => array(
+                    'class' => "$baseNamespace\\Autowired\\Example2\\Service",
+                    'alias' => array("$lowerNamespace\\autowired\\example2\\service"),
+                    'properties' => array(
+                        'inner' => "$lowerNamespace\\autowired\\example2\\dira\\innerservice",
+                    ),
+                ),
+            ))),
+
+            // Example 3. property for autowired value
+            array(__DIR__ . '/Stub/Autowired/Example3', array('services' => array(
+                'service.base' => array(
+                    'class' => "$baseNamespace\\Autowired\\Example3\\Service",
+                    'alias' => array("$lowerNamespace\\autowired\\example3\\service"),
+                    'properties' => array(
+                        'innerService'  => "service.inner",
+                        'innerProperty' => "parameter.inner",
+                    ),
+                ),
+            ))),
+
+            // Example 4. methods for types
+            array(__DIR__ . '/Stub/Autowired/Example4', array('services' => array(
+                "$lowerNamespace\\autowired\\example4\\dira\\innerservice" => array(
+                    'class' => "$baseNamespace\\Autowired\\Example4\\DirA\\InnerService",
+                ),
+                "$lowerNamespace\\autowired\\example4\\dira\\inner2service" => array(
+                    'class' => "$baseNamespace\\Autowired\\Example4\\DirA\\Inner2Service",
+                ),
+                'service.base' => array(
+                    'class' => "$baseNamespace\\Autowired\\Example4\\Service",
+                    'alias' => array("$lowerNamespace\\autowired\\example4\\service"),
+                    'calls' => array(
+                        array('init', array(
+                            "@$lowerNamespace\\autowired\\example4\\dira\\innerservice",
+                            "@$lowerNamespace\\autowired\\example4\\dira\\inner2service",
+                        )),
+                    ),
+                ),
+            ))),
+
+            // Example 5. methods for autowired annotation
+            array(__DIR__ . '/Stub/Autowired/Example5', array('services' => array(
+                "$lowerNamespace\\autowired\\example5\\dira\\innerservice" => array(
+                    'class' => "$baseNamespace\\Autowired\\Example5\\DirA\\InnerService",
+                ),
+                "$lowerNamespace\\autowired\\example5\\dira\\inner2service" => array(
+                    'class' => "$baseNamespace\\Autowired\\Example5\\DirA\\Inner2Service",
+                ),
+                'service.base' => array(
+                    'class' => "$baseNamespace\\Autowired\\Example5\\Service",
+                    'alias' => array("$lowerNamespace\\autowired\\example5\\service"),
+                    'calls' => array(
+                        array('init', array(
+                            "@service.inner",
+                            "@service.inner2",
+                            "%parameter.input%",
+                        )),
+                    ),
+                ),
+            ))),
+
+            // Example 6. methods for phpDoc types
+            array(__DIR__ . '/Stub/Autowired/Example6', array('services' => array(
+                "$lowerNamespace\\autowired\\example6\\dira\\innerservice" => array(
+                    'class' => "$baseNamespace\\Autowired\\Example6\\DirA\\InnerService",
+                ),
+                "$lowerNamespace\\autowired\\example6\\dira\\inner2service" => array(
+                    'class' => "$baseNamespace\\Autowired\\Example6\\DirA\\Inner2Service",
+                ),
+                'service.base' => array(
+                    'class' => "$baseNamespace\\Autowired\\Example6\\Service",
+                    'alias' => array("$lowerNamespace\\autowired\\example6\\service"),
+                    'calls' => array(
+                        array('init', array(
+                            "@$lowerNamespace\\autowired\\example6\\dira\\innerservice",
+                            "@$lowerNamespace\\autowired\\example6\\dira\\inner2service",
+                        )),
+                    ),
+                ),
+            ))),
+
+            // Example 7. constructor
+            array(__DIR__ . '/Stub/Autowired/Example7', array('services' => array(
+                "$lowerNamespace\\autowired\\example7\\dira\\innerservice" => array(
+                    'class' => "$baseNamespace\\Autowired\\Example7\\DirA\\InnerService",
+                ),
+                'service.base' => array(
+                    'class' => "$baseNamespace\\Autowired\\Example7\\Service",
+                    'alias' => array("$lowerNamespace\\autowired\\example7\\service"),
+                    'arguments' => array(
+                        '@service.inner',
                     ),
                 ),
             ))),

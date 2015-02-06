@@ -41,13 +41,14 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
      */
     public function visit($className, array $classAnnotations)
     {
-        if (!array_key_exists('service', $classAnnotations['class'])) {
+        $serviceName = $this->getServiceName($className, $classAnnotations['class']);
+
+        if (null === $serviceName) {
             return;
         }
 
         $config      = $this->convertAutowiredToConfig($className, $classAnnotations);
         $config      = $this->convertAnnotationsToConfig($config, $className, $classAnnotations);
-        $serviceName = $this->getServiceName($className, $classAnnotations);
 
         $this->services[$serviceName] = $config;
     }
@@ -409,8 +410,8 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
     {
         $serviceName = $className;
 
-        if (!empty($classAnnotations['class']['service'])) {
-            $serviceName = $classAnnotations['class']['service'];
+        if (!empty($classAnnotations['service'])) {
+            $serviceName = $classAnnotations['service'];
         }
 
         return strtolower($serviceName);

@@ -1,9 +1,9 @@
 <?php
 
-namespace Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Annotation\Example7;
+namespace Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Autowired\Example5;
 
-use Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Annotation\Example7\DirA\InnerService;
-use Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Annotation\Example7\DirA\Inner2Service;
+use Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Autowired\Example5\DirA\InnerService;
+use Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Autowired\Example5\DirA\Inner2Service;
 
 /**
  * @service service.base

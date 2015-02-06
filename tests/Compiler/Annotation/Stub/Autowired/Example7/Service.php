@@ -1,8 +1,8 @@
 <?php
 
-namespace Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Annotation\Example10;
+namespace Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Autowired\Example7;
 
-use Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Annotation\Example10\DirA\InnerService;
+use Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Autowired\Example7\DirA\InnerService;
 
 /**
  * @service service.base
