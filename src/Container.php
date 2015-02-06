@@ -5,6 +5,8 @@ namespace Butterfly\Component\DI;
 use Butterfly\Component\DI\Exception\BuildObjectException;
 use Butterfly\Component\DI\Exception\BuildServiceException;
 use Butterfly\Component\DI\Exception\IncorrectSyntheticServiceException;
+use Butterfly\Component\DI\Exception\UndefinedInstanceException;
+use Butterfly\Component\DI\Exception\UndefinedInterfaceException;
 use Butterfly\Component\DI\Exception\UndefinedParameterException;
 use Butterfly\Component\DI\Exception\UndefinedServiceException;
 use Butterfly\Component\DI\Exception\UndefinedTagException;
@@ -16,7 +18,11 @@ use Butterfly\Component\DI\Keeper;
  * done Triggers
  * done Synthetic Service
  * done Private Field Injection
+ * done Interface Injections
+ * done Get interface
+ * done Interfaces aliases
  * @todo Private services
+ * @todo Depends-on http://docs.spring.io/spring/docs/current/spring-framework-reference/html/beans.html#beans-factory-dependson
  *
  * Container services
  * @todo Lazy Load Proxy
@@ -25,9 +31,8 @@ use Butterfly\Component\DI\Keeper;
  *
  * Container building
  * done Abstract Services
- * @todo phar archive
- * @todo Composer integration
- * @todo Annotations
+ * done Composer integration
+ * done Annotations
  *
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
@@ -44,11 +49,12 @@ class Container
      * @var array
      */
     protected $configuration = array(
-        'parameters' => array(),
-        'interfaces' => array(),
-        'services'   => array(),
-        'tags'       => array(),
-        'aliases'    => array(),
+        'parameters'         => array(),
+        'interfaces'         => array(),
+        'interfaces_aliases' => array(),
+        'services'           => array(),
+        'tags'               => array(),
+        'aliases'            => array(),
     );
 
     /**
@@ -80,6 +86,44 @@ class Container
 
     /**
      * @param string $id
+     * @return mixed
+     * @throws UndefinedInstanceException if instance is not found
+     */
+    public function get($id)
+    {
+        if ($this->hasParameter($id)) {
+            return $this->getParameter($id);
+        }
+
+        if ($this->hasService($id)) {
+            return $this->getService($id);
+        }
+
+        if ($this->hasInterface($id)) {
+            return $this->getInterface($id);
+        }
+
+        if ($this->hasTag($id)) {
+            return $this->getServicesByTag($id);
+        }
+
+        throw new UndefinedInstanceException(sprintf("Instance '%s' is not found", $id));
+    }
+
+    /**
+     * @param string $id
+     * @return bool
+     */
+    public function has($id)
+    {
+        return $this->hasParameter($id) ||
+               $this->hasService($id) ||
+               $this->hasInterface($id) ||
+               $this->hasTag($id);
+    }
+
+    /**
+     * @param string $id
      * @return bool
      */
     public function hasParameter($id)
@@ -107,7 +151,7 @@ class Container
      * @param string $id
      * @return bool
      */
-    public function has($id)
+    public function hasService($id)
     {
         $id = strtolower($id);
 
@@ -120,7 +164,7 @@ class Container
         }
 
         if (array_key_exists($id, $this->configuration['aliases']) &&
-            $this->has($this->configuration['aliases'][$id])) {
+            $this->hasService($this->configuration['aliases'][$id])) {
             return true;
         }
 
@@ -134,7 +178,7 @@ class Container
      * @throws BuildServiceException if scope is not found
      * @throws BuildServiceException if fail to build service
      */
-    public function get($id)
+    public function getService($id)
     {
         $id = strtolower($id);
 
@@ -151,6 +195,55 @@ class Container
         } catch (BuildObjectException $e) {
             throw new BuildServiceException(sprintf("Failed to build service '%s': %s", $id, $e->getMessage()));
         }
+    }
+
+    /**
+     * @param string $id
+     * @return bool
+     */
+    public function hasInterface($id)
+    {
+        if (array_key_exists($id, $this->configuration['interfaces'])) {
+            return true;
+        }
+
+        if (array_key_exists($id, $this->configuration['interfaces_aliases']) &&
+            $this->hasInterface($this->configuration['interfaces_aliases'][$id])) {
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $id
+     * @return Object
+     * @throws UndefinedInterfaceException if interface is not found
+     */
+    public function getInterface($id)
+    {
+        $serviceId = $this->getInterfaceImplementation($id);
+
+        return $this->getService($serviceId);
+    }
+
+    /**
+     * @param string $id
+     * @return string
+     * @throws UndefinedInterfaceException if interface is not found
+     */
+    protected function getInterfaceImplementation($id)
+    {
+        if (array_key_exists($id, $this->configuration['interfaces'])) {
+            return $this->configuration['interfaces'][$id];
+        }
+
+        if (array_key_exists($id, $this->configuration['interfaces_aliases'])) {
+            return $this->getInterfaceImplementation($this->configuration['interfaces_aliases'][$id]);
+        }
+
+        throw new UndefinedInterfaceException(sprintf("Interface '%s' is not found", $id));
     }
 
     /**
@@ -181,7 +274,7 @@ class Container
         $services = array();
 
         foreach ($servicesIds as $serviceId) {
-            $services[] = $this->get($serviceId);
+            $services[] = $this->getService($serviceId);
         }
 
         return $services;

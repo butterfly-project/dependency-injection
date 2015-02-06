@@ -1,6 +1,19 @@
 CHANGELOG
 =========
 
+1.6.0
+-----
+
+Added functionality:
+
+ * Create facade interface in ConfigCompile class
+ * Create method of getting interface implementation: getInterface, hasInterface
+ * Create interfaces aliases
+ * Create universal methods: get, has. Return or check parameter, service, interface or tag.
+ * Full support DI configuration in annotations
+ * Annotation @autowired for automatical creted DI configuration
+ * Autodetect service name if empty service annotation
+
 1.5.5
 -----
 

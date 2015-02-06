@@ -1,4 +1,4 @@
 Butterfly
-=======
+=========
 
-Butterfly IoC Container (DI)
+Butterfly PHP. Dependency Injection Component

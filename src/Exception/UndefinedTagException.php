@@ -5,7 +5,7 @@ namespace Butterfly\Component\DI\Exception;
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
-class UndefinedTagException extends \InvalidArgumentException
+class UndefinedTagException extends UndefinedInstanceException
 {
 
 }
