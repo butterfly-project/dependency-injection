@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+1.6.1
+-----
+
+Changes:
+
+ * Symbol '@' use method 'get' of container
+
 1.6.0
 -----
 
