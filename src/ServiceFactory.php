@@ -215,7 +215,7 @@ class ServiceFactory
         $firstSymbol = substr($dependence, 0, 1);
         switch ($firstSymbol) {
             case '@':
-                return $this->container->getService(substr($dependence, 1));
+                return $this->container->get(substr($dependence, 1));
                 break;
             case '#':
                 return $this->container->getServicesByTag(substr($dependence, 1));
