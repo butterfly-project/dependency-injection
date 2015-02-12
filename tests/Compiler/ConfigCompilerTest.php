@@ -3,214 +3,13 @@
 namespace Butterfly\Component\DI\Tests\Compiler;
 
 use Butterfly\Component\DI\Compiler\ConfigCompiler;
-use Butterfly\Component\DI\Compiler\ParameterResolver\Resolver;
-use Butterfly\Component\DI\Compiler\ServiceVisitor\ConfigurationValidator;
 use Butterfly\Component\DI\Compiler\ServiceCollector;
-use Butterfly\Component\DI\Container;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
 class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
 {
-    protected $rightSections = array(
-        'class',
-        'factoryMethod',
-        'factoryStaticMethod',
-        'scope',
-        'arguments',
-        'calls',
-        'properties',
-        'preTriggers',
-        'postTriggers',
-        'tags',
-        'alias',
-        'parent',
-    );
-
-    protected $rightScopes = array(
-        '',
-        Container::SCOPE_SINGLETON,
-        Container::SCOPE_FACTORY,
-        Container::SCOPE_PROTOTYPE,
-        Container::SCOPE_SYNTHETIC,
-    );
-
-    protected $configuration = array(
-        'parameter_string'  => 'abz',
-        'parameter_string2' => 'b22222',
-        'parameter_array'   => array(1, 2, 3),
-        'parameter_complex' => '%parameter_string%/%parameter_string2%',
-        'interfaces'        => array(
-            'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.simple',
-            'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware2' => array(
-                'service' => 'service.simple',
-                'alias' => 'foo.aware'
-            ),
-            'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3' => array(
-                'service' => 'service.simple',
-                'alias' => array(
-                    'foo.aware.1',
-                    'foo.aware.2',
-                ),
-            ),
-        ),
-        'services'          => array(
-            'service.simple'                => array(
-                'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                'arguments'  => array(1, '2'),
-                'properties' => array(
-                    'a' => array(1, 2, 3),
-                ),
-                'tags'       => array('tag1'),
-                'alias'      => 'service.simple.alias',
-            ),
-
-            'service.injected_parameters'   => array(
-                'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                'arguments'  => array('%parameter_string%', '%parameter_complex%'),
-                'properties' => array(
-                    'a' => '%parameter_array%',
-                ),
-            ),
-
-            'service.constructor_injection' => array(
-                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
-                'arguments' => array('@service.simple'),
-            ),
-            'service.setter_injection'      => array(
-                'class' => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
-                'calls' => array(
-                    array('setInternalService', array('@service.simple')),
-                ),
-                'tags'  => array('tag1'),
-            ),
-            'service.simple.inheritor'      => array(
-                'class'  => 'Butterfly\Component\DI\Tests\Stubs\ServiceStubInheritor',
-                'parent' => 'service.simple',
-            ),
-        ),
-    );
-
-    /**
-     * @var array
-     */
-    protected $expectedConfiguration = array(
-        'parameters' => array(
-            'parameter_string'  => 'abz',
-            'parameter_string2' => 'b22222',
-            'parameter_array'   => array(1, 2, 3),
-            'parameter_complex' => 'abz/b22222',
-        ),
-        'services'   => array(
-            'service.simple'                => array(
-                'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                'arguments'  => array(1, '2'),
-                'properties' => array(
-                    'a' => array(1, 2, 3),
-                ),
-                'tags'       => array('tag1'),
-                'alias'      => 'service.simple.alias',
-            ),
-
-            'service.injected_parameters'   => array(
-                'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                'arguments'  => array('abz', 'abz/b22222'),
-                'properties' => array(
-                    'a' => array(1, 2, 3),
-                ),
-            ),
-
-            'service.constructor_injection' => array(
-                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
-                'arguments' => array('@service.simple'),
-            ),
-            'service.setter_injection'      => array(
-                'class' => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
-                'calls' => array(
-                    array('setInternalService', array('@service.simple')),
-                ),
-                'tags'  => array('tag1'),
-            ),
-            'service.simple.inheritor'      => array(
-                'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStubInheritor',
-                'arguments'  => array(1, '2'),
-                'properties' => array(
-                    'a' => array(1, 2, 3),
-                ),
-                'calls' => array(),
-                'preTriggers' => array(),
-                'postTriggers' => array(),
-            ),
-        ),
-        'tags'       => array(
-            'tag1' => array('service.simple', 'service.setter_injection'),
-        ),
-        'aliases'    => array(
-            'service.simple.alias' => 'service.simple',
-        ),
-        'interfaces' => array(
-            'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware'  => 'service.simple',
-            'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware2' => 'service.simple',
-            'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3' => 'service.simple',
-        ),
-        'interfaces_aliases' => array(
-            'foo.aware'   => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware2',
-            'foo.aware.1' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3',
-            'foo.aware.2' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3',
-        ),
-    );
-
-    public function testCompileConfig()
-    {
-        $compiler = $this->getConfigCompiler();
-
-        $configuration = $compiler->compileConfig($this->configuration);
-
-        $this->assertEquals($this->expectedConfiguration, $configuration);
-    }
-
-    public function testDoubleCompileConfig()
-    {
-        $compiler = $this->getConfigCompiler();
-
-        $compiler->compileConfig($this->configuration);
-        $configuration = $compiler->compileConfig($this->configuration);
-
-        $this->assertEquals($this->expectedConfiguration, $configuration);
-    }
-
-    public function testEmptyServiceCompileConfig()
-    {
-        $compiler = $this->getConfigCompiler();
-
-        $compiler->compileConfig(array());
-        $configuration = $compiler->compileConfig(array());
-
-        $expectedConfig = array(
-            'parameters'         => array(),
-            'services'           => array(),
-            'tags'               => array(),
-            'aliases'            => array(),
-            'interfaces'         => array(),
-            'interfaces_aliases' => array(),
-        );
-        $this->assertEquals($expectedConfig, $configuration);
-    }
-
-    /**
-     * @return ConfigCompiler
-     */
-    protected function getConfigCompiler()
-    {
-        return new ConfigCompiler(new Resolver(), array(
-            new ConfigurationValidator(),
-            new ServiceCollector\ServiceCollector(),
-            new ServiceCollector\TagCollector(),
-            new ServiceCollector\AliasCollector()
-        ));
-    }
-
     public function testCreateInstance()
     {
         $compiler = ConfigCompiler::createInstance();
@@ -218,10 +17,374 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('\Butterfly\Component\DI\Compiler\ConfigCompiler', $compiler);
     }
 
-    public function testCompile()
+    public function testCompileConfig()
     {
-        $configuration = ConfigCompiler::compile($this->configuration);
+        $input = array(
+            'services'   => array(
+                'service.simple' => array(
+                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => array(1, '2'),
+                ),
+            ),
+        );
 
-        $this->assertEquals($this->expectedConfiguration, $configuration);
+        $exptected = array(
+            'services'   => array(
+                'service.simple' => array(
+                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => array(1, '2'),
+                ),
+            ),
+            'parameters'         => array(),
+            'tags'               => array(),
+            'aliases'            => array(),
+            'interfaces'         => array(),
+            'interfaces_aliases' => array(),
+        );
+
+        $compiler      = ConfigCompiler::createInstance();
+        $configuration = $compiler->compileConfig($input);
+
+        $this->assertEquals($exptected, $configuration);
+    }
+
+    public function testDoubleCompile()
+    {
+        $input = array(
+            'services'   => array(
+                'service.simple' => array(
+                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => array(1, '2'),
+                ),
+            ),
+        );
+
+        $exptected = array(
+            'services'   => array(
+                'service.simple' => array(
+                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => array(1, '2'),
+                ),
+            ),
+            'parameters'         => array(),
+            'tags'               => array(),
+            'aliases'            => array(),
+            'interfaces'         => array(),
+            'interfaces_aliases' => array(),
+        );
+
+        ConfigCompiler::compile($input);
+        $configuration = ConfigCompiler::compile($input);
+
+        $this->assertEquals($exptected, $configuration);
+    }
+
+    public function getTestDataForTestCompile()
+    {
+        return array(
+            // empty input config
+            array(
+                array(),
+                array(
+                    'parameters'         => array(),
+                    'services'           => array(),
+                    'tags'               => array(),
+                    'aliases'            => array(),
+                    'interfaces'         => array(),
+                    'interfaces_aliases' => array(),
+                ),
+            ),
+
+            // simple parameters
+            array(
+                array(
+                    'parameter_string'  => 'abz',
+                    'parameter_string2' => 'b22222',
+                    'parameter_array'   => array(1, 2, 3),
+                    'parameter_text' => 'abz/b22222',
+                ),
+                array(
+                    'parameters'         => array(
+                        'parameter_string'  => 'abz',
+                        'parameter_string2' => 'b22222',
+                        'parameter_array'   => array(1, 2, 3),
+                        'parameter_text' => 'abz/b22222',
+                    ),
+                    'services'           => array(),
+                    'tags'               => array(),
+                    'aliases'            => array(),
+                    'interfaces'         => array(),
+                    'interfaces_aliases' => array(),
+                )
+            ),
+
+            // replaces in parameters
+            array(
+                array(
+                    'parameter_name'   => 'world',
+                    'parameter_result' => 'hello %parameter_name%',
+                ),
+                array(
+                    'parameters'         => array(
+                        'parameter_name'   => 'world',
+                        'parameter_result' => 'hello world',
+                    ),
+                    'services'           => array(),
+                    'tags'               => array(),
+                    'aliases'            => array(),
+                    'interfaces'         => array(),
+                    'interfaces_aliases' => array(),
+                )
+            ),
+
+            // replaces in services
+            array(
+                array(
+                    'service.name'  => 'service.injected_parameters',
+                    'service.class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                    'service.argument.a' => 123,
+                    'service.argument.b' => 'abc',
+                    'service.property.a' => true,
+
+                    'services' => array(
+                        '%service.name%'   => array(
+                            'class'      => '%service.class%',
+                            'arguments'  => array('%service.argument.a%', '%service.argument.b%'),
+                            'properties' => array(
+                                'a' => '%service.property.a%',
+                            ),
+                        ),
+                    ),
+                ),
+                array(
+                    'parameters'         => array(
+                        'service.name'  => 'service.injected_parameters',
+                        'service.class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                        'service.argument.a' => 123,
+                        'service.argument.b' => 'abc',
+                        'service.property.a' => true,
+                    ),
+                    'services'           => array(
+                        'service.injected_parameters'   => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments'  => array(123, 'abc'),
+                            'properties' => array(
+                                'a' => true,
+                            ),
+                        ),
+                    ),
+                    'tags'               => array(),
+                    'aliases'            => array(),
+                    'interfaces'         => array(),
+                    'interfaces_aliases' => array(),
+                )
+            ),
+
+            // service injection
+            array(
+                array(
+                    'services' => array(
+                        'service.simple'   => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments'  => array(1, '2'),
+                        ),
+                        'service.with_injections'   => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
+                            'arguments'  => array('@service.simple'),
+                            'calls' => array(
+                                array('setInternalService', array('@service.simple')),
+                            ),
+                        ),
+                    ),
+                ),
+                array(
+                    'parameters' => array(),
+                    'services' => array(
+                        'service.simple'   => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments'  => array(1, '2'),
+                        ),
+                        'service.with_injections'   => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
+                            'arguments'  => array('@service.simple'),
+                            'calls' => array(
+                                array('setInternalService', array('@service.simple')),
+                            ),
+                        ),
+                    ),
+                    'tags'               => array(),
+                    'aliases'            => array(),
+                    'interfaces'         => array(),
+                    'interfaces_aliases' => array(),
+                )
+            ),
+
+            // service inheritor
+            array(
+                array(
+                    'services' => array(
+                        'service.simple'   => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments'  => array(1, '2'),
+                        ),
+                        'service.simple.inheritor'      => array(
+                            'class'  => 'Butterfly\Component\DI\Tests\Stubs\ServiceStubInheritor',
+                            'parent' => 'service.simple',
+                        ),
+                    ),
+                ),
+                array(
+                    'parameters' => array(),
+                    'services' => array(
+                        'service.simple'   => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments'  => array(1, '2'),
+                        ),
+                        'service.simple.inheritor'      => array(
+                            'class'  => 'Butterfly\Component\DI\Tests\Stubs\ServiceStubInheritor',
+                            'arguments'  => array(1, '2'),
+                            'calls' => array(),
+                            'properties' => array(),
+                            'preTriggers' => array(),
+                            'postTriggers' => array(),
+                        ),
+                    ),
+                    'tags'               => array(),
+                    'aliases'            => array(),
+                    'interfaces'         => array(),
+                    'interfaces_aliases' => array(),
+                )
+            ),
+
+            // tags
+            array(
+                array(
+                    'services' => array(
+                        'service.simple.a'   => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments'  => array(1, '2'),
+                            'tags' => 'tag.a'
+                        ),
+                        'service.simple.b'      => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments'  => array(1, '2'),
+                            'tags' => array('tag.a', 'tag.b')
+                        ),
+                    ),
+                ),
+                array(
+                    'parameters' => array(),
+                    'services' => array(
+                        'service.simple.a'   => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments'  => array(1, '2'),
+                            'tags' => 'tag.a'
+                        ),
+                        'service.simple.b'      => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments'  => array(1, '2'),
+                            'tags' => array('tag.a', 'tag.b')
+                        ),
+                    ),
+                    'tags'               => array(
+                        'tag.a' => array('service.simple.a', 'service.simple.b'),
+                        'tag.b' => array('service.simple.b'),
+                    ),
+                    'aliases'            => array(),
+                    'interfaces'         => array(),
+                    'interfaces_aliases' => array(),
+                )
+            ),
+
+            // aliases
+            array(
+                array(
+                    'services' => array(
+                        'service.simple.a'   => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments'  => array(1, '2'),
+                            'alias' => 'service.alias'
+                        ),
+                    ),
+                ),
+                array(
+                    'parameters' => array(),
+                    'services' => array(
+                        'service.simple.a'   => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments'  => array(1, '2'),
+                            'alias' => 'service.alias',
+                        ),
+                    ),
+                    'tags'               => array(),
+                    'aliases'            => array(
+                        'service.alias' => 'service.simple.a'
+                    ),
+                    'interfaces'         => array(),
+                    'interfaces_aliases' => array(),
+                )
+            ),
+
+            // interfaces
+            array(
+                array(
+                    'interfaces'        => array(
+                        'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.simple',
+                        'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware2' => array(
+                            'service' => 'service.simple',
+                            'alias' => 'foo.aware'
+                        ),
+                        'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3' => array(
+                            'service' => 'service.simple',
+                            'alias' => array(
+                                'foo.aware.1',
+                                'foo.aware.2',
+                            ),
+                        ),
+                    ),
+
+                    'services' => array(
+                        'service.simple.a'   => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments'  => array(1, '2'),
+                        ),
+                    ),
+                ),
+                array(
+                    'parameters' => array(),
+                    'services' => array(
+                        'service.simple.a'   => array(
+                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments'  => array(1, '2'),
+                        ),
+                    ),
+                    'tags'               => array(),
+                    'aliases'            => array(),
+                    'interfaces'         => array(
+                        'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.simple',
+                        'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware2' => 'service.simple',
+                        'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3' => 'service.simple',
+                    ),
+                    'interfaces_aliases' => array(
+                        'foo.aware' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware2',
+                        'foo.aware.1' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3',
+                        'foo.aware.2' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3',
+                    ),
+                )
+            ),
+        );
+    }
+
+    /**
+     * @dataProvider getTestDataForTestCompile
+     *
+     * @param array $inputConfig
+     * @param array $expectedConfig
+     */
+    public function testCompile(array $inputConfig, array $expectedConfig)
+    {
+        $config = ConfigCompiler::compile($inputConfig);
+
+        $this->assertEquals($expectedConfig, $config);
     }
 }
