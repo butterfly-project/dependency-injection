@@ -62,25 +62,11 @@ class ServiceFactory
 
         $object = $objectBuilder->getObject();
 
-        $this->injectInterfaces($object);
-
         if (isset($configuration['postTriggers'])) {
             $this->runTriggers($configuration['postTriggers']);
         }
 
         return $object;
-    }
-
-    /**
-     * @param mixed $object
-     */
-    protected function injectInterfaces($object)
-    {
-        foreach ($this->interfaces as $interface => $serviceId) {
-            if ($object instanceof $interface) {
-                $this->container->getService($serviceId)->inject($object);
-            }
-        }
     }
 
     /**
