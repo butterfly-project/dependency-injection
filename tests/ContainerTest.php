@@ -810,35 +810,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $container->getService('service.dependence_for_synthetic_service');
     }
 
-    public function testInterfaceInjection()
-    {
-        $configuration = array(
-            'interfaces' => array(
-                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
-            ),
-            'services'   => array(
-                'service.foo'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
-                ),
-                'service.bar'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceBar',
-                ),
-                'service.other' => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceOther',
-                ),
-            ),
-        );
-        $container     = new Container($configuration);
-
-        /** @var ServiceBar $service */
-        $service = $container->getService('service.bar');
-        $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $service->getInternalService());
-
-        /** @var ServiceOther $service */
-        $service = $container->getService('service.other');
-        $this->assertNull($service->getInternalService());
-    }
-
     public function testHasInterface()
     {
         $configuration = array(
