@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+1.6.2
+-----
+
+Changes:
+
+ * Temporary remove classic interface injection mechanism 
+
 1.6.1
 -----
 
