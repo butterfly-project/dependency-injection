@@ -1,12 +1,23 @@
 CHANGELOG
 =========
 
+2.0.0
+-----
+
+Added functionality:
+
+ * Reflection of container configuration
+
+Changes:
+
+ * Controll parameters names, services, tags are case sensitive
+
 1.6.2
 -----
 
 Changes:
 
- * Temporary remove classic interface injection mechanism 
+ * Temporary remove classic interface injection mechanism
 
 1.6.1
 -----
