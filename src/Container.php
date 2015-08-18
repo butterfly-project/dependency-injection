@@ -128,7 +128,7 @@ class Container
      */
     public function hasParameter($id)
     {
-        return array_key_exists(strtolower($id), $this->configuration['parameters']);
+        return array_key_exists($id, $this->configuration['parameters']);
     }
 
     /**

@@ -6,9 +6,7 @@ use Butterfly\Component\DI\Container;
 use Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub;
 use Butterfly\Component\DI\Tests\Stubs\FactoryOutputService;
 use Butterfly\Component\DI\Tests\Stubs\PrivatePropertyServiceStub;
-use Butterfly\Component\DI\Tests\Stubs\ServiceBar;
 use Butterfly\Component\DI\Tests\Stubs\ServiceInstanceCounter;
-use Butterfly\Component\DI\Tests\Stubs\ServiceOther;
 use Butterfly\Component\DI\Tests\Stubs\ServiceStub;
 use Butterfly\Component\DI\Tests\Stubs\StaticTriggerService;
 use Butterfly\Component\DI\Tests\Stubs\TriggerService;
@@ -19,28 +17,38 @@ use Butterfly\Component\DI\Tests\Stubs\UseTriggerService;
  */
 class ContainerTest extends \PHPUnit_Framework_TestCase
 {
-    public function testHasParameter()
+    public function getDataForTestHasParameter()
     {
         $configuration = array(
             'parameters' => array(
                 'parameter1' => 'a',
+                'Parameter2' => 'a',
             ),
         );
-        $container     = new Container($configuration);
 
-        $this->assertTrue($container->hasParameter('parameter1'));
+        return array(
+            array($configuration, 'parameter1', true, 'has existing parameter - ok'),
+            array($configuration, 'undefined_parameter', false, 'has unexisting parameter - fail'),
+
+            array($configuration, 'Parameter1', false, 'search case sensitive - fail'),
+            array($configuration, 'Parameter2', true, 'search case sensitive - ok'),
+            array($configuration, 'parameter2', false, 'search case sensitive - fail'),
+        );
     }
 
-    public function testHasParameterIfNoParameter()
+    /**
+     * @dataProvider getDataForTestHasParameter
+     *
+     * @param array $configuration
+     * @param $parameterName
+     * @param $expectedResult
+     * @param $caseMessage
+     */
+    public function testHasParameter(array $configuration, $parameterName, $expectedResult, $caseMessage)
     {
-        $configuration = array(
-            'parameters' => array(
-                'parameter1' => 'a',
-            ),
-        );
-        $container     = new Container($configuration);
+        $container = new Container($configuration);
 
-        $this->assertFalse($container->hasParameter('undefined_parameter'));
+        $this->assertEquals($expectedResult, $container->hasParameter($parameterName), $caseMessage);
     }
 
     public function testGetParameter()
