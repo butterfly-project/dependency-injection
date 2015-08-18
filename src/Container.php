@@ -9,7 +9,6 @@ use Butterfly\Component\DI\Exception\UndefinedInstanceException;
 use Butterfly\Component\DI\Exception\UndefinedInterfaceException;
 use Butterfly\Component\DI\Exception\UndefinedParameterException;
 use Butterfly\Component\DI\Exception\UndefinedServiceException;
-use Butterfly\Component\DI\Exception\UndefinedTagException;
 use Butterfly\Component\DI\Keeper;
 
 /**
@@ -138,8 +137,6 @@ class Container
      */
     public function getParameter($id)
     {
-        $id = strtolower($id);
-
         if (!$this->hasParameter($id)) {
             throw new UndefinedParameterException(sprintf("Parameter '%s' is not found", $id));
         }
@@ -153,8 +150,6 @@ class Container
      */
     public function hasService($id)
     {
-        $id = strtolower($id);
-
         if (self::SERVICE_CONTAINER_ID == $id) {
             return true;
         }
@@ -180,8 +175,6 @@ class Container
      */
     public function getService($id)
     {
-        $id = strtolower($id);
-
         if (self::SERVICE_CONTAINER_ID == $id) {
             return $this;
         }
