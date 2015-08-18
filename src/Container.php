@@ -245,7 +245,7 @@ class Container
      */
     public function hasTag($name)
     {
-        return array_key_exists(strtolower($name), $this->configuration['tags']);
+        return array_key_exists($name, $this->configuration['tags']);
     }
 
     /**
@@ -279,8 +279,6 @@ class Container
      */
     public function getServicesIdsByTag($name)
     {
-        $name = strtolower($name);
-
         return $this->hasTag($name)
             ? $this->configuration['tags'][$name]
             : array();

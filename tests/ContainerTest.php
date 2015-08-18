@@ -444,24 +444,38 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
 
-    public function testHasTag()
+    public function getDataForTestHasTag()
     {
         $configuration = array(
             'tags' => array(
-                'tag1' => array('service.simple', 'service.factory_output')
+                'tag1' => array('service.simple', 'service.factory_output'),
+                'Tag2' => array('service.simple', 'service.factory_output'),
             ),
         );
-        $container     = new Container($configuration);
 
-        $this->assertTrue($container->hasTag('tag1'));
+        return array(
+            array($configuration, 'tag1', true, 'has tag - ok'),
+            array($configuration, 'undefined_tag', false, 'has tag - fail'),
+
+            array($configuration, 'Tag1', false, 'search case sensitive - fail'),
+            array($configuration, 'Tag2', true, 'search case sensitive - ok'),
+            array($configuration, 'tag2', false, 'search case sensitive - fail'),
+        );
     }
 
-    public function testHasTagIfNoTag()
+    /**
+     * @dataProvider getDataForTestHasTag
+     *
+     * @param array $configuration
+     * @param $tagName
+     * @param $expectedResult
+     * @param $caseMessage
+     */
+    public function testHasTag(array $configuration, $tagName, $expectedResult, $caseMessage)
     {
-        $configuration = array();
         $container     = new Container($configuration);
 
-        $this->assertFalse($container->hasTag('undefined_tag'));
+        $this->assertEquals($expectedResult, $container->hasTag($tagName), $caseMessage);
     }
 
     public function testGetTagList()
@@ -501,6 +515,34 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $servicesByTag = $container->getServicesByTag('tag1');
 
         $this->assertCount(2, $servicesByTag);
+    }
+
+    public function testGetServicesByTagWithCaseSensitive()
+    {
+        $configuration = array(
+            'services' => array(
+                'service.simple'         => array(
+                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => array(1, 2)
+                ),
+                'service.factory'        => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\FactoryService',
+                ),
+                'service.factory_output' => array(
+                    'factoryMethod' => array('@service.factory', 'create'),
+                    'arguments'     => array(1, 2),
+                ),
+            ),
+            'tags'     => array(
+                'tag1' => array('service.simple', 'service.factory_output'),
+                'Tag1' => array('service.simple')
+            ),
+        );
+        $container     = new Container($configuration);
+
+        $servicesByTag = $container->getServicesByTag('Tag1');
+
+        $this->assertCount(1, $servicesByTag);
     }
 
     public function testGetServicesIdsByTag()
