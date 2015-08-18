@@ -289,12 +289,11 @@ class Container
     /**
      * @param string $id
      * @param object $service
+     * @throws UndefinedServiceException if service is not found
      * @throws IncorrectSyntheticServiceException if incorrect object class
      */
     public function setSyntheticService($id, $service)
     {
-        $id = strtolower($id);
-
         $serviceDefinition = $this->getServiceDefinition($id);
         $serviceClass      = $serviceDefinition['class'];
 

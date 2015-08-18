@@ -824,6 +824,26 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @expectedException \Butterfly\Component\DI\Exception\UndefinedServiceException
+     */
+    public function testUseSyntheticServiceWithCaseSensitive()
+    {
+        $configuration = array(
+            'services' => array(
+                'service.synthetic'                        => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                    'scope' => 'synthetic'
+                ),
+            ),
+        );
+        $container     = new Container($configuration);
+
+        $syntheticService = new ServiceStub(1, 2);
+
+        $container->setSyntheticService('SERVICE.SYNTHETIC', $syntheticService);
+    }
+
+    /**
      * @expectedException \Butterfly\Component\DI\Exception\IncorrectSyntheticServiceException
      */
     public function testSetSyntheticServiceIfIncorrectClass()
