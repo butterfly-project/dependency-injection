@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+2.0.1
+-----
+
+Changes:
+
+ * Fix case sensitive on parameter resolver
+
 2.0.0
 -----
 
