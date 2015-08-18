@@ -261,30 +261,24 @@ class Container
 
     /**
      * @param string $name
-     * @return object[]
+     * @return ServicesCollection
      */
     public function getServicesByTag($name)
     {
-        $servicesIds = $this->getServicesIdsByTag($name);
+        $servicesIds = $this->hasTag($name) ? $this->configuration['tags'][$name] : array();
 
-        $services = array();
-
-        foreach ($servicesIds as $serviceId) {
-            $services[] = $this->getService($serviceId);
-        }
-
-        return $services;
+        return new ServicesCollection($this, $servicesIds);
     }
 
     /**
+     * @deprecated use $this->getServicesByTag()->getServicesIds(). Deprecated since version 2.1, to be removed in 3.0
+     *
      * @param string $name
      * @return array
      */
     public function getServicesIdsByTag($name)
     {
-        return $this->hasTag($name)
-            ? $this->configuration['tags'][$name]
-            : array();
+        return $this->getServicesByTag($name)->getServicesIds();
     }
 
     /**

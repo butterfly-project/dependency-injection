@@ -577,7 +577,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $configuration = array();
         $container     = new Container($configuration);
 
-        $this->assertEquals(array(), $container->getServicesByTag('undefined_tag'));
+        $this->assertCount(0, $container->getServicesByTag('undefined_tag'));
     }
 
     public function testTagDependency()
