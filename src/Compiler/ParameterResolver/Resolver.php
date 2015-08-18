@@ -55,8 +55,6 @@ class Resolver
      */
     public function get($name)
     {
-        $name = strtolower($name);
-
         if (!array_key_exists($name, $this->parameters)) {
             throw new ParameterNotFoundException($name);
         }
@@ -112,7 +110,7 @@ class Resolver
         // as the preg_replace_callback throw an exception when trying
         // a non-string in a parameter value
         if (preg_match('/^%([^%\s]+)%$/', $value, $match)) {
-            $key = strtolower($match[1]);
+            $key = $match[1];
 
             if (isset($resolving[$key])) {
                 throw new ParameterCircularReferenceException(array_keys($resolving));
@@ -131,7 +129,7 @@ class Resolver
                 return '%%';
             }
 
-            $key = strtolower($match[1]);
+            $key = $match[1];
             if (isset($resolving[$key])) {
                 throw new ParameterCircularReferenceException(array_keys($resolving));
             }
