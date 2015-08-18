@@ -1068,4 +1068,111 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $container->get('undefined');
     }
+
+    public function getDataForTestGetConfig()
+    {
+        $configuration = array(
+            'interfaces' => array(
+                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
+            ),
+            'parameters' => array(
+                'parameter1' => 'a',
+            ),
+            'services'   => array(
+                'service.foo'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
+                ),
+            ),
+            'tags'     => array(
+                'tag1' => array('service.foo')
+            ),
+            'aliases' => array(),
+            'interfaces_aliases' => array(),
+        );
+
+        return array(
+            array($configuration, '', $configuration, 'path root. case 1 - ok'),
+            array($configuration, '/', $configuration, 'path root. case 2 - ok'),
+            array($configuration, '/tags', array('tag1' => array('service.foo')), 'path of tags - ok'),
+            array($configuration, 'parameters/parameter1', 'a', 'path of parameter. case 1 - ok'),
+            array($configuration, '/parameters/parameter1', 'a', 'path of parameter. case 2 - ok'),
+            array($configuration, '/parameters/parameter1/', 'a', 'path of parameter. case 3 - ok'),
+        );
+    }
+
+    /**
+     * @dataProvider getDataForTestGetConfig
+     *
+     * @param array $configuration
+     * @param $path
+     * @param $expectedResult
+     * @param $caseMessage
+     */
+    public function testGetConfig(array $configuration, $path, $expectedResult, $caseMessage)
+    {
+        $container = new Container($configuration);
+
+        $this->assertEquals($expectedResult, $container->getConfig($path), $caseMessage);
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectConfigPathException
+     */
+    public function testGetConfigIfUndefinedIndex()
+    {
+        $configuration = array(
+            'parameters' => array(
+                'parameter1' => 'a',
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $container->getConfig('/parameters/undefined_parameter');
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectConfigPathException
+     */
+    public function testGetConfigIfIncorrectValue()
+    {
+        $configuration = array(
+            'parameters' => array(
+                'parameter1' => 'a',
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $container->getConfig('/parameters/parameter1/sub_parameter');
+    }
+
+    public function testReflection()
+    {
+        $configuration = array(
+            'parameters' => array(
+                'section_of_parameters' => array(
+                    'parameter1' => 'a',
+                    'parameter2' => 'b',
+                ),
+            ),
+            'services'   => array(
+                'service.foo'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => array(
+                        '%parameters/section_of_parameters/parameter1',
+                        '%services/service.foo'
+                    ),
+                ),
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        /** @var ServiceStub $foo */
+        $foo = $container->getService('service.foo');
+
+        $this->assertEquals($configuration['parameters']['section_of_parameters']['parameter1'], $foo->getB());
+        $this->assertEquals($configuration['services']['service.foo'], $foo->getC());
+    }
 }

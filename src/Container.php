@@ -4,6 +4,7 @@ namespace Butterfly\Component\DI;
 
 use Butterfly\Component\DI\Exception\BuildObjectException;
 use Butterfly\Component\DI\Exception\BuildServiceException;
+use Butterfly\Component\DI\Exception\IncorrectConfigPathException;
 use Butterfly\Component\DI\Exception\IncorrectSyntheticServiceException;
 use Butterfly\Component\DI\Exception\UndefinedInstanceException;
 use Butterfly\Component\DI\Exception\UndefinedInterfaceException;
@@ -20,6 +21,7 @@ use Butterfly\Component\DI\Keeper;
  * done Interface Injections
  * done Get interface
  * done Interfaces aliases
+ * done Reflection
  * @todo Private services
  * @todo Depends-on http://docs.spring.io/spring/docs/current/spring-framework-reference/html/beans.html#beans-factory-dependson
  *
@@ -43,6 +45,7 @@ class Container
     const SCOPE_SYNTHETIC = 'synthetic';
 
     const SERVICE_CONTAINER_ID = 'service_container';
+    const CONFIG_PATH_SEPARATOR = '/';
 
     /**
      * @var array
@@ -337,5 +340,38 @@ class Container
         }
 
         throw new UndefinedServiceException(sprintf("Service '%s' is not found", $id));
+    }
+
+    /**
+     * @param string $path
+     * @return mixed
+     */
+    public function getConfig($path)
+    {
+        if (empty($path) || $path == self::CONFIG_PATH_SEPARATOR) {
+            return $this->configuration;
+        }
+
+        return $this->getConfigPath(array_filter(explode(self::CONFIG_PATH_SEPARATOR, $path)), $this->configuration);
+    }
+
+    /**
+     * @param array $keys
+     * @param mixed $config
+     * @return mixed
+     */
+    protected function getConfigPath(array $keys, $config)
+    {
+        if (empty($keys)) {
+            return $config;
+        }
+
+        $key = array_shift($keys);
+
+        if (!is_array($config) || !array_key_exists($key, $config)) {
+            throw new IncorrectConfigPathException(sprintf('Key "%s" not found in config %s', $key, print_r($config, true)));
+        }
+
+        return $this->getConfigPath($keys, $config[$key]);
     }
 }
