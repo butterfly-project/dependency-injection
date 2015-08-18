@@ -143,13 +143,13 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     'service.name'  => 'service.injected_parameters',
                     'service.class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
                     'service.argument.a' => 123,
-                    'service.argument.b' => 'abc',
+                    'SERVICE.ARGUMENT.B' => 'abc',
                     'service.property.a' => true,
 
                     'services' => array(
                         '%service.name%'   => array(
                             'class'      => '%service.class%',
-                            'arguments'  => array('%service.argument.a%', '%service.argument.b%'),
+                            'arguments'  => array('%service.argument.a%', '%SERVICE.ARGUMENT.B%'),
                             'properties' => array(
                                 'a' => '%service.property.a%',
                             ),
@@ -161,7 +161,7 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                         'service.name'  => 'service.injected_parameters',
                         'service.class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
                         'service.argument.a' => 123,
-                        'service.argument.b' => 'abc',
+                        'SERVICE.ARGUMENT.B' => 'abc',
                         'service.property.a' => true,
                     ),
                     'services'           => array(
