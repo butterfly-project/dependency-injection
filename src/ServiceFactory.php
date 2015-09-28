@@ -203,6 +203,9 @@ class ServiceFactory
             case '@':
                 return $this->container->get(substr($dependence, 1));
                 break;
+            case '#':
+                return $this->container->getServicesByTag(substr($dependence, 1));
+                break;
             case '%':
                 return $this->container->getConfig(substr($dependence, 1));
                 break;
