@@ -2,9 +2,10 @@
 
 namespace Butterfly\Component\DI;
 
+use Butterfly\Component\DI\Compiler\Annotation\ReflectionClass;
 use Butterfly\Component\DI\Exception\BuildObjectException;
 use Butterfly\Component\DI\Exception\BuildServiceException;
-use Butterfly\Component\DI\Exception\IncorrectConfigPathException;
+use Butterfly\Component\DI\Exception\IncorrectExpressionPathException;
 use Butterfly\Component\DI\Exception\IncorrectSyntheticServiceException;
 use Butterfly\Component\DI\Exception\UndefinedInstanceException;
 use Butterfly\Component\DI\Exception\UndefinedInterfaceException;
@@ -87,11 +88,25 @@ class Container
     }
 
     /**
+     * @param string $expression
+     * @return mixed
+     * @throws UndefinedInstanceException if instance is not found
+     * @throws IncorrectExpressionPathException if incorrect expression
+     */
+    public function get($expression)
+    {
+        $path     = array_filter(explode(self::CONFIG_PATH_SEPARATOR, $expression));
+        $instance = $this->getInstance(array_shift($path));
+
+        return $this->resolvePath($path, $instance);
+    }
+
+    /**
      * @param string $id
      * @return mixed
      * @throws UndefinedInstanceException if instance is not found
      */
-    public function get($id)
+    public function getInstance($id)
     {
         if ($this->hasParameter($id)) {
             return $this->getParameter($id);
@@ -110,6 +125,52 @@ class Container
         }
 
         throw new UndefinedInstanceException(sprintf("Instance '%s' is not found", $id));
+    }
+
+    /**
+     * @param array $path
+     * @param mixed $instance
+     * @return mixed
+     * @throws IncorrectExpressionPathException if incorrect expression
+
+     */
+    protected function resolvePath(array $path, $instance)
+    {
+        $path = array_filter($path);
+
+        if (empty($path)) {
+            return $instance;
+        }
+
+        $key = array_shift($path);
+
+        if (is_array($instance) || $instance instanceof \ArrayObject) {
+
+            if (!array_key_exists($key, $instance)) {
+                throw new IncorrectExpressionPathException($key, $instance);
+            }
+
+            $result = $instance[$key];
+
+        } elseif (is_object($instance)) {
+
+            $instanceReflection = new ReflectionClass($instance);
+
+            if ($instanceReflection->hasProperty($key) && $instanceReflection->getProperty($key)->isPublic()) {
+                $result = $instance->$key;
+            } elseif (is_callable(array($instance, $key))) {
+                $result = call_user_func(array($instance, $key));
+            } elseif (is_callable(array($instance, 'get'. ucfirst($key)))) {
+                $result = call_user_func(array($instance, 'get'. ucfirst($key)));
+            } else {
+                throw new IncorrectExpressionPathException($key, $instance);
+            }
+
+        } else {
+            throw new IncorrectExpressionPathException($key, $instance);
+        }
+
+        return $this->resolvePath($path, $result);
     }
 
     /**
@@ -342,30 +403,6 @@ class Container
      */
     public function getConfig($path)
     {
-        if (empty($path) || $path == self::CONFIG_PATH_SEPARATOR) {
-            return $this->configuration;
-        }
-
-        return $this->getConfigPath(array_filter(explode(self::CONFIG_PATH_SEPARATOR, $path)), $this->configuration);
-    }
-
-    /**
-     * @param array $keys
-     * @param mixed $config
-     * @return mixed
-     */
-    protected function getConfigPath(array $keys, $config)
-    {
-        if (empty($keys)) {
-            return $config;
-        }
-
-        $key = array_shift($keys);
-
-        if (!is_array($config) || !array_key_exists($key, $config)) {
-            throw new IncorrectConfigPathException(sprintf('Key "%s" not found in config %s', $key, print_r($config, true)));
-        }
-
-        return $this->getConfigPath($keys, $config[$key]);
+        return $this->resolvePath(array_filter(explode(self::CONFIG_PATH_SEPARATOR, $path)), $this->configuration);
     }
 }

@@ -1116,7 +1116,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \Butterfly\Component\DI\Exception\IncorrectConfigPathException
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
      */
     public function testGetConfigIfUndefinedIndex()
     {
@@ -1132,7 +1132,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \Butterfly\Component\DI\Exception\IncorrectConfigPathException
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
      */
     public function testGetConfigIfIncorrectValue()
     {
@@ -1174,5 +1174,110 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals($configuration['parameters']['section_of_parameters']['parameter1'], $foo->getB());
         $this->assertEquals($configuration['services']['service.foo'], $foo->getC());
+    }
+
+    public function testGetForConfigurationExpression()
+    {
+        $configuration = array(
+            'parameters' => array(
+                'parameterA' => array(
+                    'foo' => 1,
+                    'bar' => array(
+                        'baz' => 3
+                    ),
+                )
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertEquals(1, $container->get('parameterA/foo'));
+        $this->assertEquals(3, $container->get('parameterA/bar/baz'));
+    }
+
+    public function testGetForServiceExpression()
+    {
+        $configuration = array(
+            'services'   => array(
+                'service.foo'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => array(
+                        'b',
+                    ),
+                    'properties' => array(
+                        'a' => 'a'
+                    )
+                ),
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertEquals('a', $container->get('service.foo/a'));
+        $this->assertEquals('b', $container->get('service.foo/b'));
+        $this->assertEquals('b', $container->get('service.foo/getB'));
+    }
+
+    public function testGetForTagExpression()
+    {
+        $configuration = array(
+            'services'   => array(
+                'service.foo'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                ),
+                'service.bar'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                ),
+            ),
+            'tags' => array(
+                'tag1' => array('service.foo', 'service.bar')
+            )
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertCount(2, $container->get('tag1/toArray'));
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
+     */
+    public function testGetForExpressionWithError()
+    {
+        $configuration = array(
+            'parameters' => array(
+                'parameterA' => array(
+                    'foo' => 1,
+                )
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $container->get('parameterA/bar');
+    }
+
+    public function testGetForInnersExpression()
+    {
+        $configuration = array(
+            'services'   => array(
+                'service.foo'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => array(
+                        '@service.bar',
+                    ),
+                ),
+                'service.bar'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                    'properties' => array(
+                        'a' => array('baz' => 123),
+                    ),
+                ),
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertEquals(123, $container->get('service.foo/b/a/baz'));
     }
 }

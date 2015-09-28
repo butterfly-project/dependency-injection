@@ -36,13 +36,21 @@ class ServicesCollection implements \IteratorAggregate, \ArrayAccess, \Countable
      */
     public function getIterator()
     {
+        return new \ArrayIterator($this->toArray());
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray()
+    {
         $services = array();
 
         foreach ($this->servicesIds as $serviceId) {
             $services[] = $this->container->getService($serviceId);
         }
 
-        return new \ArrayIterator($services);
+        return $services;
     }
 
     /**
