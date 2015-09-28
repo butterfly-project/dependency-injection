@@ -7,6 +7,7 @@ CHANGELOG
 Added functionality:
 
  * Reflection of container configuration
+ * Path expressions
 
 Changes:
 
