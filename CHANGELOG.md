@@ -13,6 +13,7 @@ Changes:
 
  * Controll parameters names, services, tags are case sensitive
  * Fix case sensitive on parameter resolver
+ * Remove symbol # for get tag
 
 1.6.2
 -----

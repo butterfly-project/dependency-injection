@@ -597,7 +597,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
                 ),
                 'service.tag_dependencies' => array(
                     'class'     => 'Butterfly\Component\DI\Tests\Stubs\FactoryOutputService',
-                    'arguments' => array('1', '#tag1'),
+                    'arguments' => array('1', '@tag1'),
                 ),
             ),
             'tags'     => array(
