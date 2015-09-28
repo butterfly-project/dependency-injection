@@ -1,14 +1,7 @@
 CHANGELOG
 =========
 
-2.0.1
------
-
-Changes:
-
- * Fix case sensitive on parameter resolver
-
-2.0.0
+2.0.x-dev
 -----
 
 Added functionality:
@@ -18,6 +11,7 @@ Added functionality:
 Changes:
 
  * Controll parameters names, services, tags are case sensitive
+ * Fix case sensitive on parameter resolver
 
 1.6.2
 -----
