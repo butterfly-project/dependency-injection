@@ -1027,7 +1027,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $container->get($interface));
 
         // get tag
-        $this->assertCount(1, $container->get('tag1'));
+        $this->assertCount(1, $container->get('#tag1'));
     }
 
     public function testHas()
@@ -1053,7 +1053,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertTrue($container->has('parameter1'));
         $this->assertTrue($container->has('service.foo'));
-        $this->assertTrue($container->has('tag1'));
+        $this->assertTrue($container->has('#tag1'));
         $this->assertTrue($container->has('Butterfly\Component\DI\Tests\Stubs\IServiceFooAware'));
     }
 
@@ -1091,12 +1091,12 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         );
 
         return array(
-            array($configuration, '', $configuration, 'path root. case 1 - ok'),
-            array($configuration, '/', $configuration, 'path root. case 2 - ok'),
-            array($configuration, '/tags', array('tag1' => array('service.foo')), 'path of tags - ok'),
-            array($configuration, 'parameters/parameter1', 'a', 'path of parameter. case 1 - ok'),
-            array($configuration, '/parameters/parameter1', 'a', 'path of parameter. case 2 - ok'),
-            array($configuration, '/parameters/parameter1/', 'a', 'path of parameter. case 3 - ok'),
+            array($configuration, '%', $configuration, 'path root. case 1 - ok'),
+            array($configuration, '%/', $configuration, 'path root. case 2 - ok'),
+            array($configuration, '%/tags', array('tag1' => array('service.foo')), 'path of tags - ok'),
+            array($configuration, '%parameters/parameter1', 'a', 'path of parameter. case 1 - ok'),
+            array($configuration, '%/parameters/parameter1', 'a', 'path of parameter. case 2 - ok'),
+            array($configuration, '%/parameters/parameter1/', 'a', 'path of parameter. case 3 - ok'),
         );
     }
 
@@ -1112,7 +1112,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         $container = new Container($configuration);
 
-        $this->assertEquals($expectedResult, $container->getConfig($path), $caseMessage);
+        $this->assertEquals($expectedResult, $container->get($path), $caseMessage);
     }
 
     /**
@@ -1128,7 +1128,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $container = new Container($configuration);
 
-        $container->getConfig('/parameters/undefined_parameter');
+        $container->get('%/parameters/undefined_parameter');
     }
 
     /**
@@ -1144,7 +1144,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $container = new Container($configuration);
 
-        $container->getConfig('/parameters/parameter1/sub_parameter');
+        $container->get('%/parameters/parameter1/sub_parameter');
     }
 
     public function testReflection()
@@ -1236,7 +1236,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $container = new Container($configuration);
 
-        $this->assertCount(2, $container->get('tag1/toArray'));
+        $this->assertCount(2, $container->get('#tag1/toArray'));
     }
 
     /**

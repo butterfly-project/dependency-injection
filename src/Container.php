@@ -95,8 +95,31 @@ class Container
      */
     public function get($expression)
     {
-        $path     = array_filter(explode(self::CONFIG_PATH_SEPARATOR, $expression));
-        $instance = $this->getInstance(array_shift($path));
+        $firstSymbol = substr($expression, 0, 1);
+        switch ($firstSymbol) {
+            case '@':
+                $path       = array_filter(explode(self::CONFIG_PATH_SEPARATOR, $expression));
+                $instanceId = array_shift($path);
+                $instance   = $this->getInstance(substr($instanceId, 1));
+                break;
+
+            case '#':
+                $path       = array_filter(explode(self::CONFIG_PATH_SEPARATOR, $expression));
+                $instanceId = array_shift($path);
+                $instance   = $this->getServicesByTag(substr($instanceId, 1));
+                break;
+
+            case '%':
+                $path     = array_filter(explode(self::CONFIG_PATH_SEPARATOR, substr($expression, 1)));
+                $instance = $this->configuration;
+                break;
+
+            default:
+                $path       = array_filter(explode(self::CONFIG_PATH_SEPARATOR, $expression));
+                $instanceId = array_shift($path);
+                $instance   = $this->getInstance($instanceId);
+                break;
+        }
 
         return $this->resolvePath($path, $instance);
     }
@@ -118,10 +141,6 @@ class Container
 
         if ($this->hasInterface($id)) {
             return $this->getInterface($id);
-        }
-
-        if ($this->hasTag($id)) {
-            return $this->getServicesByTag($id);
         }
 
         throw new UndefinedInstanceException(sprintf("Instance '%s' is not found", $id));
@@ -174,15 +193,30 @@ class Container
     }
 
     /**
-     * @param string $id
+     * @param string $expression
      * @return bool
      */
-    public function has($id)
+    public function has($expression)
     {
-        return $this->hasParameter($id) ||
-               $this->hasService($id) ||
-               $this->hasInterface($id) ||
-               $this->hasTag($id);
+        $path = explode(self::CONFIG_PATH_SEPARATOR, $expression);
+
+        $id          = array_shift($path);
+        $firstSymbol = substr($id, 0, 1);
+        $instanceId  = substr($id, 1);
+
+        switch ($firstSymbol) {
+            case '@':
+                return $this->hasParameter($instanceId) || $this->hasService($instanceId) || $this->hasInterface($instanceId);
+                break;
+            case '#':
+                return $this->hasTag($instanceId);
+            case '%':
+                return array_key_exists($instanceId, $this->configuration);
+                break;
+            default:
+                return $this->hasParameter($id) || $this->hasService($id) || $this->hasInterface($id);
+                break;
+        }
     }
 
     /**
@@ -395,14 +429,5 @@ class Container
         }
 
         throw new UndefinedServiceException(sprintf("Service '%s' is not found", $id));
-    }
-
-    /**
-     * @param string $path
-     * @return mixed
-     */
-    public function getConfig($path)
-    {
-        return $this->resolvePath(array_filter(explode(self::CONFIG_PATH_SEPARATOR, $path)), $this->configuration);
     }
 }
