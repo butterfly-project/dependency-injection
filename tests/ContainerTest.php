@@ -486,18 +486,16 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGetServicesByTagWithCaseSensitive()
     {
         $configuration = array(
-            'services' => array(
-                'service.simple'         => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(1, 2)
-                ),
-                'service.factory'        => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\FactoryService',
-                ),
-                'service.factory_output' => array(
-                    'factoryMethod' => array('@service.factory', 'create'),
-                    'arguments'     => array(1, 2),
-                ),
+            'service.simple'         => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(1, 2)
+            ),
+            'service.factory'        => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\FactoryService',
+            ),
+            'service.factory_output' => array(
+                'factoryMethod' => array('@service.factory', 'create'),
+                'arguments'     => array(1, 2),
             ),
             'tags'     => array(
                 'tag1' => array('service.simple', 'service.factory_output'),
