@@ -27,7 +27,7 @@ class TagCollector implements IVisitor, IConfigurationCollector
      * @param array $configuration
      * @return void
      */
-    public function visit($serviceId, array $configuration)
+    public function visit($serviceId, $configuration)
     {
         if (isset($configuration['tags'])) {
             $tags = (array)$configuration['tags'];

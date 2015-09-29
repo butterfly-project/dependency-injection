@@ -2,7 +2,7 @@
 
 namespace Butterfly\Component\DI;
 
-use Butterfly\Component\DI\Exception\UndefinedServiceException;
+use Butterfly\Component\DI\Exception\UndefinedInstanceException;
 use Traversable;
 
 class ServicesCollection implements \IteratorAggregate, \ArrayAccess, \Countable
@@ -47,7 +47,7 @@ class ServicesCollection implements \IteratorAggregate, \ArrayAccess, \Countable
         $services = array();
 
         foreach ($this->servicesIds as $serviceId) {
-            $services[] = $this->container->getService($serviceId);
+            $services[] = $this->container->get($serviceId);
         }
 
         return $services;
@@ -135,7 +135,7 @@ class ServicesCollection implements \IteratorAggregate, \ArrayAccess, \Countable
      */
     public function has($id)
     {
-        return $this->isAvailable($id) && $this->container->hasService($id);
+        return $this->isAvailable($id) && $this->container->has($id);
     }
 
     /**
@@ -145,10 +145,10 @@ class ServicesCollection implements \IteratorAggregate, \ArrayAccess, \Countable
     public function get($id)
     {
         if (!$this->isAvailable($id)) {
-            throw new UndefinedServiceException(sprintf("Service '%s' is not found", $id));
+            throw new UndefinedInstanceException(sprintf("Service '%s' is not found", $id));
         }
 
-        return $this->container->getService($id);
+        return $this->container->get($id);
     }
 
     /**
@@ -158,7 +158,7 @@ class ServicesCollection implements \IteratorAggregate, \ArrayAccess, \Countable
     public function set($id, $service)
     {
         if (!$this->isAvailable($id)) {
-            throw new UndefinedServiceException(sprintf("Service '%s' is not found", $id));
+            throw new UndefinedInstanceException(sprintf("Service '%s' is not found", $id));
         }
 
         $this->container->setSyntheticService($id, $service);

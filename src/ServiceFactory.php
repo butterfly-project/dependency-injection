@@ -86,7 +86,7 @@ class ServiceFactory
             $objectBuilder->staticFactoryMethodCreate($className, $methodName, $arguments);
         } elseif (isset($configuration['factoryMethod'])) {
             list ($factoryServiceId, $methodName) = $configuration['factoryMethod'];
-            $factoryService = $this->container->getService(substr($factoryServiceId, 1));
+            $factoryService = $this->container->get(substr($factoryServiceId, 1));
             $objectBuilder->factoryMethodCreate($factoryService, $methodName, $arguments);
         } else {
             throw new BuildObjectException('Impossible to create a service');

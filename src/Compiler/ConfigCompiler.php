@@ -47,10 +47,10 @@ class ConfigCompiler
     public static function createInstance()
     {
         return new static(new Resolver(), array(
-                new ConfigurationValidator(),
+//                new ConfigurationValidator(),
                 new ServiceCollector\ServiceCollector(),
                 new ServiceCollector\TagCollector(),
-                new ServiceCollector\AliasCollector()
+//                new ServiceCollector\AliasCollector()
             )
         );
     }
@@ -85,7 +85,7 @@ class ConfigCompiler
     public function compileConfig(array $configuration)
     {
         $configuration = $this->prepareConfiguration($configuration);
-        $configuration = $this->prepareInterfaceConfiguration($configuration);
+//        $configuration = $this->prepareInterfaceConfiguration($configuration);
 
         $this->cleanVisitors($this->visitors);
         $this->runServiceVisits($this->visitors, $configuration);
@@ -113,17 +113,7 @@ class ConfigCompiler
             $configuration = $this->resolver->resolve($configuration);
         }
 
-        $services   = $this->getSection($configuration, self::SECTION_SERVICES);
-        $interfaces = $this->getSection($configuration, self::SECTION_INTERFACES);
-
-        unset($configuration[self::SECTION_SERVICES]);
-        unset($configuration[self::SECTION_INTERFACES]);
-
-        return array(
-            self::SECTION_PARAMETERS => $configuration,
-            self::SECTION_SERVICES   => $services,
-            self::SECTION_INTERFACES => $interfaces,
-        );
+        return $configuration;
     }
 
     /**
@@ -205,7 +195,7 @@ class ConfigCompiler
     {
         $errors = array();
 
-        foreach ($configuration[self::SECTION_SERVICES] as $serviceId => $serviceConfiguration) {
+        foreach ($configuration as $serviceId => $serviceConfiguration) {
             foreach ($visitors as $visitor) {
                 try {
                     $visitor->visit($serviceId, $serviceConfiguration);
@@ -233,7 +223,11 @@ class ConfigCompiler
                 continue;
             }
 
-            $containerConfiguration[$visitor->getSection()] = $visitor->getConfiguration();
+            if ($visitor->getSection()) {
+                $containerConfiguration[$visitor->getSection()] = $visitor->getConfiguration();
+            } else {
+                $containerConfiguration = array_merge($containerConfiguration, $visitor->getConfiguration());
+            }
         }
 
         return $containerConfiguration;

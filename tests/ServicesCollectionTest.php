@@ -47,7 +47,7 @@ class ServicesCollectionTest extends \PHPUnit_Framework_TestCase
         $container  = $this->getMockContainer();
         $container
             ->expects($this->any())
-            ->method('hasService')
+            ->method('has')
             ->with('service.foo')
             ->willReturn(true);
 
@@ -82,7 +82,7 @@ class ServicesCollectionTest extends \PHPUnit_Framework_TestCase
         $container  = $this->getMockContainer();
         $container
             ->expects($this->any())
-            ->method('getService')
+            ->method('get')
             ->with('service.foo')
             ->willReturn(new ServiceStub());
 
@@ -93,7 +93,7 @@ class ServicesCollectionTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \Butterfly\Component\DI\Exception\UndefinedServiceException
+     * @expectedException \Butterfly\Component\DI\Exception\UndefinedInstanceException
      */
     public function testGetIfServiceIsNotAvailable()
     {
@@ -132,7 +132,7 @@ class ServicesCollectionTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \Butterfly\Component\DI\Exception\UndefinedServiceException
+     * @expectedException \Butterfly\Component\DI\Exception\UndefinedInstanceException
      */
     public function testSetIfServiceIsNotAvailable()
     {
@@ -176,17 +176,17 @@ class ServicesCollectionTest extends \PHPUnit_Framework_TestCase
         $container  = $this->getMockContainer();
         $container
             ->expects($this->at(0))
-            ->method('getService')
+            ->method('get')
             ->with('service.foo')
             ->willReturn($serviceObject);
         $container
             ->expects($this->at(1))
-            ->method('getService')
+            ->method('get')
             ->with('service.bar')
             ->willReturn($serviceObject);
         $container
             ->expects($this->at(2))
-            ->method('getService')
+            ->method('get')
             ->with('service.baz')
             ->willReturn($serviceObject);
 

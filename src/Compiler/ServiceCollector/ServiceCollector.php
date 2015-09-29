@@ -44,7 +44,7 @@ class ServiceCollector implements IVisitor, IConfigurationCollector
      * @param array $configuration
      * @return void
      */
-    public function visit($serviceId, array $configuration)
+    public function visit($serviceId, $configuration)
     {
         if (isset($configuration['parent'])) {
             $this->children[$serviceId] = $configuration;
@@ -58,7 +58,7 @@ class ServiceCollector implements IVisitor, IConfigurationCollector
      */
     public function getSection()
     {
-        return 'services';
+        return null;
     }
 
     /**

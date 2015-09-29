@@ -8,9 +8,6 @@ use Butterfly\Component\DI\Exception\BuildServiceException;
 use Butterfly\Component\DI\Exception\IncorrectExpressionPathException;
 use Butterfly\Component\DI\Exception\IncorrectSyntheticServiceException;
 use Butterfly\Component\DI\Exception\UndefinedInstanceException;
-use Butterfly\Component\DI\Exception\UndefinedInterfaceException;
-use Butterfly\Component\DI\Exception\UndefinedParameterException;
-use Butterfly\Component\DI\Exception\UndefinedServiceException;
 use Butterfly\Component\DI\Keeper;
 
 /**
@@ -52,12 +49,7 @@ class Container
      * @var array
      */
     protected $configuration = array(
-        'parameters'         => array(),
-        'interfaces'         => array(),
-        'interfaces_aliases' => array(),
-        'services'           => array(),
-        'tags'               => array(),
-        'aliases'            => array(),
+        'tags' => array(),
     );
 
     /**
@@ -77,7 +69,7 @@ class Container
 
     protected function init()
     {
-        $serviceBuilder = new ServiceFactory($this, $this->configuration['interfaces']);
+        $serviceBuilder = new ServiceFactory($this);
 
         $this->builders = array(
             self::SCOPE_SINGLETON => new Keeper\Singleton($serviceBuilder),
@@ -97,6 +89,11 @@ class Container
     {
         $firstSymbol = substr($expression, 0, 1);
         switch ($firstSymbol) {
+            case '%':
+                $path     = array_filter(explode(self::CONFIG_PATH_SEPARATOR, substr($expression, 1)));
+                $instance = $this->configuration;
+                break;
+
             case '@':
                 $path       = array_filter(explode(self::CONFIG_PATH_SEPARATOR, $expression));
                 $instanceId = array_shift($path);
@@ -109,11 +106,6 @@ class Container
                 $instance   = $this->getServicesByTag(substr($instanceId, 1));
                 break;
 
-            case '%':
-                $path     = array_filter(explode(self::CONFIG_PATH_SEPARATOR, substr($expression, 1)));
-                $instance = $this->configuration;
-                break;
-
             default:
                 $path       = array_filter(explode(self::CONFIG_PATH_SEPARATOR, $expression));
                 $instanceId = array_shift($path);
@@ -122,28 +114,6 @@ class Container
         }
 
         return $this->resolvePath($path, $instance);
-    }
-
-    /**
-     * @param string $id
-     * @return mixed
-     * @throws UndefinedInstanceException if instance is not found
-     */
-    public function getInstance($id)
-    {
-        if ($this->hasParameter($id)) {
-            return $this->getParameter($id);
-        }
-
-        if ($this->hasService($id)) {
-            return $this->getService($id);
-        }
-
-        if ($this->hasInterface($id)) {
-            return $this->getInterface($id);
-        }
-
-        throw new UndefinedInstanceException(sprintf("Instance '%s' is not found", $id));
     }
 
     /**
@@ -206,7 +176,7 @@ class Container
 
         switch ($firstSymbol) {
             case '@':
-                return $this->hasParameter($instanceId) || $this->hasService($instanceId) || $this->hasInterface($instanceId);
+                return $this->hasInstance($instanceId);
                 break;
             case '#':
                 return $this->hasTag($instanceId);
@@ -214,7 +184,7 @@ class Container
                 return array_key_exists($instanceId, $this->configuration);
                 break;
             default:
-                return $this->hasParameter($id) || $this->hasService($id) || $this->hasInterface($id);
+                return $this->hasInstance($id);
                 break;
         }
     }
@@ -223,41 +193,13 @@ class Container
      * @param string $id
      * @return bool
      */
-    public function hasParameter($id)
-    {
-        return array_key_exists($id, $this->configuration['parameters']);
-    }
-
-    /**
-     * @param string $id
-     * @return mixed
-     * @throws UndefinedParameterException if parameter is not found
-     */
-    public function getParameter($id)
-    {
-        if (!$this->hasParameter($id)) {
-            throw new UndefinedParameterException(sprintf("Parameter '%s' is not found", $id));
-        }
-
-        return $this->configuration['parameters'][$id];
-    }
-
-    /**
-     * @param string $id
-     * @return bool
-     */
-    public function hasService($id)
+    protected function hasInstance($id)
     {
         if (self::SERVICE_CONTAINER_ID == $id) {
             return true;
         }
 
-        if (array_key_exists($id, $this->configuration['services'])) {
-            return true;
-        }
-
-        if (array_key_exists($id, $this->configuration['aliases']) &&
-            $this->hasService($this->configuration['aliases'][$id])) {
+        if (array_key_exists($id, $this->configuration)) {
             return true;
         }
 
@@ -267,17 +209,21 @@ class Container
     /**
      * @param string $id
      * @return Object
-     * @throws UndefinedServiceException if service is not found
+     * @throws UndefinedInstanceException if service is not found
      * @throws BuildServiceException if scope is not found
      * @throws BuildServiceException if fail to build service
      */
-    public function getService($id)
+    protected function getInstance($id)
     {
         if (self::SERVICE_CONTAINER_ID == $id) {
             return $this;
         }
 
-        $serviceConfiguration = $this->getServiceDefinition($id);
+        $serviceConfiguration = $this->getInstanceDefinition($id);
+
+        if (is_string($serviceConfiguration)) {
+            return $this->get($serviceConfiguration);
+        }
 
         $scope = isset($serviceConfiguration['scope']) ? $serviceConfiguration['scope'] : self::SCOPE_SINGLETON;
 
@@ -305,36 +251,6 @@ class Container
         }
 
         return false;
-    }
-
-    /**
-     * @param string $id
-     * @return Object
-     * @throws UndefinedInterfaceException if interface is not found
-     */
-    public function getInterface($id)
-    {
-        $serviceId = $this->getInterfaceImplementation($id);
-
-        return $this->getService($serviceId);
-    }
-
-    /**
-     * @param string $id
-     * @return string
-     * @throws UndefinedInterfaceException if interface is not found
-     */
-    protected function getInterfaceImplementation($id)
-    {
-        if (array_key_exists($id, $this->configuration['interfaces'])) {
-            return $this->configuration['interfaces'][$id];
-        }
-
-        if (array_key_exists($id, $this->configuration['interfaces_aliases'])) {
-            return $this->getInterfaceImplementation($this->configuration['interfaces_aliases'][$id]);
-        }
-
-        throw new UndefinedInterfaceException(sprintf("Interface '%s' is not found", $id));
     }
 
     /**
@@ -366,25 +282,14 @@ class Container
     }
 
     /**
-     * @deprecated use $this->getServicesByTag()->getServicesIds(). Deprecated since version 2.1, to be removed in 3.0
-     *
-     * @param string $name
-     * @return array
-     */
-    public function getServicesIdsByTag($name)
-    {
-        return $this->getServicesByTag($name)->getServicesIds();
-    }
-
-    /**
      * @param string $id
      * @param object $service
-     * @throws UndefinedServiceException if service is not found
+     * @throws UndefinedInstanceException if service is not found
      * @throws IncorrectSyntheticServiceException if incorrect object class
      */
     public function setSyntheticService($id, $service)
     {
-        $serviceDefinition = $this->getServiceDefinition($id);
+        $serviceDefinition = $this->getInstanceDefinition($id);
         $serviceClass      = $serviceDefinition['class'];
 
         if (!($service instanceof $serviceClass)) {
@@ -416,18 +321,14 @@ class Container
     /**
      * @param string $id
      * @return array
-     * @throws UndefinedServiceException if service is not found
+     * @throws UndefinedInstanceException if instance is not found
      */
-    protected function getServiceDefinition($id)
+    protected function getInstanceDefinition($id)
     {
-        if (array_key_exists($id, $this->configuration['services'])) {
-            return $this->configuration['services'][$id];
+        if (array_key_exists($id, $this->configuration)) {
+            return $this->configuration[$id];
         }
 
-        if (array_key_exists($id, $this->configuration['aliases'])) {
-            return $this->getServiceDefinition($this->configuration['aliases'][$id]);
-        }
-
-        throw new UndefinedServiceException(sprintf("Service '%s' is not found", $id));
+        throw new UndefinedInstanceException(sprintf("Instance '%s' is not found", $id));
     }
 }

@@ -29,7 +29,7 @@ class AliasCollector implements IVisitor, IConfigurationCollector
      * @return void
      * @throws InvalidConfigurationException
      */
-    public function visit($serviceId, array $configuration)
+    public function visit($serviceId, $configuration)
     {
         if (isset($configuration['alias'])) {
             $aliases = (array)$configuration['alias'];

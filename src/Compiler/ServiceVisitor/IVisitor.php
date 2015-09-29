@@ -9,10 +9,10 @@ interface IVisitor
 {
     /**
      * @param string $serviceId
-     * @param array $configuration
+     * @param array|string $configuration
      * @return void
      */
-    public function visit($serviceId, array $configuration);
+    public function visit($serviceId, $configuration);
 
     /**
      * @return void

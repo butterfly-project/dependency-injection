@@ -20,19 +20,17 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function getDataForTestHasParameter()
     {
         $configuration = array(
-            'parameters' => array(
-                'parameter1' => 'a',
-                'Parameter2' => 'a',
-            ),
+            'parameter1' => 'a',
+            'Parameter2' => 'a',
         );
 
         return array(
-            array($configuration, 'parameter1', true, 'has existing parameter - ok'),
-            array($configuration, 'undefined_parameter', false, 'has unexisting parameter - fail'),
+            array($configuration, '%parameter1', true, 'has existing parameter - ok'),
+            array($configuration, '%undefined_parameter', false, 'has unexisting parameter - fail'),
 
-            array($configuration, 'Parameter1', false, 'search case sensitive - fail'),
-            array($configuration, 'Parameter2', true, 'search case sensitive - ok'),
-            array($configuration, 'parameter2', false, 'search case sensitive - fail'),
+            array($configuration, '%Parameter1', false, 'search case sensitive - fail'),
+            array($configuration, '%Parameter2', true, 'search case sensitive - ok'),
+            array($configuration, '%parameter2', false, 'search case sensitive - fail'),
         );
     }
 
@@ -48,21 +46,19 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         $container = new Container($configuration);
 
-        $this->assertEquals($expectedResult, $container->hasParameter($parameterName), $caseMessage);
+        $this->assertEquals($expectedResult, $container->has($parameterName), $caseMessage);
     }
 
     public function getDataForTestGetParameter()
     {
         $configuration = array(
-            'parameters' => array(
-                'parameter1' => 'a',
-                'Parameter1' => 'A',
-            ),
+            'parameter1' => 'a',
+            'Parameter1' => 'A',
         );
 
         return array(
-            array($configuration, 'parameter1', 'a', 'get parameter - ok'),
-            array($configuration, 'Parameter1', 'A', 'get parameter case sensitive - ok'),
+            array($configuration, '%parameter1', 'a', 'get parameter - ok'),
+            array($configuration, '%Parameter1', 'A', 'get parameter case sensitive - ok'),
         );
     }
 
@@ -78,36 +74,32 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         $container = new Container($configuration);
 
-        $this->assertEquals($expectedValue, $container->getParameter($parameterName), $caseMessage);
+        $this->assertEquals($expectedValue, $container->get($parameterName), $caseMessage);
     }
 
     /**
-     * @expectedException \Butterfly\Component\DI\Exception\UndefinedParameterException
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
      */
     public function testGetParameterIfNoParameter()
     {
         $configuration = array(
-            'parameters' => array(
-                'parameter1' => 'a',
-            ),
+            'parameter1' => 'a',
         );
         $container     = new Container($configuration);
 
-        $container->getParameter('undefined_parameter');
+        $container->get('%undefined_parameter');
     }
 
     public function getDataForTestHasService()
     {
         $configuration = array(
-            'services' => array(
-                'service.simple' => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(1, 2)
-                ),
-                'SERVICE.SIMPLE2' => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(1, 2)
-                ),
+            'service.simple' => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(1, 2)
+            ),
+            'SERVICE.SIMPLE2' => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(1, 2)
             ),
         );
 
@@ -133,7 +125,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         $container = new Container($configuration);
 
-        $this->assertEquals($expectedResult, $container->hasService($serviceName), $caseMessage);
+        $this->assertEquals($expectedResult, $container->has($serviceName), $caseMessage);
     }
 
     public function testHasServiceContainerService()
@@ -141,7 +133,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $configuration = array();
         $container     = new Container($configuration);
 
-        $this->assertTrue($container->hasService(Container::SERVICE_CONTAINER_ID));
+        $this->assertTrue($container->has(Container::SERVICE_CONTAINER_ID));
     }
 
     public function testGetServiceContainerService()
@@ -149,7 +141,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $configuration = array();
         $container     = new Container($configuration);
 
-        $service = $container->getService(Container::SERVICE_CONTAINER_ID);
+        $service = $container->get(Container::SERVICE_CONTAINER_ID);
 
         $this->assertInstanceOf('\Butterfly\Component\DI\Container', $service);
     }
@@ -157,29 +149,27 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGetServiceWithCaseSensitive()
     {
         $configuration = array(
-            'services' => array(
-                'Service.simple' => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(1, 2)
-                ),
+            'Service.simple' => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(1, 2)
             ),
         );
         $container = new Container($configuration);
 
-        $service = $container->getService('Service.simple');
+        $service = $container->get('Service.simple');
 
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceStub', $service);
     }
 
     /**
-     * @expectedException \Butterfly\Component\DI\Exception\UndefinedServiceException
+     * @expectedException \Butterfly\Component\DI\Exception\UndefinedInstanceException
      */
     public function testGetServiceIfNoService()
     {
         $configuration = array();
         $container     = new Container($configuration);
 
-        $container->getService('undefined_service');
+        $container->get('undefined_service');
     }
 
     /**
@@ -188,15 +178,13 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGetServiceIfIncorrectConfiguration()
     {
         $configuration = array(
-            'services' => array(
-                'service.incorrect' => array(
-                    'arguments' => array(1, 2)
-                ),
+            'service.incorrect' => array(
+                'arguments' => array(1, 2)
             ),
         );
         $container     = new Container($configuration);
 
-        $container->getService('service.incorrect');
+        $container->get('service.incorrect');
     }
 
     /**
@@ -205,33 +193,29 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGetServiceIfNoClassService()
     {
         $configuration = array(
-            'services' => array(
-                'undefined_class_service' => array(
-                    'class' => 'UndefinedClass',
-                ),
+            'undefined_class_service' => array(
+                'class' => 'UndefinedClass',
             ),
         );
         $container     = new Container($configuration);
 
-        $container->getService('undefined_class_service');
+        $container->get('undefined_class_service');
     }
 
     public function testGetServiceThroughStaticFactoryMethod()
     {
         $configuration = array(
-            'services' => array(
-                'service.static_factory_output' => array(
-                    'factoryStaticMethod' => array(
-                        'Butterfly\Component\DI\Tests\Stubs\FactoryService', 'createInstance'
-                    ),
-                    'arguments'           => array(1, 2),
+            'service.static_factory_output' => array(
+                'factoryStaticMethod' => array(
+                    'Butterfly\Component\DI\Tests\Stubs\FactoryService', 'createInstance'
                 ),
+                'arguments'           => array(1, 2),
             ),
         );
         $container     = new Container($configuration);
 
         /** @var FactoryOutputService $service */
-        $service = $container->getService('service.static_factory_output');
+        $service = $container->get('service.static_factory_output');
 
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\FactoryOutputService', $service);
         $this->assertEquals(1, $service->getA());
@@ -241,20 +225,18 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGetServiceThroughFactory()
     {
         $configuration = array(
-            'services' => array(
-                'service.factory'        => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\FactoryService',
-                ),
-                'service.factory_output' => array(
-                    'factoryMethod' => array('@service.factory', 'create'),
-                    'arguments'     => array(1, 2),
-                ),
+            'service.factory'        => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\FactoryService',
+            ),
+            'service.factory_output' => array(
+                'factoryMethod' => array('@service.factory', 'create'),
+                'arguments'     => array(1, 2),
             ),
         );
         $container     = new Container($configuration);
 
         /** @var FactoryOutputService $service */
-        $service = $container->getService('service.factory_output');
+        $service = $container->get('service.factory_output');
 
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\FactoryOutputService', $service);
         $this->assertEquals(1, $service->getA());
@@ -265,22 +247,20 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         ServiceInstanceCounter::$countCreateInstances = 0;
         $configuration                                = array(
-            'services' => array(
-                'service.scope.singleton' => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceInstanceCounter',
-                    'scope' => Container::SCOPE_SINGLETON,
-                ),
+            'service.scope.singleton' => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceInstanceCounter',
+                'scope' => Container::SCOPE_SINGLETON,
             ),
         );
         $container                                    = new Container($configuration);
 
         /** @var ServiceInstanceCounter $service */
-        $container->getService('service.scope.singleton');
+        $container->get('service.scope.singleton');
 
         $this->assertEquals(1, ServiceInstanceCounter::$countCreateInstances);
 
         /** @var ServiceInstanceCounter $service2 */
-        $container->getService('service.scope.singleton');
+        $container->get('service.scope.singleton');
 
         $this->assertEquals(1, ServiceInstanceCounter::$countCreateInstances);
     }
@@ -289,20 +269,18 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         ServiceInstanceCounter::$countCreateInstances = 0;
         $configuration                                = array(
-            'services' => array(
-                'service.scope.factory' => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceInstanceCounter',
-                    'scope' => Container::SCOPE_FACTORY,
-                ),
+            'service.scope.factory' => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceInstanceCounter',
+                'scope' => Container::SCOPE_FACTORY,
             ),
         );
         $container                                    = new Container($configuration);
 
-        $container->getService('service.scope.factory');
+        $container->get('service.scope.factory');
 
         $this->assertEquals(1, ServiceInstanceCounter::$countCreateInstances);
 
-        $container->getService('service.scope.factory');
+        $container->get('service.scope.factory');
 
         $this->assertEquals(2, ServiceInstanceCounter::$countCreateInstances);
     }
@@ -312,21 +290,19 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         ServiceInstanceCounter::$countCreateInstances = 0;
         ServiceInstanceCounter::$countCloneInstances  = 0;
         $configuration                                = array(
-            'services' => array(
-                'service.scope.prototype' => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceInstanceCounter',
-                    'scope' => Container::SCOPE_PROTOTYPE,
-                ),
+            'service.scope.prototype' => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceInstanceCounter',
+                'scope' => Container::SCOPE_PROTOTYPE,
             ),
         );
         $container                                    = new Container($configuration);
 
-        $container->getService('service.scope.prototype');
+        $container->get('service.scope.prototype');
 
         $this->assertEquals(1, ServiceInstanceCounter::$countCreateInstances);
         $this->assertEquals(0, ServiceInstanceCounter::$countCloneInstances);
 
-        $container->getService('service.scope.prototype');
+        $container->get('service.scope.prototype');
 
         $this->assertEquals(1, ServiceInstanceCounter::$countCreateInstances);
         $this->assertEquals(1, ServiceInstanceCounter::$countCloneInstances);
@@ -338,36 +314,32 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGetServiceWithUndefinedScope()
     {
         $configuration = array(
-            'services' => array(
-                'service.scope.undefined' => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceInstanceCounter',
-                    'scope' => 'undefined_scope',
-                ),
+            'service.scope.undefined' => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceInstanceCounter',
+                'scope' => 'undefined_scope',
             ),
         );
         $container     = new Container($configuration);
 
-        $container->getService('service.scope.undefined');
+        $container->get('service.scope.undefined');
     }
 
     public function testConstructorInjection()
     {
         $configuration = array(
-            'services' => array(
-                'service.simple'                => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(1, 2)
-                ),
-                'service.constructor_injection' => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
-                    'arguments' => array('@service.simple')
-                ),
+            'service.simple'                => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(1, 2)
+            ),
+            'service.constructor_injection' => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
+                'arguments' => array('@service.simple')
             ),
         );
         $container     = new Container($configuration);
 
         /** @var ComplexServiceStub $service */
-        $service = $container->getService('service.constructor_injection');
+        $service = $container->get('service.constructor_injection');
 
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
@@ -375,23 +347,21 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testSetterInjection()
     {
         $configuration = array(
-            'services' => array(
-                'service.simple'           => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(1, 2)
-                ),
-                'service.setter_injection' => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
-                    'calls' => array(
-                        array('setInternalService', array('@service.simple')),
-                    )
-                ),
+            'service.simple'           => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(1, 2)
+            ),
+            'service.setter_injection' => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
+                'calls' => array(
+                    array('setInternalService', array('@service.simple')),
+                )
             ),
         );
         $container     = new Container($configuration);
 
         /** @var ComplexServiceStub $service */
-        $service = $container->getService('service.setter_injection');
+        $service = $container->get('service.setter_injection');
 
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
@@ -399,23 +369,21 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testPropertyInjection()
     {
         $configuration = array(
-            'services' => array(
-                'service.simple'             => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(1, 2)
-                ),
-                'service.property_injection' => array(
-                    'class'      => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
-                    'properties' => array(
-                        'internalService' => '@service.simple',
-                    )
-                ),
+            'service.simple'             => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(1, 2)
+            ),
+            'service.property_injection' => array(
+                'class'      => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
+                'properties' => array(
+                    'internalService' => '@service.simple',
+                )
             ),
         );
         $container     = new Container($configuration);
 
         /** @var ComplexServiceStub $service */
-        $service = $container->getService('service.property_injection');
+        $service = $container->get('service.property_injection');
 
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
@@ -423,23 +391,21 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testPrivatePropertyInjection()
     {
         $configuration = array(
-            'services' => array(
-                'service.simple'                     => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(1, 2)
-                ),
-                'service.private_property_injection' => array(
-                    'class'      => 'Butterfly\Component\DI\Tests\Stubs\PrivatePropertyServiceStub',
-                    'properties' => array(
-                        'internalService' => '@service.simple',
-                    )
-                ),
+            'service.simple'                     => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(1, 2)
+            ),
+            'service.private_property_injection' => array(
+                'class'      => 'Butterfly\Component\DI\Tests\Stubs\PrivatePropertyServiceStub',
+                'properties' => array(
+                    'internalService' => '@service.simple',
+                )
             ),
         );
         $container     = new Container($configuration);
 
         /** @var PrivatePropertyServiceStub $service */
-        $service = $container->getService('service.private_property_injection');
+        $service = $container->get('service.private_property_injection');
 
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
@@ -545,33 +511,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(1, $servicesByTag);
     }
 
-    public function testGetServicesIdsByTag()
-    {
-        $configuration = array(
-            'services' => array(
-                'service.simple'         => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(1, 2)
-                ),
-                'service.factory'        => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\FactoryService',
-                ),
-                'service.factory_output' => array(
-                    'factoryMethod' => array('@service.factory', 'create'),
-                    'arguments'     => array(1, 2),
-                ),
-            ),
-            'tags'     => array(
-                'tag1' => array('service.simple', 'service.factory_output')
-            ),
-        );
-        $container     = new Container($configuration);
-
-        $servicesByTag = $container->getServicesIdsByTag('tag1');
-
-        $this->assertEquals(array('service.simple', 'service.factory_output'), $servicesByTag);
-    }
-
     public function testGetServicesByTagIfNoTag()
     {
         $configuration = array();
@@ -583,22 +522,20 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testTagDependency()
     {
         $configuration = array(
-            'services' => array(
-                'service.simple'           => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(1, 2)
-                ),
-                'service.factory'          => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\FactoryService',
-                ),
-                'service.factory_output'   => array(
-                    'factoryMethod' => array('@service.factory', 'create'),
-                    'arguments'     => array(1, 2),
-                ),
-                'service.tag_dependencies' => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\FactoryOutputService',
-                    'arguments' => array('1', '#tag1'),
-                ),
+            'service.simple'           => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(1, 2)
+            ),
+            'service.factory'          => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\FactoryService',
+            ),
+            'service.factory_output'   => array(
+                'factoryMethod' => array('@service.factory', 'create'),
+                'arguments'     => array(1, 2),
+            ),
+            'service.tag_dependencies' => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\FactoryOutputService',
+                'arguments' => array('1', '#tag1'),
             ),
             'tags'     => array(
                 'tag1' => array('service.simple', 'service.factory_output')
@@ -607,7 +544,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $container     = new Container($configuration);
 
         /** @var FactoryOutputService $service */
-        $service = $container->getService('service.tag_dependencies');
+        $service = $container->get('service.tag_dependencies');
 
         $this->assertCount(2, $service->getB());
     }
@@ -615,129 +552,43 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testTagDependencyIfUndefinedTag()
     {
         $configuration = array(
-            'services' => array(
-                'service.tag_dependencies.undefined_tag' => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\FactoryOutputService',
-                    'arguments' => array('1', '#tag123'),
-                ),
+            'service.tag_dependencies.undefined_tag' => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\FactoryOutputService',
+                'arguments' => array('1', '#tag123'),
             ),
         );
         $container     = new Container($configuration);
 
-        $service = $container->getService('service.tag_dependencies.undefined_tag');
+        $service = $container->get('service.tag_dependencies.undefined_tag');
 
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\FactoryOutputService', $service);
-    }
-
-    public function testHasServiceByAlias()
-    {
-        $configuration = array(
-            'services' => array(
-                'service.simple' => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(1, 2)
-                ),
-            ),
-            'aliases'  => array(
-                'service.simple.alias' => 'service.simple',
-            ),
-        );
-        $container     = new Container($configuration);
-
-        $this->assertTrue($container->hasService('service.simple.alias'));
-    }
-
-    public function testGetServiceByAlias()
-    {
-        $configuration = array(
-            'services' => array(
-                'service.simple' => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(1, 2)
-                ),
-            ),
-            'aliases'  => array(
-                'service.simple.alias' => 'service.simple',
-            ),
-        );
-        $container     = new Container($configuration);
-
-        /** @var ServiceStub $service */
-        $service = $container->getService('service.simple.alias');
-
-        $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceStub', $service);
-    }
-
-    public function testHasInterfaceByAlias()
-    {
-        $configuration = array(
-            'interfaces' => array(
-                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
-            ),
-            'services'   => array(
-                'service.foo'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
-                ),
-            ),
-            'interfaces_aliases' => array(
-                'interface.alias' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware',
-            ),
-        );
-
-        $container = new Container($configuration);
-
-        $this->assertTrue($container->hasInterface('interface.alias'));
-        $this->assertFalse($container->hasInterface('interface.undefined_alias'));
-    }
-
-    public function testGetInterfaceByAlias()
-    {
-        $configuration = array(
-            'interfaces' => array(
-                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
-            ),
-            'services'   => array(
-                'service.foo'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
-                ),
-            ),
-            'interfaces_aliases' => array(
-                'interface.alias' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware',
-            ),
-        );
-
-        $container = new Container($configuration);
-
-        $this->assertInstanceOf('Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $container->getInterface('interface.alias'));
     }
 
     public function testTriggers()
     {
         $configuration = array(
-            'services' => array(
-                'service.trigger'     => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\TriggerService',
-                    'arguments' => array('initial'),
+            'service.trigger'     => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\TriggerService',
+                'arguments' => array('initial'),
+            ),
+            'service.use_trigger' => array(
+                'class'        => 'Butterfly\Component\DI\Tests\Stubs\UseTriggerService',
+                'arguments'    => array('@service.trigger'),
+                'preTriggers'  => array(
+                    array('service' => '@service.trigger', 'method' => 'setA', 'arguments' => array('pre')),
                 ),
-                'service.use_trigger' => array(
-                    'class'        => 'Butterfly\Component\DI\Tests\Stubs\UseTriggerService',
-                    'arguments'    => array('@service.trigger'),
-                    'preTriggers'  => array(
-                        array('service' => '@service.trigger', 'method' => 'setA', 'arguments' => array('pre')),
-                    ),
-                    'postTriggers' => array(
-                        array('service' => '@service.trigger', 'method' => 'setA', 'arguments' => array('post')),
-                    ),
+                'postTriggers' => array(
+                    array('service' => '@service.trigger', 'method' => 'setA', 'arguments' => array('post')),
                 ),
             ),
         );
         $container     = new Container($configuration);
 
         /** @var TriggerService $triggerService */
-        $triggerService = $container->getService('service.trigger');
+        $triggerService = $container->get('service.trigger');
 
         /** @var UseTriggerService $useTriggerService */
-        $useTriggerService = $container->getService('service.use_trigger');
+        $useTriggerService = $container->get('service.use_trigger');
 
         $this->assertEquals('pre', $useTriggerService->getPreA());
         $this->assertEquals('post', $triggerService->getA());
@@ -746,22 +597,20 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testStaticTriggers()
     {
         $configuration = array(
-            'services' => array(
-                'service.use_static_trigger' => array(
-                    'class'        => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
-                    'preTriggers'  => array(
-                        array(
-                            'class'     => 'Butterfly\Component\DI\Tests\Stubs\StaticTriggerService',
-                            'method'    => 'setA',
-                            'arguments' => array('pre')
-                        ),
+            'service.use_static_trigger' => array(
+                'class'        => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                'preTriggers'  => array(
+                    array(
+                        'class'     => 'Butterfly\Component\DI\Tests\Stubs\StaticTriggerService',
+                        'method'    => 'setA',
+                        'arguments' => array('pre')
                     ),
-                    'postTriggers' => array(
-                        array(
-                            'class'     => 'Butterfly\Component\DI\Tests\Stubs\StaticTriggerService',
-                            'method'    => 'setA',
-                            'arguments' => array('post')
-                        ),
+                ),
+                'postTriggers' => array(
+                    array(
+                        'class'     => 'Butterfly\Component\DI\Tests\Stubs\StaticTriggerService',
+                        'method'    => 'setA',
+                        'arguments' => array('post')
                     ),
                 ),
             ),
@@ -771,7 +620,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         StaticTriggerService::setA('initial');
 
         /** @var UseTriggerService $useTriggerService */
-        $useTriggerService = $container->getService('service.use_static_trigger');
+        $useTriggerService = $container->get('service.use_static_trigger');
 
         $this->assertEquals('pre', $useTriggerService->getPreA());
         $this->assertEquals('post', StaticTriggerService::getA());
@@ -783,18 +632,16 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testStaticTriggersIfUnexistingClass()
     {
         $configuration = array(
-            'services' => array(
-                'service.trigger.unexists_class' => array(
-                    'class'       => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
-                    'preTriggers' => array(
-                        array('class' => 'UnexistsClass', 'method' => 'setA', 'arguments' => array('pre')),
-                    ),
+            'service.trigger.unexists_class' => array(
+                'class'       => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                'preTriggers' => array(
+                    array('class' => 'UnexistsClass', 'method' => 'setA', 'arguments' => array('pre')),
                 ),
             ),
         );
         $container     = new Container($configuration);
 
-        $container->getService('service.trigger.unexists_class');
+        $container->get('service.trigger.unexists_class');
     }
 
     /**
@@ -803,21 +650,19 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testStaticTriggersIfUnexistingMethod()
     {
         $configuration = array(
-            'services' => array(
-                'service.trigger.unexists_method' => array(
-                    'class'       => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
-                    'preTriggers' => array(
-                        array(
-                            'class'  => 'Butterfly\Component\DI\Tests\Stubs\StaticTriggerService',
-                            'method' => 'unexists_method', 'arguments' => array('pre')
-                        ),
+            'service.trigger.unexists_method' => array(
+                'class'       => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                'preTriggers' => array(
+                    array(
+                        'class'  => 'Butterfly\Component\DI\Tests\Stubs\StaticTriggerService',
+                        'method' => 'unexists_method', 'arguments' => array('pre')
                     ),
                 ),
             ),
         );
         $container     = new Container($configuration);
 
-        $container->getService('service.trigger.unexists_method');
+        $container->get('service.trigger.unexists_method');
     }
 
     /**
@@ -826,32 +671,28 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGetServiceIfIncorrectTriggerType()
     {
         $configuration = array(
-            'services' => array(
-                'service.incorrect_trigger_type' => array(
-                    'class'       => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
-                    'preTriggers' => array(
-                        array('method' => 'setA', 'arguments' => array('pre')),
-                    ),
+            'service.incorrect_trigger_type' => array(
+                'class'       => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                'preTriggers' => array(
+                    array('method' => 'setA', 'arguments' => array('pre')),
                 ),
             ),
         );
         $container     = new Container($configuration);
 
-        $container->getService('service.incorrect_trigger_type');
+        $container->get('service.incorrect_trigger_type');
     }
 
     public function testUseSyntheticService()
     {
         $configuration = array(
-            'services' => array(
-                'service.synthetic'                        => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'scope' => 'synthetic'
-                ),
-                'service.dependence_for_synthetic_service' => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
-                    'arguments' => array('@service.synthetic')
-                ),
+            'service.synthetic'                        => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'scope' => 'synthetic'
+            ),
+            'service.dependence_for_synthetic_service' => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
+                'arguments' => array('@service.synthetic')
             ),
         );
         $container     = new Container($configuration);
@@ -861,21 +702,19 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $container->setSyntheticService('service.synthetic', $syntheticService);
 
         /** @var ComplexServiceStub $service */
-        $service = $container->getService('service.dependence_for_synthetic_service');
+        $service = $container->get('service.dependence_for_synthetic_service');
         $this->assertEquals($syntheticService, $service->getInternalService());
     }
 
     /**
-     * @expectedException \Butterfly\Component\DI\Exception\UndefinedServiceException
+     * @expectedException \Butterfly\Component\DI\Exception\UndefinedInstanceException
      */
     public function testUseSyntheticServiceWithCaseSensitive()
     {
         $configuration = array(
-            'services' => array(
-                'service.synthetic'                        => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'scope' => 'synthetic'
-                ),
+            'service.synthetic'                        => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'scope' => 'synthetic'
             ),
         );
         $container     = new Container($configuration);
@@ -891,11 +730,9 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testSetSyntheticServiceIfIncorrectClass()
     {
         $configuration = array(
-            'services' => array(
-                'service.synthetic' => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'scope' => 'synthetic'
-                ),
+            'service.synthetic' => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'scope' => 'synthetic'
             ),
         );
         $container     = new Container($configuration);
@@ -909,105 +746,26 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testSetSyntheticServiceIfSyntheticServiceIsNotFound()
     {
         $configuration = array(
-            'services' => array(
-                'service.synthetic'                        => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'scope' => 'synthetic'
-                ),
-                'service.dependence_for_synthetic_service' => array(
-                    'class'     => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
-                    'arguments' => array('@service.synthetic')
-                ),
+            'service.synthetic'                        => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'scope' => 'synthetic'
+            ),
+            'service.dependence_for_synthetic_service' => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
+                'arguments' => array('@service.synthetic')
             ),
         );
         $container     = new Container($configuration);
 
-        $container->getService('service.dependence_for_synthetic_service');
-    }
-
-    public function testHasInterface()
-    {
-        $configuration = array(
-            'interfaces' => array(
-                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
-            ),
-            'services'   => array(
-                'service.foo'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
-                ),
-            ),
-        );
-
-        $container = new Container($configuration);
-
-        $this->assertTrue($container->hasInterface('Butterfly\Component\DI\Tests\Stubs\IServiceFooAware'));
-    }
-
-    public function testHasInterfaceIfNotExists()
-    {
-        $configuration = array(
-            'services'   => array(
-                'service.foo'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
-                ),
-            ),
-        );
-
-        $container = new Container($configuration);
-
-        $this->assertFalse($container->hasInterface('undefined'));
-    }
-
-    public function testGetInterface()
-    {
-        $configuration = array(
-            'interfaces' => array(
-                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
-            ),
-            'services'   => array(
-                'service.foo'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
-                ),
-            ),
-        );
-
-        $container = new Container($configuration);
-
-        $interfaceImplement = $container->getInterface('Butterfly\Component\DI\Tests\Stubs\IServiceFooAware');
-        $this->assertInstanceOf('Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $interfaceImplement);
-    }
-
-    /**
-     * @expectedException \Butterfly\Component\DI\Exception\UndefinedInterfaceException
-     */
-    public function testGetInterfaceIfNotExists()
-    {
-        $configuration = array(
-            'services'   => array(
-                'service.foo'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
-                ),
-            ),
-        );
-
-        $container = new Container($configuration);
-
-        $container->getInterface('undefined');
+        $container->get('service.dependence_for_synthetic_service');
     }
 
     public function testGet()
     {
         $configuration = array(
-            'interfaces' => array(
-                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
-            ),
-            'parameters' => array(
-                'parameter1' => 'a',
-            ),
-            'services'   => array(
-                'service.foo'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
-                ),
+            'parameter1' => 'a',
+            'service.foo'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
             ),
             'tags'     => array(
                 'tag1' => array('service.foo')
@@ -1017,14 +775,10 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $container = new Container($configuration);
 
         // get parameter
-        $this->assertEquals('a', $container->get('parameter1'));
+        $this->assertEquals('a', $container->get('%parameter1'));
 
         // get service
-        $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $container->get('service.foo'));
-
-        // get interface
-        $interface = 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware';
-        $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $container->get($interface));
+        $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $container->get('@service.foo'));
 
         // get tag
         $this->assertCount(1, $container->get('#tag1'));
@@ -1033,16 +787,9 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testHas()
     {
         $configuration = array(
-            'interfaces' => array(
-                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
-            ),
-            'parameters' => array(
-                'parameter1' => 'a',
-            ),
-            'services'   => array(
-                'service.foo'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
-                ),
+            'parameter1' => 'a',
+            'service.foo'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
             ),
             'tags'     => array(
                 'tag1' => array('service.foo')
@@ -1051,10 +798,9 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $container = new Container($configuration);
 
-        $this->assertTrue($container->has('parameter1'));
+        $this->assertTrue($container->has('%parameter1'));
         $this->assertTrue($container->has('service.foo'));
         $this->assertTrue($container->has('#tag1'));
-        $this->assertTrue($container->has('Butterfly\Component\DI\Tests\Stubs\IServiceFooAware'));
     }
 
     /**
@@ -1072,31 +818,22 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function getDataForTestGetConfig()
     {
         $configuration = array(
-            'interfaces' => array(
-                'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.foo'
-            ),
-            'parameters' => array(
-                'parameter1' => 'a',
-            ),
-            'services'   => array(
-                'service.foo'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
-                ),
+            'parameter1' => 'a',
+            'service.foo'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
             ),
             'tags'     => array(
                 'tag1' => array('service.foo')
             ),
-            'aliases' => array(),
-            'interfaces_aliases' => array(),
         );
 
         return array(
             array($configuration, '%', $configuration, 'path root. case 1 - ok'),
             array($configuration, '%/', $configuration, 'path root. case 2 - ok'),
             array($configuration, '%/tags', array('tag1' => array('service.foo')), 'path of tags - ok'),
-            array($configuration, '%parameters/parameter1', 'a', 'path of parameter. case 1 - ok'),
-            array($configuration, '%/parameters/parameter1', 'a', 'path of parameter. case 2 - ok'),
-            array($configuration, '%/parameters/parameter1/', 'a', 'path of parameter. case 3 - ok'),
+            array($configuration, '%parameter1', 'a', 'path of parameter. case 1 - ok'),
+            array($configuration, '%/parameter1', 'a', 'path of parameter. case 2 - ok'),
+            array($configuration, '%/parameter1/', 'a', 'path of parameter. case 3 - ok'),
         );
     }
 
@@ -1121,14 +858,12 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGetConfigIfUndefinedIndex()
     {
         $configuration = array(
-            'parameters' => array(
-                'parameter1' => 'a',
-            ),
+            'parameter1' => 'a',
         );
 
         $container = new Container($configuration);
 
-        $container->get('%/parameters/undefined_parameter');
+        $container->get('%/undefined_parameter');
     }
 
     /**
@@ -1137,32 +872,26 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGetConfigIfIncorrectValue()
     {
         $configuration = array(
-            'parameters' => array(
-                'parameter1' => 'a',
-            ),
+            'parameter1' => 'a',
         );
 
         $container = new Container($configuration);
 
-        $container->get('%/parameters/parameter1/sub_parameter');
+        $container->get('%/parameter1/sub_parameter');
     }
 
     public function testReflection()
     {
         $configuration = array(
-            'parameters' => array(
-                'section_of_parameters' => array(
-                    'parameter1' => 'a',
-                    'parameter2' => 'b',
-                ),
+            'section_of_parameters' => array(
+                'parameter1' => 'a',
+                'parameter2' => 'b',
             ),
-            'services'   => array(
-                'service.foo'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(
-                        '%parameters/section_of_parameters/parameter1',
-                        '%services/service.foo'
-                    ),
+            'service.foo'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(
+                    '%section_of_parameters/parameter1',
+                    '%service.foo'
                 ),
             ),
         );
@@ -1170,44 +899,40 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $container = new Container($configuration);
 
         /** @var ServiceStub $foo */
-        $foo = $container->getService('service.foo');
+        $foo = $container->get('service.foo');
 
-        $this->assertEquals($configuration['parameters']['section_of_parameters']['parameter1'], $foo->getB());
-        $this->assertEquals($configuration['services']['service.foo'], $foo->getC());
+        $this->assertEquals($configuration['section_of_parameters']['parameter1'], $foo->getB());
+        $this->assertEquals($configuration['service.foo'], $foo->getC());
     }
 
     public function testGetForConfigurationExpression()
     {
         $configuration = array(
-            'parameters' => array(
-                'parameterA' => array(
-                    'foo' => 1,
-                    'bar' => array(
-                        'baz' => 3
-                    ),
-                )
-            ),
+            'parameterA' => array(
+                'foo' => 1,
+                'bar' => array(
+                    'baz' => 3
+                ),
+            )
         );
 
         $container = new Container($configuration);
 
-        $this->assertEquals(1, $container->get('parameterA/foo'));
-        $this->assertEquals(3, $container->get('parameterA/bar/baz'));
+        $this->assertEquals(1, $container->get('%parameterA/foo'));
+        $this->assertEquals(3, $container->get('%parameterA/bar/baz'));
     }
 
     public function testGetForServiceExpression()
     {
         $configuration = array(
-            'services'   => array(
-                'service.foo'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(
-                        'b',
-                    ),
-                    'properties' => array(
-                        'a' => 'a'
-                    )
+            'service.foo'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(
+                    'b',
                 ),
+                'properties' => array(
+                    'a' => 'a'
+                )
             ),
         );
 
@@ -1221,13 +946,11 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGetForTagExpression()
     {
         $configuration = array(
-            'services'   => array(
-                'service.foo'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                ),
-                'service.bar'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                ),
+            'service.foo'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+            ),
+            'service.bar'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
             ),
             'tags' => array(
                 'tag1' => array('service.foo', 'service.bar')
@@ -1245,33 +968,29 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testGetForExpressionWithError()
     {
         $configuration = array(
-            'parameters' => array(
-                'parameterA' => array(
-                    'foo' => 1,
-                )
-            ),
+            'parameterA' => array(
+                'foo' => 1,
+            )
         );
 
         $container = new Container($configuration);
 
-        $container->get('parameterA/bar');
+        $container->get('%parameterA/bar');
     }
 
     public function testGetForInnersExpression()
     {
         $configuration = array(
-            'services'   => array(
-                'service.foo'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'arguments' => array(
-                        '@service.bar',
-                    ),
+            'service.foo'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(
+                    '@service.bar',
                 ),
-                'service.bar'   => array(
-                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                    'properties' => array(
-                        'a' => array('baz' => 123),
-                    ),
+            ),
+            'service.bar'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'properties' => array(
+                    'a' => array('baz' => 123),
                 ),
             ),
         );

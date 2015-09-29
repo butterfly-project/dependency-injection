@@ -59,7 +59,7 @@ class ConfigurationValidator implements IVisitor
      * @param array $configuration
      * @return void
      */
-    public function visit($serviceId, array $configuration)
+    public function visit($serviceId, $configuration)
     {
         $errors = array();
 
@@ -93,8 +93,12 @@ class ConfigurationValidator implements IVisitor
      * @param array $configuration
      * @throws \InvalidArgumentException if sections is undefined
      */
-    protected function checkRightSections(array $configuration)
+    protected function checkRightSections($configuration)
     {
+        if (!is_array($configuration)) {
+            return;
+        }
+
         $undefinedSections = array_diff(array_keys($configuration), $this->rightSections);
 
         if (!empty($undefinedSections)) {
@@ -106,7 +110,7 @@ class ConfigurationValidator implements IVisitor
      * @param array $configuration
      * @throws \InvalidArgumentException if impossible to create a class
      */
-    protected function checkInstanceConfiguration(array $configuration)
+    protected function checkInstanceConfiguration($configuration)
     {
         if (!isset($configuration['class']) &&
             !isset($configuration['factoryStaticMethod']) &&
@@ -123,7 +127,7 @@ class ConfigurationValidator implements IVisitor
      * @param array $configuration
      * @throws \InvalidArgumentException if scope is invalid
      */
-    protected function checkScopeConfiguration(array $configuration)
+    protected function checkScopeConfiguration($configuration)
     {
         if (!empty($configuration['scope']) && !in_array($configuration['scope'], $this->rightScopes)) {
             throw new \InvalidArgumentException(sprintf("Scope '%s' is invalid", $configuration['scope']));
