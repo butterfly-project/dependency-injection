@@ -17,78 +17,153 @@ use Butterfly\Component\DI\Tests\Stubs\UseTriggerService;
  */
 class ContainerTest extends \PHPUnit_Framework_TestCase
 {
-    public function getDataForTestHasParameter()
+    public function testHasParameter()
+    {
+        $configuration = array(
+            'parameter1' => 'a',
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertTrue($container->has('%parameter1'));
+    }
+
+    public function testHasParameterIfUndefinedParameter()
+    {
+        $configuration = array();
+
+        $container = new Container($configuration);
+
+        $this->assertFalse($container->has('%undefined_parameter'));
+    }
+
+    public function testHasParameterIfCaseSensitive()
     {
         $configuration = array(
             'parameter1' => 'a',
             'Parameter2' => 'a',
         );
 
-        return array(
-            array($configuration, '%parameter1', true, 'has existing parameter - ok'),
-            array($configuration, '%undefined_parameter', false, 'has unexisting parameter - fail'),
+        $container = new Container($configuration);
 
-            array($configuration, '%Parameter1', false, 'search case sensitive - fail'),
-            array($configuration, '%Parameter2', true, 'search case sensitive - ok'),
-            array($configuration, '%parameter2', false, 'search case sensitive - fail'),
+        $this->assertFalse($container->has('%Parameter1'), 'search case sensitive - fail');
+        $this->assertTrue($container->has('%Parameter2'), 'search case sensitive - ok');
+        $this->assertFalse($container->has('%parameter2'), 'search case sensitive - fail');
+    }
+
+    public function testHasParameterIfRoot()
+    {
+        $configuration = array(
+            'parameter1' => 'a',
+            'Parameter2' => 'a',
         );
+
+        $container = new Container($configuration);
+
+        $this->assertTrue($container->has('%'));
+    }
+
+    public function testHasParameterIfUseExpression()
+    {
+        $configuration = array(
+            'parameter1' => array(
+                'parameter2' => 'a'
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertTrue($container->has('%parameter1/parameter2'), 'expression of parameter. case 1 - ok');
+        $this->assertTrue($container->has('%parameter1/parameter2/'), 'expression of parameter. case 1 - ok');
+        $this->assertFalse($container->has('%parameter1/undefined_parameter'), 'expression of undefined parameter - fail');
+    }
+
+    public function testGetParameter()
+    {
+        $configuration = array(
+            'parameter1' => 'a',
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertEquals('a', $container->get('%parameter1'));
     }
 
     /**
-     * @dataProvider getDataForTestHasParameter
-     *
-     * @param array $configuration
-     * @param $parameterName
-     * @param $expectedResult
-     * @param $caseMessage
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
      */
-    public function testHasParameter(array $configuration, $parameterName, $expectedResult, $caseMessage)
+    public function testGetParameterIfUndefinedParameter()
     {
+        $configuration = array();
+
         $container = new Container($configuration);
 
-        $this->assertEquals($expectedResult, $container->has($parameterName), $caseMessage);
+        $container->get('%undefined_parameter');
     }
 
-    public function getDataForTestGetParameter()
+    /**
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
+     */
+    public function testGetParameterIfUndefinedExpression()
+    {
+        $configuration = array(
+            'parameter' => array()
+        );
+
+        $container = new Container($configuration);
+
+        $container->get('%parameter/undefined_parameter');
+    }
+
+    public function testGetParameterIfCaseSensitive()
     {
         $configuration = array(
             'parameter1' => 'a',
             'Parameter1' => 'A',
         );
 
-        return array(
-            array($configuration, '%parameter1', 'a', 'get parameter - ok'),
-            array($configuration, '%Parameter1', 'A', 'get parameter case sensitive - ok'),
-        );
-    }
-
-    /**
-     * @dataProvider getDataForTestGetParameter
-     *
-     * @param array $configuration
-     * @param $parameterName
-     * @param $expectedValue
-     * @param $caseMessage
-     */
-    public function testGetParameter(array $configuration, $parameterName, $expectedValue, $caseMessage)
-    {
         $container = new Container($configuration);
 
-        $this->assertEquals($expectedValue, $container->get($parameterName), $caseMessage);
+        $this->assertEquals('a', $container->get('%parameter1'), 'get parameter case sensitive. case 1 - ok');
+        $this->assertEquals('A', $container->get('%Parameter1'), 'get parameter case sensitive. case 2 - ok');
     }
 
-    /**
-     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
-     */
-    public function testGetParameterIfNoParameter()
+    public function testGetParameterIfRoot()
     {
         $configuration = array(
             'parameter1' => 'a',
         );
-        $container     = new Container($configuration);
 
-        $container->get('%undefined_parameter');
+        $container = new Container($configuration);
+
+        $this->assertEquals($configuration, $container->get('%'));
     }
+
+    public function testGetParameterIfUseExpression()
+    {
+        $configuration = array(
+            'parameter1' => array(
+                'parameter2' => 'a'
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertEquals('a', $container->get('%parameter1/parameter2'), 'get parameter if use expression. case 1');
+        $this->assertEquals('a', $container->get('%parameter1/parameter2/'), 'get parameter if use expression. case 1');
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
     public function getDataForTestHasService()
     {
@@ -785,7 +860,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     public function testHas()
     {
         $configuration = array(
-            'parameter1' => 'a',
             'service.foo'   => array(
                 'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
             ),
@@ -796,7 +870,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $container = new Container($configuration);
 
-        $this->assertTrue($container->has('%parameter1'));
         $this->assertTrue($container->has('service.foo'));
         $this->assertTrue($container->has('#tag1'));
     }
@@ -811,71 +884,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $container = new Container($configuration);
 
         $container->get('undefined');
-    }
-
-    public function getDataForTestGetConfig()
-    {
-        $configuration = array(
-            'parameter1' => 'a',
-            'service.foo'   => array(
-                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
-            ),
-            'tags'     => array(
-                'tag1' => array('service.foo')
-            ),
-        );
-
-        return array(
-            array($configuration, '%', $configuration, 'path root. case 1 - ok'),
-            array($configuration, '%/', $configuration, 'path root. case 2 - ok'),
-            array($configuration, '%/tags', array('tag1' => array('service.foo')), 'path of tags - ok'),
-            array($configuration, '%parameter1', 'a', 'path of parameter. case 1 - ok'),
-            array($configuration, '%/parameter1', 'a', 'path of parameter. case 2 - ok'),
-            array($configuration, '%/parameter1/', 'a', 'path of parameter. case 3 - ok'),
-        );
-    }
-
-    /**
-     * @dataProvider getDataForTestGetConfig
-     *
-     * @param array $configuration
-     * @param $path
-     * @param $expectedResult
-     * @param $caseMessage
-     */
-    public function testGetConfig(array $configuration, $path, $expectedResult, $caseMessage)
-    {
-        $container = new Container($configuration);
-
-        $this->assertEquals($expectedResult, $container->get($path), $caseMessage);
-    }
-
-    /**
-     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
-     */
-    public function testGetConfigIfUndefinedIndex()
-    {
-        $configuration = array(
-            'parameter1' => 'a',
-        );
-
-        $container = new Container($configuration);
-
-        $container->get('%/undefined_parameter');
-    }
-
-    /**
-     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
-     */
-    public function testGetConfigIfIncorrectValue()
-    {
-        $configuration = array(
-            'parameter1' => 'a',
-        );
-
-        $container = new Container($configuration);
-
-        $container->get('%/parameter1/sub_parameter');
     }
 
     public function testReflection()
@@ -901,23 +909,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals($configuration['section_of_parameters']['parameter1'], $foo->getB());
         $this->assertEquals($configuration['service.foo'], $foo->getC());
-    }
-
-    public function testGetForConfigurationExpression()
-    {
-        $configuration = array(
-            'parameterA' => array(
-                'foo' => 1,
-                'bar' => array(
-                    'baz' => 3
-                ),
-            )
-        );
-
-        $container = new Container($configuration);
-
-        $this->assertEquals(1, $container->get('%parameterA/foo'));
-        $this->assertEquals(3, $container->get('%parameterA/bar/baz'));
     }
 
     public function testGetForServiceExpression()

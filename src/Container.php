@@ -48,9 +48,7 @@ class Container
     /**
      * @var array
      */
-    protected $configuration = array(
-        'tags' => array(),
-    );
+    protected $configuration = array();
 
     /**
      * @var Keeper\AbstractKeeper[]
@@ -121,7 +119,6 @@ class Container
      * @param mixed $instance
      * @return mixed
      * @throws IncorrectExpressionPathException if incorrect expression
-
      */
     protected function resolvePath(array $path, $instance)
     {
@@ -181,11 +178,28 @@ class Container
             case '#':
                 return $this->hasTag($instanceId);
             case '%':
-                return array_key_exists($instanceId, $this->configuration);
+
+                if (empty($instanceId)) {
+                    return true;
+                }
+
+                if (!array_key_exists($instanceId, $this->configuration)) {
+                    return false;
+                }
+
+                $instance = $this->configuration[$instanceId];
+
                 break;
             default:
                 return $this->hasInstance($id);
                 break;
+        }
+
+        try {
+            $this->resolvePath($path, $instance);
+            return true;
+        } catch (IncorrectExpressionPathException $e) {
+            return false;
         }
     }
 
@@ -259,7 +273,7 @@ class Container
      */
     public function hasTag($name)
     {
-        return array_key_exists($name, $this->configuration['tags']);
+        return !empty($this->configuration['tags']) && array_key_exists($name, $this->configuration['tags']);
     }
 
     /**
@@ -267,7 +281,7 @@ class Container
      */
     public function getTagsList()
     {
-        return array_keys($this->configuration['tags']);
+        return !empty($this->configuration['tags']) ? array_keys($this->configuration['tags']) : array();
     }
 
     /**
