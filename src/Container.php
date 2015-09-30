@@ -7,7 +7,6 @@ use Butterfly\Component\DI\Exception\BuildObjectException;
 use Butterfly\Component\DI\Exception\BuildServiceException;
 use Butterfly\Component\DI\Exception\IncorrectExpressionPathException;
 use Butterfly\Component\DI\Exception\IncorrectSyntheticServiceException;
-use Butterfly\Component\DI\Exception\UndefinedInstanceException;
 use Butterfly\Component\DI\Keeper;
 
 /**

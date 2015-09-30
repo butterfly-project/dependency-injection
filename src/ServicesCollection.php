@@ -3,7 +3,6 @@
 namespace Butterfly\Component\DI;
 
 use Butterfly\Component\DI\Exception\IncorrectExpressionPathException;
-use Butterfly\Component\DI\Exception\UndefinedInstanceException;
 use Traversable;
 
 class ServicesCollection implements \IteratorAggregate, \ArrayAccess, \Countable
