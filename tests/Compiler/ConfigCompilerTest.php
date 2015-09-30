@@ -10,13 +10,6 @@ use Butterfly\Component\DI\Compiler\ServiceCollector;
  */
 class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
 {
-    public function testCreateInstance()
-    {
-        $compiler = ConfigCompiler::createInstance();
-
-        $this->assertInstanceOf('\Butterfly\Component\DI\Compiler\ConfigCompiler', $compiler);
-    }
-
     public function testCompileConfig()
     {
         $input = array(
@@ -34,8 +27,7 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
             'tags' => array(),
         );
 
-        $compiler      = ConfigCompiler::createInstance();
-        $configuration = $compiler->compileConfig($input);
+        $configuration = ConfigCompiler::compile($input);
 
         $this->assertEquals($exptected, $configuration);
     }

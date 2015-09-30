@@ -11,7 +11,7 @@
 
 namespace Butterfly\Component\DI\Compiler\PreProcessing\ParameterResolver;
 
-use Butterfly\Component\DI\Compiler\PreProcessing\IFilter;
+use Butterfly\Component\Form\Transform\ITransformer;
 
 /**
  * Source: Symfony 2 ParameterBag
@@ -19,7 +19,7 @@ use Butterfly\Component\DI\Compiler\PreProcessing\IFilter;
  * @author Fabien Potencier <fabien@symfony.com>
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
-class Resolver implements IFilter
+class Resolver implements ITransformer
 {
     /**
      * @var array
@@ -27,12 +27,13 @@ class Resolver implements IFilter
     protected $parameters;
 
     /**
-     * @param array $configuration
-     * @return array
+     * @param mixed $value
+     * @return mixed
+     * @throws \InvalidArgumentException if incorrect value type
      */
-    public function filter(array $configuration)
+    public function transform($value)
     {
-        return $this->resolve($configuration);
+        return $this->resolve($value);
     }
 
     /**

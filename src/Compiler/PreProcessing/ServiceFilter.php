@@ -3,11 +3,12 @@
 namespace Butterfly\Component\DI\Compiler\PreProcessing;
 
 use Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException;
+use Butterfly\Component\Form\Transform\ITransformer;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
-class ServiceFilter implements IFilter
+class ServiceFilter implements ITransformer
 {
     /**
      * @var array
@@ -30,15 +31,16 @@ class ServiceFilter implements IFilter
     protected $children = array();
 
     /**
-     * @param array $configuration
-     * @return array
+     * @param mixed $value
+     * @return mixed
+     * @throws \InvalidArgumentException if incorrect value type
      */
-    public function filter(array $configuration)
+    public function transform($value)
     {
         $this->services = array();
         $this->children = array();
 
-        foreach ($configuration as $serviceId => $serviceConfiguration) {
+        foreach ($value as $serviceId => $serviceConfiguration) {
             if (isset($serviceConfiguration['parent'])) {
                 $this->children[$serviceId] = $serviceConfiguration;
             } else {

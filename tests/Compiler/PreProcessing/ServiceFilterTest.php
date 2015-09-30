@@ -103,7 +103,7 @@ class ServiceFilterTest extends \PHPUnit_Framework_TestCase
             ),
         );
 
-        $this->assertEquals($expectedConfiguration, $this->collector->filter($configuration));
+        $this->assertEquals($expectedConfiguration, $this->collector->transform($configuration));
     }
 
     /**
@@ -111,7 +111,7 @@ class ServiceFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function testVisitIfUndefinedParentService()
     {
-        $this->collector->filter(array(
+        $this->collector->transform(array(
             'service2' => array(
                 'parent' => 'service1',
                 'class'  => 'B',

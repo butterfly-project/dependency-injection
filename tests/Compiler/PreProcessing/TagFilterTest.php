@@ -29,6 +29,6 @@ class TagFilterTest extends \PHPUnit_Framework_TestCase
             )
         );
 
-        $this->assertEquals($expectedConfiguration, $filter->filter($configuration));
+        $this->assertEquals($expectedConfiguration, $filter->transform($configuration));
     }
 }

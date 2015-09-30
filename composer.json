@@ -13,6 +13,7 @@
     "require": {
         "php": ">=5.3.3",
 
+        "butterfly/form": "~1.3",
         "butterfly/annotations": "1.0.*"
     },
     "autoload": {
