@@ -42,7 +42,9 @@ class Container
     const SCOPE_PROTOTYPE = 'prototype';
     const SCOPE_SYNTHETIC = 'synthetic';
 
-    const SERVICE_CONTAINER_ID = 'service_container';
+    const EXPR_SERVICE = '@';
+    const EXPR_CONFIGURATION = '%';
+
     const CONFIG_PATH_SEPARATOR = '/';
 
     /**
@@ -80,7 +82,6 @@ class Container
     /**
      * @param string $expression
      * @return mixed
-     * @throws UndefinedInstanceException if instance is not found
      * @throws IncorrectExpressionPathException if incorrect expression
      */
     public function get($expression)
@@ -93,6 +94,10 @@ class Container
                 break;
 
             case '@':
+                if ('@' == $expression) {
+                    return $this;
+                }
+
                 $path       = array_filter(explode(self::CONFIG_PATH_SEPARATOR, $expression));
                 $instanceId = array_shift($path);
                 $instance   = $this->getInstance(substr($instanceId, 1));
@@ -173,7 +178,14 @@ class Container
 
         switch ($firstSymbol) {
             case '@':
-                return $this->hasInstance($instanceId);
+
+                try {
+                    $this->get($expression);
+                    return true;
+                } catch (IncorrectExpressionPathException $e) {
+                    return false;
+                }
+
                 break;
             case '#':
                 return $this->hasTag($instanceId);
@@ -191,7 +203,12 @@ class Container
 
                 break;
             default:
-                return $this->hasInstance($id);
+                try {
+                    $this->get($expression);
+                    return true;
+                } catch (IncorrectExpressionPathException $e) {
+                    return false;
+                }
                 break;
         }
 
@@ -209,10 +226,6 @@ class Container
      */
     protected function hasInstance($id)
     {
-        if (self::SERVICE_CONTAINER_ID == $id) {
-            return true;
-        }
-
         if (array_key_exists($id, $this->configuration)) {
             return true;
         }
@@ -223,16 +236,12 @@ class Container
     /**
      * @param string $id
      * @return Object
-     * @throws UndefinedInstanceException if service is not found
+     * @throws IncorrectExpressionPathException if incorrect expression
      * @throws BuildServiceException if scope is not found
      * @throws BuildServiceException if fail to build service
      */
     protected function getInstance($id)
     {
-        if (self::SERVICE_CONTAINER_ID == $id) {
-            return $this;
-        }
-
         $serviceConfiguration = $this->getInstanceDefinition($id);
 
         if (is_string($serviceConfiguration)) {
@@ -298,7 +307,7 @@ class Container
     /**
      * @param string $id
      * @param object $service
-     * @throws UndefinedInstanceException if service is not found
+     * @throws IncorrectExpressionPathException if incorrect expression
      * @throws IncorrectSyntheticServiceException if incorrect object class
      */
     public function setSyntheticService($id, $service)
@@ -335,7 +344,7 @@ class Container
     /**
      * @param string $id
      * @return array
-     * @throws UndefinedInstanceException if instance is not found
+     * @throws IncorrectExpressionPathException if instance is not found
      */
     protected function getInstanceDefinition($id)
     {
@@ -343,6 +352,6 @@ class Container
             return $this->configuration[$id];
         }
 
-        throw new UndefinedInstanceException(sprintf("Instance '%s' is not found", $id));
+        throw new IncorrectExpressionPathException($id, $this->configuration);
     }
 }

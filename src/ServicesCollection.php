@@ -2,6 +2,7 @@
 
 namespace Butterfly\Component\DI;
 
+use Butterfly\Component\DI\Exception\IncorrectExpressionPathException;
 use Butterfly\Component\DI\Exception\UndefinedInstanceException;
 use Traversable;
 
@@ -145,7 +146,7 @@ class ServicesCollection implements \IteratorAggregate, \ArrayAccess, \Countable
     public function get($id)
     {
         if (!$this->isAvailable($id)) {
-            throw new UndefinedInstanceException(sprintf("Service '%s' is not found", $id));
+            throw new IncorrectExpressionPathException($id, $this->servicesIds);
         }
 
         return $this->container->get($id);
@@ -158,7 +159,7 @@ class ServicesCollection implements \IteratorAggregate, \ArrayAccess, \Countable
     public function set($id, $service)
     {
         if (!$this->isAvailable($id)) {
-            throw new UndefinedInstanceException(sprintf("Service '%s' is not found", $id));
+            throw new IncorrectExpressionPathException($id, $this->servicesIds);
         }
 
         $this->container->setSyntheticService($id, $service);

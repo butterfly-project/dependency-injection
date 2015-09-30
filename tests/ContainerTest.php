@@ -153,19 +153,30 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('a', $container->get('%parameter1/parameter2/'), 'get parameter if use expression. case 1');
     }
 
+    public function testHasService()
+    {
+        $configuration = array(
+            'service.simple' => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(1, 2)
+            ),
+        );
 
+        $container = new Container($configuration);
 
+        $this->assertTrue($container->has('service.simple'));
+    }
 
+    public function testHasServiceIfUndefinedService()
+    {
+        $configuration = array();
 
+        $container = new Container($configuration);
 
+        $this->assertFalse($container->has('undefined_service'));
+    }
 
-
-
-
-
-
-
-    public function getDataForTestHasService()
+    public function testHasServiceIfCaseSensitive()
     {
         $configuration = array(
             'service.simple' => array(
@@ -178,29 +189,11 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
             ),
         );
 
-        return array(
-            array($configuration, 'service.simple', true, 'has existing service - ok'),
-            array($configuration, 'undefined_service', false, 'has unexisting service - fail'),
-
-            array($configuration, 'SERVICE.SIMPLE', false, 'search case sensitive - fail'),
-            array($configuration, 'SERVICE.SIMPLE2', true, 'search case sensitive - ok'),
-            array($configuration, 'service.simple2', false, 'search case sensitive - fail'),
-        );
-    }
-
-    /**
-     * @dataProvider getDataForTestHasService
-     *
-     * @param array $configuration
-     * @param $serviceName
-     * @param $expectedResult
-     * @param $caseMessage
-     */
-    public function testHasService(array $configuration, $serviceName, $expectedResult, $caseMessage)
-    {
         $container = new Container($configuration);
 
-        $this->assertEquals($expectedResult, $container->has($serviceName), $caseMessage);
+        $this->assertFalse($container->has('SERVICE.SIMPLE'), 'search case sensitive - fail');
+        $this->assertTrue($container->has('SERVICE.SIMPLE2'), 'search case sensitive - ok');
+        $this->assertFalse($container->has('service.simple2'), 'search case sensitive - fail');
     }
 
     public function testHasServiceContainerService()
@@ -208,7 +201,80 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $configuration = array();
         $container     = new Container($configuration);
 
-        $this->assertTrue($container->has(Container::SERVICE_CONTAINER_ID));
+        $this->assertTrue($container->has('@'));
+    }
+
+    public function testHasServiceIfUseExpression()
+    {
+        $configuration = array(
+            'service.foo'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(
+                    'b',
+                ),
+                'properties' => array(
+                    'a' => 'a'
+                )
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertTrue($container->has('service.foo/a'), 'has service if use expression. case property - ok');
+        $this->assertTrue($container->has('service.foo/b'), 'has service if use expression. case with getter - ok');
+        $this->assertTrue($container->has('service.foo/getB'), 'has service if use expression. case method - ok');
+        $this->assertFalse($container->has('service.foo/undefined'), 'has service if use expression - fail');
+
+        $this->assertTrue($container->has('@service.foo/a'), 'has service if use expression. case property - ok');
+        $this->assertTrue($container->has('@service.foo/b'), 'has service if use expression. case with getter - ok');
+        $this->assertTrue($container->has('@service.foo/getB'), 'has service if use expression. case method - ok');
+        $this->assertFalse($container->has('@service.foo/undefined'), 'has service if use expression - fail');
+    }
+
+    public function testGetService()
+    {
+        $configuration = array(
+            'service.simple' => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(1, 2)
+            ),
+        );
+        $container = new Container($configuration);
+
+        $service = $container->get('service.simple');
+
+        $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceStub', $service);
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
+     */
+    public function testGetServiceIfUndefinedService()
+    {
+        $configuration = array();
+
+        $container = new Container($configuration);
+
+        $container->get('undefined_service');
+    }
+
+    public function testGetServiceIfCaseSensitive()
+    {
+        $configuration = array(
+            'service.simple' => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(1)
+            ),
+            'SERVICE.SIMPLE' => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(2)
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertEquals(1, $container->get('service.simple')->getB(), 'get instance with case sensitive. case 1');
+        $this->assertEquals(2, $container->get('SERVICE.SIMPLE')->getB(), 'get instance with case sensitive. case 2');
     }
 
     public function testGetServiceContainerService()
@@ -216,41 +282,54 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $configuration = array();
         $container     = new Container($configuration);
 
-        $service = $container->get(Container::SERVICE_CONTAINER_ID);
+        $service = $container->get('@');
 
         $this->assertInstanceOf('\Butterfly\Component\DI\Container', $service);
     }
 
-    public function testGetServiceWithCaseSensitive()
+    public function testGetServiceIfUseExpression()
     {
         $configuration = array(
-            'Service.simple' => array(
-                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                'arguments' => array(1, 2)
+            'service.foo'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(2),
+                'properties' => array(
+                    'a' => 1
+                )
             ),
         );
+
         $container = new Container($configuration);
 
-        $service = $container->get('Service.simple');
+        $this->assertEquals(1, $container->get('service.foo/a'), 'use instance expression. case property - ok');
+        $this->assertEquals(2, $container->has('service.foo/b'), 'use instance expression. case with getter - ok');
+        $this->assertEquals(2, $container->has('service.foo/getB'), 'use instance expression. case method - ok');
 
-        $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceStub', $service);
+        $this->assertEquals(1, $container->get('@service.foo/a'), 'use instance expression. case property - ok');
+        $this->assertEquals(2, $container->has('@service.foo/b'), 'use instance expression. case with getter - ok');
+        $this->assertEquals(2, $container->has('@service.foo/getB'), 'use instance expression. case method - ok');
     }
 
     /**
-     * @expectedException \Butterfly\Component\DI\Exception\UndefinedInstanceException
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
      */
-    public function testGetServiceIfNoService()
+    public function testGetServiceIfIncorrectExpression()
     {
-        $configuration = array();
-        $container     = new Container($configuration);
+        $configuration = array(
+            'service.foo'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+            ),
+        );
 
-        $container->get('undefined_service');
+        $container = new Container($configuration);
+
+        $container->get('service.foo/undefined');
     }
 
     /**
      * @expectedException \Butterfly\Component\DI\Exception\BuildServiceException
      */
-    public function testGetServiceIfIncorrectConfiguration()
+    public function testGetInstanceIfIncorrectConfiguration()
     {
         $configuration = array(
             'service.incorrect' => array(
@@ -265,7 +344,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     /**
      * @expectedException \Butterfly\Component\DI\Exception\BuildServiceException
      */
-    public function testGetServiceIfNoClassService()
+    public function testGetInstanceIfNoClassService()
     {
         $configuration = array(
             'undefined_class_service' => array(
@@ -277,7 +356,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $container->get('undefined_class_service');
     }
 
-    public function testGetServiceThroughStaticFactoryMethod()
+    public function testGetInstanceThroughStaticFactoryMethod()
     {
         $configuration = array(
             'service.static_factory_output' => array(
@@ -297,7 +376,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(2, $service->getB());
     }
 
-    public function testGetServiceThroughFactory()
+    public function testGetInstanceThroughFactory()
     {
         $configuration = array(
             'service.factory'        => array(
@@ -318,7 +397,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(2, $service->getB());
     }
 
-    public function testGetServiceWithSingletonScope()
+    public function testGetInstanceWithSingletonScope()
     {
         ServiceInstanceCounter::$countCreateInstances = 0;
         $configuration                                = array(
@@ -340,7 +419,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, ServiceInstanceCounter::$countCreateInstances);
     }
 
-    public function testGetServiceWithFactoryScope()
+    public function testGetInstanceWithFactoryScope()
     {
         ServiceInstanceCounter::$countCreateInstances = 0;
         $configuration                                = array(
@@ -360,7 +439,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(2, ServiceInstanceCounter::$countCreateInstances);
     }
 
-    public function testGetServiceWithPrototypeScope()
+    public function testGetInstanceWithPrototypeScope()
     {
         ServiceInstanceCounter::$countCreateInstances = 0;
         ServiceInstanceCounter::$countCloneInstances  = 0;
@@ -386,7 +465,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     /**
      * @expectedException \Butterfly\Component\DI\Exception\BuildServiceException
      */
-    public function testGetServiceWithUndefinedScope()
+    public function testGetInstanceWithUndefinedScope()
     {
         $configuration = array(
             'service.scope.undefined' => array(
@@ -398,6 +477,133 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $container->get('service.scope.undefined');
     }
+
+    public function testUseSyntheticService()
+    {
+        $configuration = array(
+            'service.synthetic'                        => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'scope' => 'synthetic'
+            ),
+            'service.dependence_for_synthetic_service' => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
+                'arguments' => array('@service.synthetic')
+            ),
+        );
+        $container     = new Container($configuration);
+
+        $syntheticService = new ServiceStub(1, 2);
+
+        $container->setSyntheticService('service.synthetic', $syntheticService);
+
+        /** @var ComplexServiceStub $service */
+        $service = $container->get('service.dependence_for_synthetic_service');
+        $this->assertEquals($syntheticService, $service->getInternalService());
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
+     */
+    public function testUseSyntheticServiceWithCaseSensitive()
+    {
+        $configuration = array(
+            'service.synthetic'                        => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'scope' => 'synthetic'
+            ),
+        );
+        $container     = new Container($configuration);
+
+        $syntheticService = new ServiceStub(1, 2);
+
+        $container->setSyntheticService('SERVICE.SYNTHETIC', $syntheticService);
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectSyntheticServiceException
+     */
+    public function testSetSyntheticServiceIfIncorrectClass()
+    {
+        $configuration = array(
+            'service.synthetic' => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'scope' => 'synthetic'
+            ),
+        );
+        $container     = new Container($configuration);
+
+        $container->setSyntheticService('service.synthetic', new ServiceInstanceCounter());
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Exception\BuildServiceException
+     */
+    public function testSetSyntheticServiceIfSyntheticServiceIsNotFound()
+    {
+        $configuration = array(
+            'service.synthetic'                        => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'scope' => 'synthetic'
+            ),
+            'service.dependence_for_synthetic_service' => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
+                'arguments' => array('@service.synthetic')
+            ),
+        );
+        $container     = new Container($configuration);
+
+        $container->get('service.dependence_for_synthetic_service');
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public function testReflection()
+    {
+        $configuration = array(
+            'section_of_parameters' => array(
+                'parameter1' => 'a',
+                'parameter2' => 'b',
+            ),
+            'service.foo'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(
+                    '%section_of_parameters/parameter1',
+                    '%service.foo'
+                ),
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        /** @var ServiceStub $foo */
+        $foo = $container->get('service.foo');
+
+        $this->assertEquals($configuration['section_of_parameters']['parameter1'], $foo->getB());
+        $this->assertEquals($configuration['service.foo'], $foo->getC());
+    }
+
+
+
+
+
+
+
+
+
+
+
 
     public function testConstructorInjection()
     {
@@ -531,7 +737,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(array('tag1'), $container->getTagsList());
     }
 
-    public function testGetServicesByTag()
+    public function testGetInstancesByTag()
     {
         $configuration = array(
             'services' => array(
@@ -756,83 +962,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $container->get('service.incorrect_trigger_type');
     }
 
-    public function testUseSyntheticService()
-    {
-        $configuration = array(
-            'service.synthetic'                        => array(
-                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                'scope' => 'synthetic'
-            ),
-            'service.dependence_for_synthetic_service' => array(
-                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
-                'arguments' => array('@service.synthetic')
-            ),
-        );
-        $container     = new Container($configuration);
-
-        $syntheticService = new ServiceStub(1, 2);
-
-        $container->setSyntheticService('service.synthetic', $syntheticService);
-
-        /** @var ComplexServiceStub $service */
-        $service = $container->get('service.dependence_for_synthetic_service');
-        $this->assertEquals($syntheticService, $service->getInternalService());
-    }
-
-    /**
-     * @expectedException \Butterfly\Component\DI\Exception\UndefinedInstanceException
-     */
-    public function testUseSyntheticServiceWithCaseSensitive()
-    {
-        $configuration = array(
-            'service.synthetic'                        => array(
-                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                'scope' => 'synthetic'
-            ),
-        );
-        $container     = new Container($configuration);
-
-        $syntheticService = new ServiceStub(1, 2);
-
-        $container->setSyntheticService('SERVICE.SYNTHETIC', $syntheticService);
-    }
-
-    /**
-     * @expectedException \Butterfly\Component\DI\Exception\IncorrectSyntheticServiceException
-     */
-    public function testSetSyntheticServiceIfIncorrectClass()
-    {
-        $configuration = array(
-            'service.synthetic' => array(
-                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                'scope' => 'synthetic'
-            ),
-        );
-        $container     = new Container($configuration);
-
-        $container->setSyntheticService('service.synthetic', new ServiceInstanceCounter());
-    }
-
-    /**
-     * @expectedException \Butterfly\Component\DI\Exception\BuildServiceException
-     */
-    public function testSetSyntheticServiceIfSyntheticServiceIsNotFound()
-    {
-        $configuration = array(
-            'service.synthetic'                        => array(
-                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                'scope' => 'synthetic'
-            ),
-            'service.dependence_for_synthetic_service' => array(
-                'class'     => 'Butterfly\Component\DI\Tests\Stubs\ComplexServiceStub',
-                'arguments' => array('@service.synthetic')
-            ),
-        );
-        $container     = new Container($configuration);
-
-        $container->get('service.dependence_for_synthetic_service');
-    }
-
     public function testGet()
     {
         $configuration = array(
@@ -874,63 +1003,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($container->has('#tag1'));
     }
 
-    /**
-     * @expectedException \Butterfly\Component\DI\Exception\UndefinedInstanceException
-     */
-    public function testGetIfInstanceNotExists()
-    {
-        $configuration = array();
-
-        $container = new Container($configuration);
-
-        $container->get('undefined');
-    }
-
-    public function testReflection()
-    {
-        $configuration = array(
-            'section_of_parameters' => array(
-                'parameter1' => 'a',
-                'parameter2' => 'b',
-            ),
-            'service.foo'   => array(
-                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                'arguments' => array(
-                    '%section_of_parameters/parameter1',
-                    '%service.foo'
-                ),
-            ),
-        );
-
-        $container = new Container($configuration);
-
-        /** @var ServiceStub $foo */
-        $foo = $container->get('service.foo');
-
-        $this->assertEquals($configuration['section_of_parameters']['parameter1'], $foo->getB());
-        $this->assertEquals($configuration['service.foo'], $foo->getC());
-    }
-
-    public function testGetForServiceExpression()
-    {
-        $configuration = array(
-            'service.foo'   => array(
-                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                'arguments' => array(
-                    'b',
-                ),
-                'properties' => array(
-                    'a' => 'a'
-                )
-            ),
-        );
-
-        $container = new Container($configuration);
-
-        $this->assertEquals('a', $container->get('service.foo/a'));
-        $this->assertEquals('b', $container->get('service.foo/b'));
-        $this->assertEquals('b', $container->get('service.foo/getB'));
-    }
 
     public function testGetForTagExpression()
     {

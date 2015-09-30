@@ -93,7 +93,7 @@ class ServicesCollectionTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \Butterfly\Component\DI\Exception\UndefinedInstanceException
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
      */
     public function testGetIfServiceIsNotAvailable()
     {
@@ -102,7 +102,7 @@ class ServicesCollectionTest extends \PHPUnit_Framework_TestCase
         $container  = $this->getMockContainer();
         $container
             ->expects($this->never())
-            ->method('getService')
+            ->method('get')
             ->with('service.foo')
             ->willReturn(true);
 
@@ -132,7 +132,7 @@ class ServicesCollectionTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \Butterfly\Component\DI\Exception\UndefinedInstanceException
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
      */
     public function testSetIfServiceIsNotAvailable()
     {
