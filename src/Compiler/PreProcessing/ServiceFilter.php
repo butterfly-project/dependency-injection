@@ -1,15 +1,13 @@
 <?php
 
-namespace Butterfly\Component\DI\Compiler\ServiceCollector;
+namespace Butterfly\Component\DI\Compiler\PreProcessing;
 
-use Butterfly\Component\DI\Compiler\PreProcessing\IFilter;
 use Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException;
-use Butterfly\Component\DI\Compiler\ServiceVisitor\IVisitor;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
-class ServiceCollector implements IFilter, IVisitor, IConfigurationCollector
+class ServiceFilter implements IFilter
 {
     /**
      * @var array

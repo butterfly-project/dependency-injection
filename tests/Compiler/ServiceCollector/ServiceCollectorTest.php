@@ -2,7 +2,7 @@
 
 namespace Butterfly\Component\DI\Tests\Compiler\ServiceCollector;
 
-use Butterfly\Component\DI\Compiler\ServiceCollector\ServiceCollector;
+use Butterfly\Component\DI\Compiler\PreProcessing\ServiceFilter;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
@@ -10,13 +10,13 @@ use Butterfly\Component\DI\Compiler\ServiceCollector\ServiceCollector;
 class ServiceCollectorTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var ServiceCollector
+     * @var ServiceFilter
      */
     protected $collector;
 
     protected function setUp()
     {
-        $this->collector = new ServiceCollector();
+        $this->collector = new ServiceFilter();
     }
 
     public function testVisit()
