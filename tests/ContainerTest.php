@@ -310,6 +310,28 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(2, $container->has('@service.foo/getB'), 'use instance expression. case method - ok');
     }
 
+    public function testGetForInnersExpression()
+    {
+        $configuration = array(
+            'service.foo'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'arguments' => array(
+                    '@service.bar',
+                ),
+            ),
+            'service.bar'   => array(
+                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                'properties' => array(
+                    'a' => array('baz' => 123),
+                ),
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertEquals(123, $container->get('service.foo/b/a/baz'));
+    }
+
     /**
      * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
      */
@@ -555,21 +577,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $container->get('service.dependence_for_synthetic_service');
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public function testReflection()
+    public function testConfigurationInjection()
     {
         $configuration = array(
             'section_of_parameters' => array(
@@ -593,17 +601,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($configuration['section_of_parameters']['parameter1'], $foo->getB());
         $this->assertEquals($configuration['service.foo'], $foo->getC());
     }
-
-
-
-
-
-
-
-
-
-
-
 
     public function testConstructorInjection()
     {
@@ -689,6 +686,125 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $service = $container->get('service.private_property_injection');
 
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
+    }
+
+    public function testTriggers()
+    {
+        $configuration = array(
+            'service.trigger'     => array(
+                'class'     => 'Butterfly\Component\DI\Tests\Stubs\TriggerService',
+                'arguments' => array('initial'),
+            ),
+            'service.use_trigger' => array(
+                'class'        => 'Butterfly\Component\DI\Tests\Stubs\UseTriggerService',
+                'arguments'    => array('@service.trigger'),
+                'preTriggers'  => array(
+                    array('service' => '@service.trigger', 'method' => 'setA', 'arguments' => array('pre')),
+                ),
+                'postTriggers' => array(
+                    array('service' => '@service.trigger', 'method' => 'setA', 'arguments' => array('post')),
+                ),
+            ),
+        );
+        $container     = new Container($configuration);
+
+        /** @var TriggerService $triggerService */
+        $triggerService = $container->get('service.trigger');
+
+        /** @var UseTriggerService $useTriggerService */
+        $useTriggerService = $container->get('service.use_trigger');
+
+        $this->assertEquals('pre', $useTriggerService->getPreA());
+        $this->assertEquals('post', $triggerService->getA());
+    }
+
+    public function testStaticTriggers()
+    {
+        $configuration = array(
+            'service.use_static_trigger' => array(
+                'class'        => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                'preTriggers'  => array(
+                    array(
+                        'class'     => 'Butterfly\Component\DI\Tests\Stubs\StaticTriggerService',
+                        'method'    => 'setA',
+                        'arguments' => array('pre')
+                    ),
+                ),
+                'postTriggers' => array(
+                    array(
+                        'class'     => 'Butterfly\Component\DI\Tests\Stubs\StaticTriggerService',
+                        'method'    => 'setA',
+                        'arguments' => array('post')
+                    ),
+                ),
+            ),
+        );
+        $container     = new Container($configuration);
+
+        StaticTriggerService::setA('initial');
+
+        /** @var UseTriggerService $useTriggerService */
+        $useTriggerService = $container->get('service.use_static_trigger');
+
+        $this->assertEquals('pre', $useTriggerService->getPreA());
+        $this->assertEquals('post', StaticTriggerService::getA());
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Exception\BuildServiceException
+     */
+    public function testStaticTriggersIfUnexistingClass()
+    {
+        $configuration = array(
+            'service.trigger.unexists_class' => array(
+                'class'       => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                'preTriggers' => array(
+                    array('class' => 'UnexistsClass', 'method' => 'setA', 'arguments' => array('pre')),
+                ),
+            ),
+        );
+        $container     = new Container($configuration);
+
+        $container->get('service.trigger.unexists_class');
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Exception\BuildServiceException
+     */
+    public function testStaticTriggersIfUnexistingMethod()
+    {
+        $configuration = array(
+            'service.trigger.unexists_method' => array(
+                'class'       => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                'preTriggers' => array(
+                    array(
+                        'class'  => 'Butterfly\Component\DI\Tests\Stubs\StaticTriggerService',
+                        'method' => 'unexists_method', 'arguments' => array('pre')
+                    ),
+                ),
+            ),
+        );
+        $container     = new Container($configuration);
+
+        $container->get('service.trigger.unexists_method');
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Exception\BuildServiceException
+     */
+    public function testGetServiceIfIncorrectTriggerType()
+    {
+        $configuration = array(
+            'service.incorrect_trigger_type' => array(
+                'class'       => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
+                'preTriggers' => array(
+                    array('method' => 'setA', 'arguments' => array('pre')),
+                ),
+            ),
+        );
+        $container     = new Container($configuration);
+
+        $container->get('service.incorrect_trigger_type');
     }
 
     public function getDataForTestHasTag()
@@ -843,167 +959,6 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\FactoryOutputService', $service);
     }
 
-    public function testTriggers()
-    {
-        $configuration = array(
-            'service.trigger'     => array(
-                'class'     => 'Butterfly\Component\DI\Tests\Stubs\TriggerService',
-                'arguments' => array('initial'),
-            ),
-            'service.use_trigger' => array(
-                'class'        => 'Butterfly\Component\DI\Tests\Stubs\UseTriggerService',
-                'arguments'    => array('@service.trigger'),
-                'preTriggers'  => array(
-                    array('service' => '@service.trigger', 'method' => 'setA', 'arguments' => array('pre')),
-                ),
-                'postTriggers' => array(
-                    array('service' => '@service.trigger', 'method' => 'setA', 'arguments' => array('post')),
-                ),
-            ),
-        );
-        $container     = new Container($configuration);
-
-        /** @var TriggerService $triggerService */
-        $triggerService = $container->get('service.trigger');
-
-        /** @var UseTriggerService $useTriggerService */
-        $useTriggerService = $container->get('service.use_trigger');
-
-        $this->assertEquals('pre', $useTriggerService->getPreA());
-        $this->assertEquals('post', $triggerService->getA());
-    }
-
-    public function testStaticTriggers()
-    {
-        $configuration = array(
-            'service.use_static_trigger' => array(
-                'class'        => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
-                'preTriggers'  => array(
-                    array(
-                        'class'     => 'Butterfly\Component\DI\Tests\Stubs\StaticTriggerService',
-                        'method'    => 'setA',
-                        'arguments' => array('pre')
-                    ),
-                ),
-                'postTriggers' => array(
-                    array(
-                        'class'     => 'Butterfly\Component\DI\Tests\Stubs\StaticTriggerService',
-                        'method'    => 'setA',
-                        'arguments' => array('post')
-                    ),
-                ),
-            ),
-        );
-        $container     = new Container($configuration);
-
-        StaticTriggerService::setA('initial');
-
-        /** @var UseTriggerService $useTriggerService */
-        $useTriggerService = $container->get('service.use_static_trigger');
-
-        $this->assertEquals('pre', $useTriggerService->getPreA());
-        $this->assertEquals('post', StaticTriggerService::getA());
-    }
-
-    /**
-     * @expectedException \Butterfly\Component\DI\Exception\BuildServiceException
-     */
-    public function testStaticTriggersIfUnexistingClass()
-    {
-        $configuration = array(
-            'service.trigger.unexists_class' => array(
-                'class'       => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
-                'preTriggers' => array(
-                    array('class' => 'UnexistsClass', 'method' => 'setA', 'arguments' => array('pre')),
-                ),
-            ),
-        );
-        $container     = new Container($configuration);
-
-        $container->get('service.trigger.unexists_class');
-    }
-
-    /**
-     * @expectedException \Butterfly\Component\DI\Exception\BuildServiceException
-     */
-    public function testStaticTriggersIfUnexistingMethod()
-    {
-        $configuration = array(
-            'service.trigger.unexists_method' => array(
-                'class'       => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
-                'preTriggers' => array(
-                    array(
-                        'class'  => 'Butterfly\Component\DI\Tests\Stubs\StaticTriggerService',
-                        'method' => 'unexists_method', 'arguments' => array('pre')
-                    ),
-                ),
-            ),
-        );
-        $container     = new Container($configuration);
-
-        $container->get('service.trigger.unexists_method');
-    }
-
-    /**
-     * @expectedException \Butterfly\Component\DI\Exception\BuildServiceException
-     */
-    public function testGetServiceIfIncorrectTriggerType()
-    {
-        $configuration = array(
-            'service.incorrect_trigger_type' => array(
-                'class'       => 'Butterfly\Component\DI\Tests\Stubs\UseStaticTriggerService',
-                'preTriggers' => array(
-                    array('method' => 'setA', 'arguments' => array('pre')),
-                ),
-            ),
-        );
-        $container     = new Container($configuration);
-
-        $container->get('service.incorrect_trigger_type');
-    }
-
-    public function testGet()
-    {
-        $configuration = array(
-            'parameter1' => 'a',
-            'service.foo'   => array(
-                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
-            ),
-            'tags'     => array(
-                'tag1' => array('service.foo')
-            ),
-        );
-
-        $container = new Container($configuration);
-
-        // get parameter
-        $this->assertEquals('a', $container->get('%parameter1'));
-
-        // get service
-        $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $container->get('@service.foo'));
-
-        // get tag
-        $this->assertCount(1, $container->get('#tag1'));
-    }
-
-    public function testHas()
-    {
-        $configuration = array(
-            'service.foo'   => array(
-                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceFoo',
-            ),
-            'tags'     => array(
-                'tag1' => array('service.foo')
-            ),
-        );
-
-        $container = new Container($configuration);
-
-        $this->assertTrue($container->has('service.foo'));
-        $this->assertTrue($container->has('#tag1'));
-    }
-
-
     public function testGetForTagExpression()
     {
         $configuration = array(
@@ -1021,43 +976,5 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $container = new Container($configuration);
 
         $this->assertCount(2, $container->get('#tag1/toArray'));
-    }
-
-    /**
-     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
-     */
-    public function testGetForExpressionWithError()
-    {
-        $configuration = array(
-            'parameterA' => array(
-                'foo' => 1,
-            )
-        );
-
-        $container = new Container($configuration);
-
-        $container->get('%parameterA/bar');
-    }
-
-    public function testGetForInnersExpression()
-    {
-        $configuration = array(
-            'service.foo'   => array(
-                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                'arguments' => array(
-                    '@service.bar',
-                ),
-            ),
-            'service.bar'   => array(
-                'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                'properties' => array(
-                    'a' => array('baz' => 123),
-                ),
-            ),
-        );
-
-        $container = new Container($configuration);
-
-        $this->assertEquals(123, $container->get('service.foo/b/a/baz'));
     }
 }
