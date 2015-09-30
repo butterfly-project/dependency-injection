@@ -53,7 +53,7 @@ class Resolver
      * @return mixed  The parameter value
      * @throws ParameterNotFoundException if the parameter is not defined
      */
-    public function get($name)
+    protected function get($name)
     {
         if (!array_key_exists($name, $this->parameters)) {
             throw new ParameterNotFoundException($name);
@@ -104,7 +104,7 @@ class Resolver
      * @throws ParameterCircularReferenceException if a circular reference if detected
      * @throws \RuntimeException when a given parameter has a type problem.
      */
-    public function resolveString($value, array $resolving = array())
+    protected function resolveString($value, array $resolving = array())
     {
         // we do this to deal with non string values (Boolean, integer, ...)
         // as the preg_replace_callback throw an exception when trying
