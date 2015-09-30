@@ -11,18 +11,29 @@
 
 namespace Butterfly\Component\DI\Compiler\ParameterResolver;
 
+use Butterfly\Component\DI\Compiler\PreProcessing\IFilter;
+
 /**
  * Source: Symfony 2 ParameterBag
  *
  * @author Fabien Potencier <fabien@symfony.com>
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
-class Resolver
+class Resolver implements IFilter
 {
     /**
      * @var array
      */
     protected $parameters;
+
+    /**
+     * @param array $configuration
+     * @return array
+     */
+    public function filter(array $configuration)
+    {
+        return $this->resolve($configuration);
+    }
 
     /**
      * Replaces parameter placeholders (%name%) by their values for all parameters.
