@@ -8,68 +8,24 @@ namespace Butterfly\Component\DI\Compiler\PreProcessing;
 class TagFilter implements IFilter
 {
     /**
-     * @var array
-     */
-    protected $tags = array();
-
-    /**
      * @param array $configuration
      * @return array
      */
     public function filter(array $configuration)
     {
-        $this->clean();
+        $tags = array();
 
         foreach ($configuration as $serviceId => $serviceConfiguration) {
             if (isset($serviceConfiguration['tags'])) {
-                $tags = (array)$serviceConfiguration['tags'];
-                foreach ($tags as $tag) {
-                    $this->tags[$tag][] = $serviceId;
+                $serviceTags = (array)$serviceConfiguration['tags'];
+                foreach ($serviceTags as $tag) {
+                    $tags[$tag][] = $serviceId;
                 }
             }
         }
 
-        $configuration['tags'] = $this->tags;
+        $configuration['tags'] = $tags;
 
         return $configuration;
-    }
-
-    /**
-     * @return void
-     */
-    public function clean()
-    {
-        $this->tags = array();
-    }
-
-    /**
-     * @param array $serviceId
-     * @param array $configuration
-     * @return void
-     */
-    public function visit($serviceId, $configuration)
-    {
-        if (isset($configuration['tags'])) {
-            $tags = (array)$configuration['tags'];
-            foreach ($tags as $tag) {
-                $this->tags[strtolower($tag)][] = $serviceId;
-            }
-        }
-    }
-
-    /**
-     * @return string
-     */
-    public function getSection()
-    {
-        return 'tags';
-    }
-
-    /**
-     * @return array
-     */
-    public function getConfiguration()
-    {
-        return $this->tags;
     }
 }
