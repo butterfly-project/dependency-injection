@@ -5,7 +5,7 @@ namespace Butterfly\Component\DI\Compiler;
 use Butterfly\Component\DI\Compiler\PreProcessing\IFilter;
 use Butterfly\Component\DI\Compiler\PreProcessing\ParameterResolver\Resolver;
 use Butterfly\Component\DI\Compiler\PreProcessing\ServiceFilter;
-use Butterfly\Component\DI\Compiler\ServiceCollector\TagCollector;
+use Butterfly\Component\DI\Compiler\PreProcessing\TagFilter;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
@@ -34,7 +34,7 @@ class ConfigCompiler
         return new static(array(
             new Resolver(),
             new ServiceFilter(),
-            new TagCollector(),
+            new TagFilter(),
         ));
     }
 

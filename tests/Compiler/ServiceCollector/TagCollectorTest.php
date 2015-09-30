@@ -2,7 +2,7 @@
 
 namespace Butterfly\Component\DI\Tests\Compiler\ServiceCollector;
 
-use Butterfly\Component\DI\Compiler\ServiceCollector\TagCollector;
+use Butterfly\Component\DI\Compiler\PreProcessing\TagFilter;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
@@ -10,13 +10,13 @@ use Butterfly\Component\DI\Compiler\ServiceCollector\TagCollector;
 class TagCollectorTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var TagCollector
+     * @var TagFilter
      */
     protected $collector;
 
     protected function setUp()
     {
-        $this->collector = new TagCollector();
+        $this->collector = new TagFilter();
     }
 
     public function testVisit()

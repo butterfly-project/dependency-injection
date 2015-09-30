@@ -1,14 +1,11 @@
 <?php
 
-namespace Butterfly\Component\DI\Compiler\ServiceCollector;
-
-use Butterfly\Component\DI\Compiler\PreProcessing\IFilter;
-use Butterfly\Component\DI\Compiler\ServiceVisitor\IVisitor;
+namespace Butterfly\Component\DI\Compiler\PreProcessing;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
-class TagCollector implements IFilter, IVisitor, IConfigurationCollector
+class TagFilter implements IFilter
 {
     /**
      * @var array
