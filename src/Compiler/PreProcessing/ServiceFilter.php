@@ -35,7 +35,8 @@ class ServiceFilter implements IFilter
      */
     public function filter(array $configuration)
     {
-        $this->clean();
+        $this->services = array();
+        $this->children = array();
 
         foreach ($configuration as $serviceId => $serviceConfiguration) {
             if (isset($serviceConfiguration['parent'])) {
@@ -45,46 +46,6 @@ class ServiceFilter implements IFilter
             }
         }
 
-        return $this->getConfiguration();
-    }
-
-    /**
-     * @return void
-     */
-    public function clean()
-    {
-        $this->services = array();
-        $this->children = array();
-    }
-
-    /**
-     * @param string $serviceId
-     * @param array $configuration
-     * @return void
-     */
-    public function visit($serviceId, $configuration)
-    {
-        if (isset($configuration['parent'])) {
-            $this->children[$serviceId] = $configuration;
-        } else {
-            $this->services[$serviceId] = $configuration;
-        }
-    }
-
-    /**
-     * @return string
-     */
-    public function getSection()
-    {
-        return null;
-    }
-
-    /**
-     * @return array
-     * @throws InvalidConfigurationException if parent service is not found
-     */
-    public function getConfiguration()
-    {
         $this->mergeConfiguration();
 
         return $this->services;

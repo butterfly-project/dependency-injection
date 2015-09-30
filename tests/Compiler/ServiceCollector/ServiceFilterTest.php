@@ -7,7 +7,7 @@ use Butterfly\Component\DI\Compiler\PreProcessing\ServiceFilter;
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
-class ServiceCollectorTest extends \PHPUnit_Framework_TestCase
+class ServiceFilterTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @var ServiceFilter
@@ -21,41 +21,43 @@ class ServiceCollectorTest extends \PHPUnit_Framework_TestCase
 
     public function testVisit()
     {
-        $this->collector->visit('service1', array(
-            'class'     => 'A',
-            'arguments' => array(1, 2),
-            'calls'     => array(
-                array('setA', array(1)),
+        $configuration = array(
+            'service1' => array(
+                'class'     => 'A',
+                'arguments' => array(1, 2),
+                'calls'     => array(
+                    array('setA', array(1)),
+                ),
+                'properties'     => array(
+                    array('p1', array(1)),
+                ),
+                'preTriggers' => array(
+                    array('service' => '@trigger1', 'method' => 'beforeCreate1', 'arguments' => array('value1'))
+                ),
+                'postTriggers' => array(
+                    array('service' => '@trigger1', 'method' => 'afterCreate1', 'arguments' => array('value1'))
+                ),
+                'alias'     => 'alias1',
+                'tags'      => 'tag1',
             ),
-            'properties'     => array(
-                array('p1', array(1)),
+            'service2' => array(
+                'parent' => 'service1',
+                'class'  => 'B',
+                'calls'     => array(
+                    array('setB', array(2)),
+                ),
+                'properties'     => array(
+                    array('p2', array(2)),
+                ),
+                'preTriggers' => array(
+                    array('service' => '@trigger2', 'method' => 'beforeCreate2', 'arguments' => array('value2'))
+                ),
+                'postTriggers' => array(
+                    array('service' => '@trigger2', 'method' => 'afterCreate2', 'arguments' => array('value2'))
+                ),
             ),
-            'preTriggers' => array(
-                array('service' => '@trigger1', 'method' => 'beforeCreate1', 'arguments' => array('value1'))
-            ),
-            'postTriggers' => array(
-                array('service' => '@trigger1', 'method' => 'afterCreate1', 'arguments' => array('value1'))
-            ),
-            'alias'     => 'alias1',
-            'tags'      => 'tag1',
-        ));
-        $this->collector->visit('service2', array(
-            'parent' => 'service1',
-            'class'  => 'B',
-            'calls'     => array(
-                array('setB', array(2)),
-            ),
-            'properties'     => array(
-                array('p2', array(2)),
-            ),
-            'preTriggers' => array(
-                array('service' => '@trigger2', 'method' => 'beforeCreate2', 'arguments' => array('value2'))
-            ),
-            'postTriggers' => array(
-                array('service' => '@trigger2', 'method' => 'afterCreate2', 'arguments' => array('value2'))
-            ),
-        ));
-        $this->collector->visit('service3', array('class' => 'C'));
+            'service3' => array('class' => 'C')
+        );
 
         $expectedConfiguration = array(
             'service1' => array(
@@ -101,7 +103,7 @@ class ServiceCollectorTest extends \PHPUnit_Framework_TestCase
             ),
         );
 
-        $this->assertEquals($expectedConfiguration, $this->collector->getConfiguration());
+        $this->assertEquals($expectedConfiguration, $this->collector->filter($configuration));
     }
 
     /**
@@ -109,11 +111,11 @@ class ServiceCollectorTest extends \PHPUnit_Framework_TestCase
      */
     public function testVisitIfUndefinedParentService()
     {
-        $this->collector->visit('service2', array(
-            'parent' => 'service1',
-            'class'  => 'B',
+        $this->collector->filter(array(
+            'service2' => array(
+                'parent' => 'service1',
+                'class'  => 'B',
+            ),
         ));
-
-        $this->collector->getConfiguration();
     }
 }
