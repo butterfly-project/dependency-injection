@@ -257,29 +257,10 @@ class Container
     }
 
     /**
-     * @param string $id
-     * @return bool
-     */
-    public function hasInterface($id)
-    {
-        if (array_key_exists($id, $this->configuration['interfaces'])) {
-            return true;
-        }
-
-        if (array_key_exists($id, $this->configuration['interfaces_aliases']) &&
-            $this->hasInterface($this->configuration['interfaces_aliases'][$id])) {
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * @param string $name
      * @return bool
      */
-    public function hasTag($name)
+    protected function hasTag($name)
     {
         return !empty($this->configuration['tags']) && array_key_exists($name, $this->configuration['tags']);
     }

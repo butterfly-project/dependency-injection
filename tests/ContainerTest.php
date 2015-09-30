@@ -817,12 +817,12 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         );
 
         return array(
-            array($configuration, 'tag1', true, 'has tag - ok'),
-            array($configuration, 'undefined_tag', false, 'has tag - fail'),
+            array($configuration, '#tag1', true, 'has tag - ok'),
+            array($configuration, '#undefined_tag', false, 'has tag - fail'),
 
-            array($configuration, 'Tag1', false, 'search case sensitive - fail'),
-            array($configuration, 'Tag2', true, 'search case sensitive - ok'),
-            array($configuration, 'tag2', false, 'search case sensitive - fail'),
+            array($configuration, '#Tag1', false, 'search case sensitive - fail'),
+            array($configuration, '#Tag2', true, 'search case sensitive - ok'),
+            array($configuration, '#tag2', false, 'search case sensitive - fail'),
         );
     }
 
@@ -838,7 +838,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         $container     = new Container($configuration);
 
-        $this->assertEquals($expectedResult, $container->hasTag($tagName), $caseMessage);
+        $this->assertEquals($expectedResult, $container->has($tagName), $caseMessage);
     }
 
     public function testGetTagList()
