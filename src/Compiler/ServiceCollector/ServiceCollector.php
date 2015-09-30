@@ -2,13 +2,14 @@
 
 namespace Butterfly\Component\DI\Compiler\ServiceCollector;
 
+use Butterfly\Component\DI\Compiler\PreProcessing\IFilter;
 use Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException;
 use Butterfly\Component\DI\Compiler\ServiceVisitor\IVisitor;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
-class ServiceCollector implements IVisitor, IConfigurationCollector
+class ServiceCollector implements IFilter, IVisitor, IConfigurationCollector
 {
     /**
      * @var array
@@ -29,6 +30,25 @@ class ServiceCollector implements IVisitor, IConfigurationCollector
      * @var array
      */
     protected $children = array();
+
+    /**
+     * @param array $configuration
+     * @return array
+     */
+    public function filter(array $configuration)
+    {
+        $this->clean();
+
+        foreach ($configuration as $serviceId => $serviceConfiguration) {
+            if (isset($serviceConfiguration['parent'])) {
+                $this->children[$serviceId] = $serviceConfiguration;
+            } else {
+                $this->services[$serviceId] = $serviceConfiguration;
+            }
+        }
+
+        return $this->getConfiguration();
+    }
 
     /**
      * @return void

@@ -2,8 +2,10 @@
 
 namespace Butterfly\Component\DI\Compiler;
 
-use Butterfly\Component\DI\Compiler\ParameterResolver\Resolver;
-use Butterfly\Component\DI\Compiler\ServiceVisitor\ConfigurationValidator;
+use Butterfly\Component\DI\Compiler\PreProcessing\IFilter;
+use Butterfly\Component\DI\Compiler\PreProcessing\ParameterResolver\Resolver;
+use Butterfly\Component\DI\Compiler\ServiceCollector\ServiceCollector;
+use Butterfly\Component\DI\Compiler\ServiceCollector\TagCollector;
 use Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException;
 use Butterfly\Component\DI\Compiler\ServiceVisitor\IVisitor;
 use Butterfly\Component\DI\Compiler\ServiceCollector\IConfigurationCollector;
@@ -28,6 +30,11 @@ class ConfigCompiler
     protected $visitors = array();
 
     /**
+     * @var IFilter[]
+     */
+    protected $filters = array();
+
+    /**
      * @var array
      */
     protected $configuration = array();
@@ -46,34 +53,32 @@ class ConfigCompiler
      */
     public static function createInstance()
     {
-        return new static(new Resolver(), array(
-//                new ConfigurationValidator(),
-                new ServiceCollector\ServiceCollector(),
-                new ServiceCollector\TagCollector(),
-//                new ServiceCollector\AliasCollector()
-            )
-        );
+        return new static(array(
+            new Resolver(),
+            new ServiceCollector(),
+            new TagCollector(),
+        ));
     }
 
     /**
-     * @param Resolver $resolver
-     * @param IVisitor[] $visitors
+     * @param IFilter[] $filters
      */
-    public function __construct(Resolver $resolver, array $visitors)
+    public function __construct(array $filters = array())
     {
-        $this->resolver = $resolver;
-
-        foreach ($visitors as $visitor) {
-            $this->addServiceVisitor($visitor);
+        foreach ($filters as $filter) {
+            $this->addFilter($filter);
         }
     }
 
     /**
-     * @param IVisitor $visitor
+     * @param IFilter $filter
+     * @return $this
      */
-    public function addServiceVisitor(IVisitor $visitor)
+    public function addFilter(IFilter $filter)
     {
-        $this->visitors[] = $visitor;
+        $this->filters[] = $filter;
+
+        return $this;
     }
 
     /**
@@ -84,7 +89,12 @@ class ConfigCompiler
      */
     public function compileConfig(array $configuration)
     {
-        $configuration = $this->prepareConfiguration($configuration);
+        foreach ($this->filters as $filter) {
+            $configuration = $filter->filter($configuration);
+        }
+
+
+//        $configuration = $this->prepareConfiguration($configuration);
 //        $configuration = $this->prepareInterfaceConfiguration($configuration);
 
         $this->cleanVisitors($this->visitors);
@@ -101,19 +111,6 @@ class ConfigCompiler
         foreach ($visitors as $visitor) {
             $visitor->clean();
         }
-    }
-
-    /**
-     * @param array $configuration
-     * @return array
-     */
-    protected function prepareConfiguration(array $configuration)
-    {
-        if (null !== $this->resolver) {
-            $configuration = $this->resolver->resolve($configuration);
-        }
-
-        return $configuration;
     }
 
     /**

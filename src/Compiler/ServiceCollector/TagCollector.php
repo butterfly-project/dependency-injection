@@ -2,17 +2,40 @@
 
 namespace Butterfly\Component\DI\Compiler\ServiceCollector;
 
+use Butterfly\Component\DI\Compiler\PreProcessing\IFilter;
 use Butterfly\Component\DI\Compiler\ServiceVisitor\IVisitor;
 
 /**
  * @author Marat Fakhertdinov <marat.fakhertdinov@gmail.com>
  */
-class TagCollector implements IVisitor, IConfigurationCollector
+class TagCollector implements IFilter, IVisitor, IConfigurationCollector
 {
     /**
      * @var array
      */
     protected $tags = array();
+
+    /**
+     * @param array $configuration
+     * @return array
+     */
+    public function filter(array $configuration)
+    {
+        $this->clean();
+
+        foreach ($configuration as $serviceId => $serviceConfiguration) {
+            if (isset($serviceConfiguration['tags'])) {
+                $tags = (array)$serviceConfiguration['tags'];
+                foreach ($tags as $tag) {
+                    $this->tags[$tag][] = $serviceId;
+                }
+            }
+        }
+
+        $configuration['tags'] = $this->tags;
+
+        return $configuration;
+    }
 
     /**
      * @return void
