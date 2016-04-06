@@ -101,7 +101,14 @@ class ServiceFactory
     {
         foreach ($calls as $callConfiguration) {
             list($methodName, $dependencies) = $callConfiguration;
-            $objectBuilder->callObjectMethod($methodName, $this->resolveDependencies($dependencies));
+
+            $forceCreate = false;
+
+            if (array_key_exists(2, $callConfiguration)) {
+                $forceCreate = (bool)$callConfiguration[2];
+            }
+
+            $objectBuilder->callObjectMethod($methodName, $this->resolveDependencies($dependencies), $forceCreate);
         }
     }
 

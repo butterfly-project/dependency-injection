@@ -8,6 +8,7 @@ use Butterfly\Component\DI\Tests\Stubs\FactoryOutputService;
 use Butterfly\Component\DI\Tests\Stubs\PrivatePropertyServiceStub;
 use Butterfly\Component\DI\Tests\Stubs\ServiceInstanceCounter;
 use Butterfly\Component\DI\Tests\Stubs\ServiceStub;
+use Butterfly\Component\DI\Tests\Stubs\ServiceStubWithMagicSetter;
 use Butterfly\Component\DI\Tests\Stubs\StaticTriggerService;
 use Butterfly\Component\DI\Tests\Stubs\TriggerService;
 use Butterfly\Component\DI\Tests\Stubs\UseTriggerService;
@@ -394,6 +395,26 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $service = $container->getService('service.setter_injection');
 
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
+    }
+
+    public function testMagicSetterInjection()
+    {
+        $configuration = array(
+            'services' => array(
+                'service.magic_setter' => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStubWithMagicSetter',
+                    'calls' => array(
+                        array('setA', array(1), true),
+                    )
+                ),
+            ),
+        );
+        $container     = new Container($configuration);
+
+        /** @var ServiceStubWithMagicSetter $service */
+        $service = $container->getService('service.magic_setter');
+
+        $this->assertEquals(1, $service->getA());
     }
 
     public function testPropertyInjection()

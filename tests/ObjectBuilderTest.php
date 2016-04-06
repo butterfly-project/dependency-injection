@@ -127,6 +127,14 @@ class ObjectBuilderTest extends \PHPUnit_Framework_TestCase
             ->callObjectMethod('setG', array(1));
     }
 
+    public function testCallObjectMethodIfForced()
+    {
+        $this
+            ->objectBuilder
+            ->nativeCreate('\Butterfly\Component\DI\Tests\Stubs\ServiceStubWithMagicSetter')
+            ->callObjectMethod('setA', array(1), true);
+    }
+
     public function testSetObjectProperty()
     {
         /** @var ServiceStub $service */
