@@ -8,6 +8,7 @@ Added functionality:
 
  * Reflection of container configuration
  * Path expressions
+ * Change aliases feature
 
 Changes:
 

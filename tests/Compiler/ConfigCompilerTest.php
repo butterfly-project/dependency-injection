@@ -82,7 +82,6 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
     public function getTestDataForTestCompile()
     {
         return array(
-            // empty input config
             array(
                 array(),
                 array(
@@ -93,9 +92,9 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     'interfaces'         => array(),
                     'interfaces_aliases' => array(),
                 ),
+                'empty input config'
             ),
 
-            // simple parameters
             array(
                 array(
                     'parameter_string'  => 'abz',
@@ -115,10 +114,10 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     'aliases'            => array(),
                     'interfaces'         => array(),
                     'interfaces_aliases' => array(),
-                )
+                ),
+                'simple parameters'
             ),
 
-            // replaces in parameters
             array(
                 array(
                     'parameter_name'   => 'world',
@@ -134,10 +133,10 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     'aliases'            => array(),
                     'interfaces'         => array(),
                     'interfaces_aliases' => array(),
-                )
+                ),
+                'replaces in parameters'
             ),
 
-            // replaces in services
             array(
                 array(
                     'service.name'  => 'service.injected_parameters',
@@ -177,10 +176,10 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     'aliases'            => array(),
                     'interfaces'         => array(),
                     'interfaces_aliases' => array(),
-                )
+                ),
+                'replaces in services'
             ),
 
-            // service injection
             array(
                 array(
                     'services' => array(
@@ -216,10 +215,10 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     'aliases'            => array(),
                     'interfaces'         => array(),
                     'interfaces_aliases' => array(),
-                )
+                ),
+                'service injection'
             ),
 
-            // service inheritor
             array(
                 array(
                     'services' => array(
@@ -253,10 +252,10 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     'aliases'            => array(),
                     'interfaces'         => array(),
                     'interfaces_aliases' => array(),
-                )
+                ),
+                'service inheritor'
             ),
 
-            // tags
             array(
                 array(
                     'services' => array(
@@ -293,39 +292,58 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     'aliases'            => array(),
                     'interfaces'         => array(),
                     'interfaces_aliases' => array(),
-                )
+                ),
+                'tags'
             ),
 
-            // aliases
             array(
                 array(
                     'services' => array(
                         'service.simple.a'   => array(
-                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                            'arguments'  => array(1, '2'),
                             'alias' => 'service.alias'
                         ),
                     ),
                 ),
                 array(
-                    'parameters' => array(),
-                    'services' => array(
-                        'service.simple.a'   => array(
-                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                            'arguments'  => array(1, '2'),
-                            'alias' => 'service.alias',
-                        ),
-                    ),
+                    'parameters'         => array(),
+                    'services'           => array(),
                     'tags'               => array(),
                     'aliases'            => array(
-                        'service.alias' => 'service.simple.a'
+                        'service.simple.a' => 'service.alias'
                     ),
                     'interfaces'         => array(),
                     'interfaces_aliases' => array(),
-                )
+                ),
+                'alias'
             ),
 
-            // interfaces
+            array(
+                array(
+                    'services' => array(
+                        'service.simple.a' => array(
+                            'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments' => array(1, '2'),
+                            'alias'     => 'service.alias'
+                        ),
+                    ),
+                ),
+                array(
+                    'parameters'         => array(),
+                    'services'           => array(
+                        'service.simple.a' => array(
+                            'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                            'arguments' => array(1, '2'),
+                            'alias'     => 'service.alias',
+                        ),
+                    ),
+                    'tags'               => array(),
+                    'aliases'            => array(),
+                    'interfaces'         => array(),
+                    'interfaces_aliases' => array(),
+                ),
+                'alias ignore if other constructions'
+            ),
+
             array(
                 array(
                     'interfaces'        => array(
@@ -370,7 +388,8 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                         'foo.aware.1' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3',
                         'foo.aware.2' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3',
                     ),
-                )
+                ),
+                'interfaces'
             ),
         );
     }
@@ -380,11 +399,12 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
      *
      * @param array $inputConfig
      * @param array $expectedConfig
+     * @param string $case
      */
-    public function testCompile(array $inputConfig, array $expectedConfig)
+    public function testCompile(array $inputConfig, array $expectedConfig, $case)
     {
         $config = ConfigCompiler::compile($inputConfig);
 
-        $this->assertEquals($expectedConfig, $config);
+        $this->assertEquals($expectedConfig, $config, $case);
     }
 }

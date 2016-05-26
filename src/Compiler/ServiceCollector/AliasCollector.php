@@ -13,6 +13,13 @@ class AliasCollector implements IVisitor, IConfigurationCollector
     /**
      * @var array
      */
+    protected static $availableConstructions = array(
+        'alias',
+    );
+
+    /**
+     * @var array
+     */
     protected $aliases = array();
 
     /**
@@ -31,20 +38,41 @@ class AliasCollector implements IVisitor, IConfigurationCollector
      */
     public function visit($serviceId, array $configuration)
     {
-        if (isset($configuration['alias'])) {
-            $aliases = (array)$configuration['alias'];
-            foreach ($aliases as $alias) {
-                if (array_key_exists($alias, $this->aliases)) {
-                    throw new InvalidConfigurationException(sprintf(
-                        "Two services: '%s', '%s' have the same alias '%s'",
-                        $this->aliases[$alias],
-                        $serviceId,
-                        $alias
-                    ));
-                }
-                $this->aliases[$alias] = $serviceId;
-            }
+        if (!$this->isAliasConfiguration($configuration)) {
+            return;
         }
+
+        $pointTo = $configuration['alias'];
+
+        $existingAlias = array_search($pointTo, $this->aliases);
+        if (false !== $existingAlias) {
+            throw new InvalidConfigurationException(sprintf(
+                "Two aliases: '%s', '%s' point to service '%s'",
+                $existingAlias,
+                $serviceId,
+                $pointTo
+            ));
+        }
+
+        $this->aliases[$serviceId] = $pointTo;
+    }
+
+    /**
+     * @param array $configuration
+     * @return bool
+     */
+    protected function isAliasConfiguration(array $configuration)
+    {
+        if (empty($configuration['alias']) || !is_string($configuration['alias'])) {
+            return false;
+        }
+
+        $otherConstructions = array_diff(array_keys($configuration), self::$availableConstructions);
+        if (!empty($otherConstructions)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

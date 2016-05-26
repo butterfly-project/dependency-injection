@@ -56,6 +56,7 @@ class ServiceCollectorTest extends \PHPUnit_Framework_TestCase
             ),
         ));
         $this->collector->visit('service3', array('class' => 'C'));
+        $this->collector->visit('service4', array('alias' => 'service5'));
 
         $expectedConfiguration = array(
             'service1' => array(
@@ -76,9 +77,6 @@ class ServiceCollectorTest extends \PHPUnit_Framework_TestCase
                 'alias'     => 'alias1',
                 'tags'      => 'tag1',
             ),
-            'service3' => array(
-                'class' => 'C',
-            ),
             'service2' => array(
                 'class'     => 'B',
                 'arguments' => array(1, 2),
@@ -98,6 +96,9 @@ class ServiceCollectorTest extends \PHPUnit_Framework_TestCase
                     array('service' => '@trigger1', 'method' => 'afterCreate1', 'arguments' => array('value1')),
                     array('service' => '@trigger2', 'method' => 'afterCreate2', 'arguments' => array('value2')),
                 ),
+            ),
+            'service3' => array(
+                'class' => 'C',
             ),
         );
 
