@@ -2,7 +2,9 @@
 
 namespace Butterfly\Component\DI\Tests\Compiler\Annotation;
 
+use Butterfly\Component\Annotations\ClassFinder\ClassFinder;
 use Butterfly\Component\Annotations\ClassParser;
+use Butterfly\Component\Annotations\Parser\PhpDocParser;
 use Butterfly\Component\Annotations\Visitor\AnnotationsHandler;
 use Butterfly\Component\DI\Compiler\Annotation\AnnotationConfigVisitor;
 
@@ -233,7 +235,15 @@ class AnnotationConfigVisitorTest extends \PHPUnit_Framework_TestCase
      */
     public function testExtractDiConfiguration($dirPath, array $expectedConfig)
     {
-        $annotations = ClassParser::createInstance()->parseClassesInDir($dirPath);
+        $classParser = new ClassParser(new PhpDocParser());
+        $classFinder = new ClassFinder(array('php'));
+        $classes     = $classFinder->findClassesInDir($dirPath);
+
+        $annotations = array();
+        foreach ($classes as $class) {
+            $annotations[$class] = $classParser->parseClass($class);
+        }
+
         $visitor     = new AnnotationConfigVisitor();
 
         $annotationHandler = new AnnotationsHandler();

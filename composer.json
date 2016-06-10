@@ -13,7 +13,7 @@
     "require": {
         "php": ">=5.3.3",
 
-        "butterfly/annotations": "1.0.*"
+        "butterfly/annotations": "2.0.x-dev"
     },
     "autoload": {
         "psr-4": {
