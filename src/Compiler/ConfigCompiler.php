@@ -16,6 +16,7 @@ class ConfigCompiler
     const SECTION_SERVICES   = 'services';
     const SECTION_INTERFACES = 'interfaces';
     const SECTION_PARAMETERS = 'parameters';
+    const SECTION_ALIASES    = 'aliases';
 
     /**
      * @var Resolver
@@ -90,7 +91,15 @@ class ConfigCompiler
         $this->cleanVisitors($this->visitors);
         $this->runServiceVisits($this->visitors, $configuration);
 
-        return array_merge($configuration, $this->resolveServiceConfiguration($this->visitors));
+        $resolvedConfiguration = $this->resolveServiceConfiguration($this->visitors);
+
+        $mergedSections = array(self::SECTION_PARAMETERS, self::SECTION_ALIASES);
+        foreach ($mergedSections as $section) {
+            $resolvedSection = !empty($resolvedConfiguration[$section]) ? $resolvedConfiguration[$section] : array();
+            $resolvedConfiguration[$section] = array_merge($configuration[$section], $resolvedSection);
+        }
+
+        return $resolvedConfiguration;
     }
 
     /**
@@ -115,14 +124,17 @@ class ConfigCompiler
 
         $services   = $this->getSection($configuration, self::SECTION_SERVICES);
         $interfaces = $this->getSection($configuration, self::SECTION_INTERFACES);
+        $aliases    = $this->getSection($configuration, self::SECTION_ALIASES);
 
         unset($configuration[self::SECTION_SERVICES]);
         unset($configuration[self::SECTION_INTERFACES]);
+        unset($configuration[self::SECTION_ALIASES]);
 
         return array(
             self::SECTION_PARAMETERS => $configuration,
             self::SECTION_SERVICES   => $services,
             self::SECTION_INTERFACES => $interfaces,
+            self::SECTION_ALIASES    => $aliases,
         );
     }
 

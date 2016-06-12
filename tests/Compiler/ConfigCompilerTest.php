@@ -28,7 +28,7 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
             ),
         );
 
-        $exptected = array(
+        $expected = array(
             'services'   => array(
                 'service.simple' => array(
                     'class'     => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
@@ -38,14 +38,12 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
             'parameters'         => array(),
             'tags'               => array(),
             'aliases'            => array(),
-            'interfaces'         => array(),
-            'interfaces_aliases' => array(),
         );
 
         $compiler      = ConfigCompiler::createInstance();
         $configuration = $compiler->compileConfig($input);
 
-        $this->assertEquals($exptected, $configuration);
+        $this->assertEquals($expected, $configuration);
     }
 
     public function testDoubleCompile()
@@ -69,8 +67,6 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
             'parameters'         => array(),
             'tags'               => array(),
             'aliases'            => array(),
-            'interfaces'         => array(),
-            'interfaces_aliases' => array(),
         );
 
         ConfigCompiler::compile($input);
@@ -89,8 +85,6 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     'services'           => array(),
                     'tags'               => array(),
                     'aliases'            => array(),
-                    'interfaces'         => array(),
-                    'interfaces_aliases' => array(),
                 ),
                 'empty input config'
             ),
@@ -112,8 +106,6 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     'services'           => array(),
                     'tags'               => array(),
                     'aliases'            => array(),
-                    'interfaces'         => array(),
-                    'interfaces_aliases' => array(),
                 ),
                 'simple parameters'
             ),
@@ -131,8 +123,6 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     'services'           => array(),
                     'tags'               => array(),
                     'aliases'            => array(),
-                    'interfaces'         => array(),
-                    'interfaces_aliases' => array(),
                 ),
                 'replaces in parameters'
             ),
@@ -174,8 +164,6 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     ),
                     'tags'               => array(),
                     'aliases'            => array(),
-                    'interfaces'         => array(),
-                    'interfaces_aliases' => array(),
                 ),
                 'replaces in services'
             ),
@@ -213,8 +201,6 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     ),
                     'tags'               => array(),
                     'aliases'            => array(),
-                    'interfaces'         => array(),
-                    'interfaces_aliases' => array(),
                 ),
                 'service injection'
             ),
@@ -250,8 +236,6 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     ),
                     'tags'               => array(),
                     'aliases'            => array(),
-                    'interfaces'         => array(),
-                    'interfaces_aliases' => array(),
                 ),
                 'service inheritor'
             ),
@@ -290,8 +274,6 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                         'tag.b' => array('service.simple.b'),
                     ),
                     'aliases'            => array(),
-                    'interfaces'         => array(),
-                    'interfaces_aliases' => array(),
                 ),
                 'tags'
             ),
@@ -311,8 +293,6 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     'aliases'            => array(
                         'service.simple.a' => 'service.alias'
                     ),
-                    'interfaces'         => array(),
-                    'interfaces_aliases' => array(),
                 ),
                 'alias'
             ),
@@ -338,58 +318,8 @@ class ConfigCompilerTest extends \PHPUnit_Framework_TestCase
                     ),
                     'tags'               => array(),
                     'aliases'            => array(),
-                    'interfaces'         => array(),
-                    'interfaces_aliases' => array(),
                 ),
                 'alias ignore if other constructions'
-            ),
-
-            array(
-                array(
-                    'interfaces'        => array(
-                        'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.simple',
-                        'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware2' => array(
-                            'service' => 'service.simple',
-                            'alias' => 'foo.aware'
-                        ),
-                        'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3' => array(
-                            'service' => 'service.simple',
-                            'alias' => array(
-                                'foo.aware.1',
-                                'foo.aware.2',
-                            ),
-                        ),
-                    ),
-
-                    'services' => array(
-                        'service.simple.a'   => array(
-                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                            'arguments'  => array(1, '2'),
-                        ),
-                    ),
-                ),
-                array(
-                    'parameters' => array(),
-                    'services' => array(
-                        'service.simple.a'   => array(
-                            'class'      => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
-                            'arguments'  => array(1, '2'),
-                        ),
-                    ),
-                    'tags'               => array(),
-                    'aliases'            => array(),
-                    'interfaces'         => array(
-                        'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware' => 'service.simple',
-                        'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware2' => 'service.simple',
-                        'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3' => 'service.simple',
-                    ),
-                    'interfaces_aliases' => array(
-                        'foo.aware' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware2',
-                        'foo.aware.1' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3',
-                        'foo.aware.2' => 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware3',
-                    ),
-                ),
-                'interfaces'
             ),
         );
     }
