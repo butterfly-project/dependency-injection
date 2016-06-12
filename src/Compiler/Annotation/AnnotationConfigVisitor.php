@@ -21,18 +21,25 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
     protected $services = array();
 
     /**
+     * @var array
+     */
+    protected $aliases = array();
+
+    /**
      * @return array
      */
     public function extractDiConfiguration()
     {
         return array(
             'services' => $this->services,
+            'aliases'  => $this->aliases,
         );
     }
 
     public function clean()
     {
         $this->services = array();
+        $this->aliases  = array();
     }
 
     /**
@@ -41,23 +48,34 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
      */
     public function visit($className, array $classAnnotations)
     {
-        $serviceName = $this->getServiceName($className, $classAnnotations['class']);
+        $serviceName = strtolower($className);
 
-        if (null === $serviceName) {
+        if (!$this->isService($classAnnotations['class'])) {
             return;
         }
 
         $reflectionClass = new ReflectionClass($className);
 
-        $config      = $this->convertAutowiredToConfig($className, $classAnnotations, $reflectionClass);
-        $config      = $this->convertAnnotationsToConfig($config, $className, $classAnnotations);
+        $config = $this->convertAutowiredToConfig($className, $classAnnotations, $reflectionClass);
+        $config = $this->convertAnnotationsToConfig($config, $className, $classAnnotations);
 
         $this->services[$serviceName] = $config;
+
+        $this->aliases = array_merge($this->aliases, $this->getServiceAliases($serviceName, $classAnnotations['class']));
 
         $servicesForFactories = $this->getServicesForFactories($serviceName, $reflectionClass, $classAnnotations['methods']);
         foreach ($servicesForFactories as $name => $config) {
             $this->services[$name] = $config;
         }
+    }
+
+    /**
+     * @param array $classAnnotations
+     * @return bool
+     */
+    protected function isService(array $classAnnotations)
+    {
+        return array_key_exists('service', $classAnnotations);
     }
 
     /**
@@ -94,13 +112,28 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
         $config = $this->addSectionIfNotEmpty($config, 'arguments', $this->getServiceArguments($className, $classAnnotations));
         $config = $this->addSectionIfNotEmpty($config, 'calls', $this->getServiceCalls($className, $classAnnotations));
         $config = $this->addSectionIfNotEmpty($config, 'properties', $this->getServiceProperties($className, $classAnnotations));
-        $config = $this->addSectionIfNotEmpty($config, 'alias', $this->getServiceAliases($classAnnotations, $className));
         $config = $this->addSectionIfNotEmpty($config, 'preTriggers', $this->getServiceTriggers('preTriggers', $classAnnotations, $className));
         $config = $this->addSectionIfNotEmpty($config, 'postTriggers', $this->getServiceTriggers('postTriggers', $classAnnotations, $className));
         $config = $this->addSectionIfNotEmpty($config, 'scope', $this->getScope($classAnnotations));
         $config = $this->addSectionIfNotEmpty($config, 'tags', $this->getTags($classAnnotations));
 
         return $config;
+    }
+
+    /**
+     * @param string $serviceName
+     * @param array $classAnnotations
+     * @return array
+     */
+    protected function getServiceAliases($serviceName, array $classAnnotations)
+    {
+        $aliases = array();
+
+        if (!empty($classAnnotations['service'])) {
+            $aliases[$classAnnotations['service']] = $serviceName;
+        }
+
+        return $aliases;
     }
 
     /**
@@ -268,26 +301,6 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
 
 
         return $properties;
-    }
-
-    /**
-     * @param array $classAnnotations
-     * @param string $className
-     * @return array
-     */
-    protected function getServiceAliases(array $classAnnotations, $className)
-    {
-        $aliases = array();
-
-        if (null !== $classAnnotations['service']) {
-            $aliases[] = strtolower($className);
-        }
-
-        if (array_key_exists('alias', $classAnnotations)) {
-            $aliases = array_merge($aliases, (array)$classAnnotations['alias']);
-        }
-
-        return $aliases;
     }
 
     /**
