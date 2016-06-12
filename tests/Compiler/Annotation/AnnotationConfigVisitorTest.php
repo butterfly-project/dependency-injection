@@ -333,4 +333,88 @@ class AnnotationConfigVisitorTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals($expectedConfig, $diConfig, $caseDescription);
     }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException
+     */
+    public function testExtractDiConfigurationIfInvalidFactoryAnnotation()
+    {
+        $className   = 'Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Annotation\Example3\ServiceWithInvalidFactoryAnnotation';
+        $classParser = new ClassParser(new PhpDocParser());
+        $visitor     = new AnnotationConfigVisitor();
+
+        $visitor->visit($className, $classParser->parseClass($className));
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException
+     */
+    public function testExtractDiConfigurationIfInvalidFactoryAnnotationValue()
+    {
+        $className   = 'Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Annotation\Example3\ServiceWithInvalidFactoryAnnotationValue';
+        $classParser = new ClassParser(new PhpDocParser());
+        $visitor     = new AnnotationConfigVisitor();
+
+        $visitor->visit($className, $classParser->parseClass($className));
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException
+     */
+    public function testExtractDiConfigurationIfInvalidArgumentsAnnotationValue()
+    {
+        $className   = 'Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Annotation\Example3\ServiceWithInvalidArgumentsAnnotationValue';
+        $classParser = new ClassParser(new PhpDocParser());
+        $visitor     = new AnnotationConfigVisitor();
+
+        $visitor->visit($className, $classParser->parseClass($className));
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException
+     */
+    public function testExtractDiConfigurationIfInvalidCallsAnnotationValueCase1()
+    {
+        $className   = 'Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Annotation\Example3\ServiceWithInvalidCallsAnnotation1';
+        $classParser = new ClassParser(new PhpDocParser());
+        $visitor     = new AnnotationConfigVisitor();
+
+        $visitor->visit($className, $classParser->parseClass($className));
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException
+     */
+    public function testExtractDiConfigurationIfInvalidCallsAnnotationValueCase2()
+    {
+        $className   = 'Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Annotation\Example3\ServiceWithInvalidCallsAnnotation2';
+        $classParser = new ClassParser(new PhpDocParser());
+        $visitor     = new AnnotationConfigVisitor();
+
+        $visitor->visit($className, $classParser->parseClass($className));
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException
+     */
+    public function testExtractDiConfigurationIfInvalidCallsAnnotationValueCase3()
+    {
+        $className   = 'Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Annotation\Example3\ServiceWithInvalidCallsAnnotation3';
+        $classParser = new ClassParser(new PhpDocParser());
+        $visitor     = new AnnotationConfigVisitor();
+
+        $visitor->visit($className, $classParser->parseClass($className));
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Compiler\ServiceVisitor\InvalidConfigurationException
+     */
+    public function testExtractDiConfigurationIfInvalidCallsAnnotationValueCase4()
+    {
+        $className   = 'Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Annotation\Example3\ServiceWithInvalidCallsAnnotation4';
+        $classParser = new ClassParser(new PhpDocParser());
+        $visitor     = new AnnotationConfigVisitor();
+
+        $visitor->visit($className, $classParser->parseClass($className));
+    }
 }

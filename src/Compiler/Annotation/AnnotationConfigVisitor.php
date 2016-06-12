@@ -254,8 +254,22 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
 
         $calls = array();
 
+        if (!is_array($classAnnotations['calls'])) {
+            throw new InvalidConfigurationException(sprintf(
+                "Invalid value of @calls annotation in '%s' service. Expected array, given: %s",
+                $className, var_export($classAnnotations['calls'], true)
+            ));
+        }
+
         foreach ($classAnnotations['calls'] as $callConfig) {
-            if (!is_array($callConfig) || count($callConfig) != 2) {
+            if (!is_array($callConfig)) {
+                throw new InvalidConfigurationException(sprintf(
+                    "Invalid value of @calls annotation in '%s' service. Expected array, given: %s",
+                    $className, var_export($callConfig, true)
+                ));
+            }
+
+            if (count($callConfig) < 2) {
                 throw new InvalidConfigurationException(sprintf(
                     "Invalid value of @calls annotation in '%s' service. Expected array with 2 values, given: %s",
                     $className, var_export($callConfig, true)
@@ -478,24 +492,6 @@ class AnnotationConfigVisitor implements IAnnotationVisitor
         }
 
         return $arguments;
-    }
-
-    /**
-     * @param string $className
-     * @param array $classAnnotations
-     * @return mixed
-     */
-    protected function getServiceName($className, array $classAnnotations)
-    {
-        if (!array_key_exists('service', $classAnnotations)) {
-            return null;
-        }
-
-        $serviceName = !empty($classAnnotations['service'])
-            ? $classAnnotations['service']
-            : $className;
-
-        return strtolower($serviceName);
     }
 
     /**
