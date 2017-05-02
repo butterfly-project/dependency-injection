@@ -1038,13 +1038,13 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $container = new Container($configuration);
 
         // get parameter
-        $this->assertEquals('a', $container->get('parameter1'));
+        $this->assertEquals('a', $container->get('%parameters/parameter1'));
 
         // get service
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $container->get('service.foo'));
 
         // get interface
-        $interface = 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware';
+        $interface = '@Butterfly\Component\DI\Tests\Stubs\IServiceFooAware';
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $container->get($interface));
 
         // get tag
@@ -1072,10 +1072,10 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $container = new Container($configuration);
 
-        $this->assertTrue($container->has('parameter1'));
+        $this->assertTrue($container->hasParameter('parameter1'));
         $this->assertTrue($container->has('service.foo'));
         $this->assertTrue($container->has('#tag1'));
-        $this->assertTrue($container->has('Butterfly\Component\DI\Tests\Stubs\IServiceFooAware'));
+        $this->assertTrue($container->hasInterface('Butterfly\Component\DI\Tests\Stubs\IServiceFooAware'));
     }
 
     /**
@@ -1212,8 +1212,8 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $container = new Container($configuration);
 
-        $this->assertEquals(1, $container->get('parameterA/foo'));
-        $this->assertEquals(3, $container->get('parameterA/bar/baz'));
+        $this->assertEquals(1, $container->get('%parameters/parameterA/foo'));
+        $this->assertEquals(3, $container->get('%parameters/parameterA/bar/baz'));
     }
 
     public function testGetForServiceExpression()
@@ -1275,7 +1275,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $container = new Container($configuration);
 
-        $container->get('parameterA/bar');
+        $container->get('%parameters/parameterA/bar');
     }
 
     public function testGetForInnersExpression()

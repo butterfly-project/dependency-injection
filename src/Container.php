@@ -117,7 +117,7 @@ class Container
             default:
                 $path       = array_filter(explode(self::CONFIG_PATH_SEPARATOR, $expression));
                 $instanceId = array_shift($path);
-                $instance   = $this->getInstance($instanceId);
+                $instance   = $this->getService($instanceId);
                 break;
         }
 
@@ -214,7 +214,7 @@ class Container
                 return array_key_exists($instanceId, $this->configuration);
                 break;
             default:
-                return $this->hasParameter($id) || $this->hasService($id) || $this->hasInterface($id);
+                return $this->hasService($id);
                 break;
         }
     }
