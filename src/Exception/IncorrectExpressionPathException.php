@@ -26,7 +26,7 @@ class IncorrectExpressionPathException extends \InvalidArgumentException
         $this->path     = $path;
         $this->instance = $instance;
 
-        parent::__construct('Expression path not found in instance');
+        parent::__construct(sprintf("Expression path '%s' not found in instance", $this->path));
     }
 
     /**
