@@ -11,9 +11,9 @@
         }
     ],
     "require": {
-        "php": ">=5.3.3",
+        "php": ">=7.0.0",
 
-        "butterfly/annotations": "2.0.x-dev"
+        "butterfly/annotations": "~2.1"
     },
     "autoload": {
         "psr-4": {
