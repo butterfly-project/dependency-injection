@@ -91,12 +91,13 @@ class ObjectBuilder
     /**
      * @param string $methodName
      * @param array $arguments
+     * @param bool $force
      * @return $this
      * @throws BuildObjectException if object's method is not found
      */
-    public function callObjectMethod($methodName, array $arguments = array())
+    public function callObjectMethod($methodName, array $arguments = array(), $force = false)
     {
-        if (!method_exists($this->object, $methodName)) {
+        if (!method_exists($this->object, $methodName) && !$force) {
             throw new BuildObjectException(
                 sprintf("Method '%s' for object '%s' is not found", $methodName, get_class($this->object))
             );

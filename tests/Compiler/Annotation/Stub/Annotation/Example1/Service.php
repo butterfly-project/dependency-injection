@@ -16,7 +16,6 @@ use Butterfly\Component\DI\Tests\Compiler\Annotation\Stub\Annotation\Example1\Di
  *     "propertyB": "%parameter_of_property.b%"
  * }
  * @scope factory
- * @alias service.alias
  * @tags  service.tag
  * @preTriggers [
  *     {

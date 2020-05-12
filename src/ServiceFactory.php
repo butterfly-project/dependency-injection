@@ -101,7 +101,14 @@ class ServiceFactory
     {
         foreach ($calls as $callConfiguration) {
             list($methodName, $dependencies) = $callConfiguration;
-            $objectBuilder->callObjectMethod($methodName, $this->resolveDependencies($dependencies));
+
+            $forceCreate = false;
+
+            if (array_key_exists(2, $callConfiguration)) {
+                $forceCreate = (bool)$callConfiguration[2];
+            }
+
+            $objectBuilder->callObjectMethod($methodName, $this->resolveDependencies($dependencies), $forceCreate);
         }
     }
 
@@ -198,21 +205,7 @@ class ServiceFactory
             return $dependence;
         }
 
-        $firstSymbol = substr($dependence, 0, 1);
-        switch ($firstSymbol) {
-            case '@':
-                return $this->container->get(substr($dependence, 1));
-                break;
-            case '#':
-                return $this->container->getServicesByTag(substr($dependence, 1));
-                break;
-            case '%':
-                return $this->container->getConfig(substr($dependence, 1));
-                break;
-            default:
-                return $dependence;
-                break;
-        }
+        return $this->container->has($dependence) ? $this->container->get($dependence) : $dependence;
     }
 
     /**

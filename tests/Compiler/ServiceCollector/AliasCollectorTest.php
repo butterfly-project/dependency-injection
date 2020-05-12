@@ -21,13 +21,23 @@ class AliasCollectorTest extends \PHPUnit_Framework_TestCase
 
     public function testVisit()
     {
-        $this->collector->visit('service1', array('class' => 'A', 'alias' => 'service1.alias'));
-        $this->collector->visit('service2', array('class' => 'A', 'alias' => 'service2.alias'));
+        $this->collector->visit('service1', array('alias' => 'service1.alias'));
+        $this->collector->visit('service2', array('alias' => 'service2.alias'));
         $this->collector->visit('service3', array('class' => 'A'));
 
         $this->assertEquals(array(
-            'service1.alias' => 'service1',
-            'service2.alias' => 'service2',
+            'service1' => 'service1.alias',
+            'service2' => 'service2.alias',
+        ), $this->collector->getConfiguration());
+    }
+
+    public function testVisitIfOtherConstructions()
+    {
+        $this->collector->visit('service1', array('class' => 'A', 'alias' => 'service1.alias'));
+        $this->collector->visit('service2', array('alias' => 'service2.alias'));
+
+        $this->assertEquals(array(
+            'service2' => 'service2.alias',
         ), $this->collector->getConfiguration());
     }
 
@@ -36,7 +46,7 @@ class AliasCollectorTest extends \PHPUnit_Framework_TestCase
      */
     public function testVisitIfDuplicateAlias()
     {
-        $this->collector->visit('service1', array('class' => 'A', 'alias' => 'service.alias'));
-        $this->collector->visit('service2', array('class' => 'B', 'alias' => 'service.alias'));
+        $this->collector->visit('service1', array('alias' => 'service.alias'));
+        $this->collector->visit('service2', array('alias' => 'service.alias'));
     }
 }

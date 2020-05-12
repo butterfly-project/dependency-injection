@@ -2,9 +2,10 @@
 
 namespace Butterfly\Component\DI;
 
+use Butterfly\Component\DI\Compiler\Annotation\ReflectionClass;
 use Butterfly\Component\DI\Exception\BuildObjectException;
 use Butterfly\Component\DI\Exception\BuildServiceException;
-use Butterfly\Component\DI\Exception\IncorrectConfigPathException;
+use Butterfly\Component\DI\Exception\IncorrectExpressionPathException;
 use Butterfly\Component\DI\Exception\IncorrectSyntheticServiceException;
 use Butterfly\Component\DI\Exception\UndefinedInstanceException;
 use Butterfly\Component\DI\Exception\UndefinedInterfaceException;
@@ -87,11 +88,48 @@ class Container
     }
 
     /**
+     * @param string $expression
+     * @return mixed
+     * @throws UndefinedInstanceException if instance is not found
+     * @throws IncorrectExpressionPathException if incorrect expression
+     */
+    public function get($expression)
+    {
+        $firstSymbol = substr($expression, 0, 1);
+        switch ($firstSymbol) {
+            case '@':
+                $path       = array_filter(explode(self::CONFIG_PATH_SEPARATOR, $expression));
+                $instanceId = array_shift($path);
+                $instance   = $this->getInstance(substr($instanceId, 1));
+                break;
+
+            case '#':
+                $path       = array_filter(explode(self::CONFIG_PATH_SEPARATOR, $expression));
+                $instanceId = array_shift($path);
+                $instance   = $this->getServicesByTag(substr($instanceId, 1));
+                break;
+
+            case '%':
+                $path     = array_filter(explode(self::CONFIG_PATH_SEPARATOR, substr($expression, 1)));
+                $instance = $this->configuration;
+                break;
+
+            default:
+                $path       = array_filter(explode(self::CONFIG_PATH_SEPARATOR, $expression));
+                $instanceId = array_shift($path);
+                $instance   = $this->getService($instanceId);
+                break;
+        }
+
+        return $this->resolvePath($path, $instance);
+    }
+
+    /**
      * @param string $id
      * @return mixed
      * @throws UndefinedInstanceException if instance is not found
      */
-    public function get($id)
+    public function getInstance($id)
     {
         if ($this->hasParameter($id)) {
             return $this->getParameter($id);
@@ -105,23 +143,80 @@ class Container
             return $this->getInterface($id);
         }
 
-        if ($this->hasTag($id)) {
-            return $this->getServicesByTag($id);
-        }
-
         throw new UndefinedInstanceException(sprintf("Instance '%s' is not found", $id));
     }
 
     /**
-     * @param string $id
+     * @param array $path
+     * @param mixed $instance
+     * @return mixed
+     * @throws IncorrectExpressionPathException if incorrect expression
+
+     */
+    protected function resolvePath(array $path, $instance)
+    {
+        $path = array_filter($path);
+
+        if (empty($path)) {
+            return $instance;
+        }
+
+        $key = array_shift($path);
+
+        if (is_array($instance) || $instance instanceof \ArrayObject) {
+
+            if (!array_key_exists($key, $instance)) {
+                throw new IncorrectExpressionPathException($key, $instance);
+            }
+
+            $result = $instance[$key];
+
+        } elseif (is_object($instance)) {
+
+            $instanceReflection = new ReflectionClass($instance);
+
+            if ($instanceReflection->hasProperty($key) && $instanceReflection->getProperty($key)->isPublic()) {
+                $result = $instance->$key;
+            } elseif (is_callable(array($instance, $key))) {
+                $result = call_user_func(array($instance, $key));
+            } elseif (is_callable(array($instance, 'get'. ucfirst($key)))) {
+                $result = call_user_func(array($instance, 'get'. ucfirst($key)));
+            } else {
+                throw new IncorrectExpressionPathException($key, $instance);
+            }
+
+        } else {
+            throw new IncorrectExpressionPathException($key, $instance);
+        }
+
+        return $this->resolvePath($path, $result);
+    }
+
+    /**
+     * @param string $expression
      * @return bool
      */
-    public function has($id)
+    public function has($expression)
     {
-        return $this->hasParameter($id) ||
-               $this->hasService($id) ||
-               $this->hasInterface($id) ||
-               $this->hasTag($id);
+        $path = explode(self::CONFIG_PATH_SEPARATOR, $expression);
+
+        $id          = array_shift($path);
+        $firstSymbol = substr($id, 0, 1);
+        $instanceId  = substr($id, 1);
+
+        switch ($firstSymbol) {
+            case '@':
+                return $this->hasParameter($instanceId) || $this->hasService($instanceId) || $this->hasInterface($instanceId);
+                break;
+            case '#':
+                return $this->hasTag($instanceId);
+            case '%':
+                return array_key_exists($instanceId, $this->configuration);
+                break;
+            default:
+                return $this->hasService($id);
+                break;
+        }
     }
 
     /**
@@ -261,30 +356,24 @@ class Container
 
     /**
      * @param string $name
-     * @return object[]
+     * @return ServicesCollection
      */
     public function getServicesByTag($name)
     {
-        $servicesIds = $this->getServicesIdsByTag($name);
+        $servicesIds = $this->hasTag($name) ? $this->configuration['tags'][$name] : array();
 
-        $services = array();
-
-        foreach ($servicesIds as $serviceId) {
-            $services[] = $this->getService($serviceId);
-        }
-
-        return $services;
+        return new ServicesCollection($this, $servicesIds);
     }
 
     /**
+     * @deprecated use $this->getServicesByTag()->getServicesIds(). Deprecated since version 2.1, to be removed in 3.0
+     *
      * @param string $name
      * @return array
      */
     public function getServicesIdsByTag($name)
     {
-        return $this->hasTag($name)
-            ? $this->configuration['tags'][$name]
-            : array();
+        return $this->getServicesByTag($name)->getServicesIds();
     }
 
     /**
@@ -340,38 +429,5 @@ class Container
         }
 
         throw new UndefinedServiceException(sprintf("Service '%s' is not found", $id));
-    }
-
-    /**
-     * @param string $path
-     * @return mixed
-     */
-    public function getConfig($path)
-    {
-        if (empty($path) || $path == self::CONFIG_PATH_SEPARATOR) {
-            return $this->configuration;
-        }
-
-        return $this->getConfigPath(array_filter(explode(self::CONFIG_PATH_SEPARATOR, $path)), $this->configuration);
-    }
-
-    /**
-     * @param array $keys
-     * @param mixed $config
-     * @return mixed
-     */
-    protected function getConfigPath(array $keys, $config)
-    {
-        if (empty($keys)) {
-            return $config;
-        }
-
-        $key = array_shift($keys);
-
-        if (!is_array($config) || !array_key_exists($key, $config)) {
-            throw new IncorrectConfigPathException(sprintf('Key "%s" not found in config %s', $key, print_r($config, true)));
-        }
-
-        return $this->getConfigPath($keys, $config[$key]);
     }
 }

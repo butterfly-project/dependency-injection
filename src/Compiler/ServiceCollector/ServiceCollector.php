@@ -13,6 +13,16 @@ class ServiceCollector implements IVisitor, IConfigurationCollector
     /**
      * @var array
      */
+    protected static $commonSections = array(
+        'class',
+        'factoryStaticMethod',
+        'factoryMethod',
+        'parent'
+    );
+
+    /**
+     * @var array
+     */
     protected static $unionSectionKeys = array(
         'calls',
         'properties',
@@ -46,11 +56,26 @@ class ServiceCollector implements IVisitor, IConfigurationCollector
      */
     public function visit($serviceId, array $configuration)
     {
+        if (!$this->checkCommonSections($configuration)) {
+            return;
+        }
+
         if (isset($configuration['parent'])) {
             $this->children[$serviceId] = $configuration;
         } else {
             $this->services[$serviceId] = $configuration;
         }
+    }
+
+    /**
+     * @param array $configuration
+     * @return bool
+     */
+    protected function checkCommonSections(array $configuration)
+    {
+        $commonSections = array_intersect(array_keys($configuration), self::$commonSections);
+
+        return !empty($commonSections);
     }
 
     /**

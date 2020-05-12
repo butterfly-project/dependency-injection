@@ -111,7 +111,8 @@ class ConfigurationValidator implements IVisitor
         if (!isset($configuration['class']) &&
             !isset($configuration['factoryStaticMethod']) &&
             !isset($configuration['factoryMethod']) &&
-            !isset($configuration['parent'])
+            !isset($configuration['parent']) &&
+            !isset($configuration['alias'])
         ) {
             throw new \InvalidArgumentException(
                 "It is impossible to create a class. Add section 'class', 'factoryMethod' or 'factoryStaticMethod'"

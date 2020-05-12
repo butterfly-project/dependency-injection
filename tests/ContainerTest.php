@@ -8,6 +8,7 @@ use Butterfly\Component\DI\Tests\Stubs\FactoryOutputService;
 use Butterfly\Component\DI\Tests\Stubs\PrivatePropertyServiceStub;
 use Butterfly\Component\DI\Tests\Stubs\ServiceInstanceCounter;
 use Butterfly\Component\DI\Tests\Stubs\ServiceStub;
+use Butterfly\Component\DI\Tests\Stubs\ServiceStubWithMagicSetter;
 use Butterfly\Component\DI\Tests\Stubs\StaticTriggerService;
 use Butterfly\Component\DI\Tests\Stubs\TriggerService;
 use Butterfly\Component\DI\Tests\Stubs\UseTriggerService;
@@ -396,6 +397,26 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceStub', $service->getInternalService());
     }
 
+    public function testMagicSetterInjection()
+    {
+        $configuration = array(
+            'services' => array(
+                'service.magic_setter' => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStubWithMagicSetter',
+                    'calls' => array(
+                        array('setA', array(1), true),
+                    )
+                ),
+            ),
+        );
+        $container     = new Container($configuration);
+
+        /** @var ServiceStubWithMagicSetter $service */
+        $service = $container->getService('service.magic_setter');
+
+        $this->assertEquals(1, $service->getA());
+    }
+
     public function testPropertyInjection()
     {
         $configuration = array(
@@ -577,7 +598,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $configuration = array();
         $container     = new Container($configuration);
 
-        $this->assertEquals(array(), $container->getServicesByTag('undefined_tag'));
+        $this->assertCount(0, $container->getServicesByTag('undefined_tag'));
     }
 
     public function testTagDependency()
@@ -1017,17 +1038,17 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $container = new Container($configuration);
 
         // get parameter
-        $this->assertEquals('a', $container->get('parameter1'));
+        $this->assertEquals('a', $container->get('%parameters/parameter1'));
 
         // get service
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $container->get('service.foo'));
 
         // get interface
-        $interface = 'Butterfly\Component\DI\Tests\Stubs\IServiceFooAware';
+        $interface = '@Butterfly\Component\DI\Tests\Stubs\IServiceFooAware';
         $this->assertInstanceOf('\Butterfly\Component\DI\Tests\Stubs\ServiceFoo', $container->get($interface));
 
         // get tag
-        $this->assertCount(1, $container->get('tag1'));
+        $this->assertCount(1, $container->get('#tag1'));
     }
 
     public function testHas()
@@ -1051,10 +1072,10 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $container = new Container($configuration);
 
-        $this->assertTrue($container->has('parameter1'));
+        $this->assertTrue($container->hasParameter('parameter1'));
         $this->assertTrue($container->has('service.foo'));
-        $this->assertTrue($container->has('tag1'));
-        $this->assertTrue($container->has('Butterfly\Component\DI\Tests\Stubs\IServiceFooAware'));
+        $this->assertTrue($container->has('#tag1'));
+        $this->assertTrue($container->hasInterface('Butterfly\Component\DI\Tests\Stubs\IServiceFooAware'));
     }
 
     /**
@@ -1091,12 +1112,12 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         );
 
         return array(
-            array($configuration, '', $configuration, 'path root. case 1 - ok'),
-            array($configuration, '/', $configuration, 'path root. case 2 - ok'),
-            array($configuration, '/tags', array('tag1' => array('service.foo')), 'path of tags - ok'),
-            array($configuration, 'parameters/parameter1', 'a', 'path of parameter. case 1 - ok'),
-            array($configuration, '/parameters/parameter1', 'a', 'path of parameter. case 2 - ok'),
-            array($configuration, '/parameters/parameter1/', 'a', 'path of parameter. case 3 - ok'),
+            array($configuration, '%', $configuration, 'path root. case 1 - ok'),
+            array($configuration, '%/', $configuration, 'path root. case 2 - ok'),
+            array($configuration, '%/tags', array('tag1' => array('service.foo')), 'path of tags - ok'),
+            array($configuration, '%parameters/parameter1', 'a', 'path of parameter. case 1 - ok'),
+            array($configuration, '%/parameters/parameter1', 'a', 'path of parameter. case 2 - ok'),
+            array($configuration, '%/parameters/parameter1/', 'a', 'path of parameter. case 3 - ok'),
         );
     }
 
@@ -1112,11 +1133,11 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
     {
         $container = new Container($configuration);
 
-        $this->assertEquals($expectedResult, $container->getConfig($path), $caseMessage);
+        $this->assertEquals($expectedResult, $container->get($path), $caseMessage);
     }
 
     /**
-     * @expectedException \Butterfly\Component\DI\Exception\IncorrectConfigPathException
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
      */
     public function testGetConfigIfUndefinedIndex()
     {
@@ -1128,11 +1149,11 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $container = new Container($configuration);
 
-        $container->getConfig('/parameters/undefined_parameter');
+        $container->get('%/parameters/undefined_parameter');
     }
 
     /**
-     * @expectedException \Butterfly\Component\DI\Exception\IncorrectConfigPathException
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
      */
     public function testGetConfigIfIncorrectValue()
     {
@@ -1144,7 +1165,7 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $container = new Container($configuration);
 
-        $container->getConfig('/parameters/parameter1/sub_parameter');
+        $container->get('%/parameters/parameter1/sub_parameter');
     }
 
     public function testReflection()
@@ -1174,5 +1195,110 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals($configuration['parameters']['section_of_parameters']['parameter1'], $foo->getB());
         $this->assertEquals($configuration['services']['service.foo'], $foo->getC());
+    }
+
+    public function testGetForConfigurationExpression()
+    {
+        $configuration = array(
+            'parameters' => array(
+                'parameterA' => array(
+                    'foo' => 1,
+                    'bar' => array(
+                        'baz' => 3
+                    ),
+                )
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertEquals(1, $container->get('%parameters/parameterA/foo'));
+        $this->assertEquals(3, $container->get('%parameters/parameterA/bar/baz'));
+    }
+
+    public function testGetForServiceExpression()
+    {
+        $configuration = array(
+            'services'   => array(
+                'service.foo'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => array(
+                        'b',
+                    ),
+                    'properties' => array(
+                        'a' => 'a'
+                    )
+                ),
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertEquals('a', $container->get('service.foo/a'));
+        $this->assertEquals('b', $container->get('service.foo/b'));
+        $this->assertEquals('b', $container->get('service.foo/getB'));
+    }
+
+    public function testGetForTagExpression()
+    {
+        $configuration = array(
+            'services'   => array(
+                'service.foo'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                ),
+                'service.bar'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                ),
+            ),
+            'tags' => array(
+                'tag1' => array('service.foo', 'service.bar')
+            )
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertCount(2, $container->get('#tag1/toArray'));
+    }
+
+    /**
+     * @expectedException \Butterfly\Component\DI\Exception\IncorrectExpressionPathException
+     */
+    public function testGetForExpressionWithError()
+    {
+        $configuration = array(
+            'parameters' => array(
+                'parameterA' => array(
+                    'foo' => 1,
+                )
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $container->get('%parameters/parameterA/bar');
+    }
+
+    public function testGetForInnersExpression()
+    {
+        $configuration = array(
+            'services'   => array(
+                'service.foo'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                    'arguments' => array(
+                        '@service.bar',
+                    ),
+                ),
+                'service.bar'   => array(
+                    'class' => 'Butterfly\Component\DI\Tests\Stubs\ServiceStub',
+                    'properties' => array(
+                        'a' => array('baz' => 123),
+                    ),
+                ),
+            ),
+        );
+
+        $container = new Container($configuration);
+
+        $this->assertEquals(123, $container->get('service.foo/b/a/baz'));
     }
 }
