@@ -196,16 +196,12 @@ class ServiceFactory
     }
 
     /**
-     * @param string $dependence
+     * @param mixed $dependence
      * @return mixed
      */
     protected function resolveDependence($dependence)
     {
-        if (!is_string($dependence)) {
-            return $dependence;
-        }
-
-        return $this->container->has($dependence) ? $this->container->get($dependence) : $dependence;
+        return $this->container->get($dependence);
     }
 
     /**

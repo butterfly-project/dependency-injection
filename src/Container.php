@@ -88,19 +88,23 @@ class Container
     }
 
     /**
-     * @param string $expression
+     * @param mixed $expression
      * @return mixed
      * @throws UndefinedInstanceException if instance is not found
      * @throws IncorrectExpressionPathException if incorrect expression
      */
     public function get($expression)
     {
+        if (!is_string($expression)) {
+            return $expression;
+        }
+
         $firstSymbol = substr($expression, 0, 1);
         switch ($firstSymbol) {
             case '@':
                 $path       = array_filter(explode(self::CONFIG_PATH_SEPARATOR, $expression));
                 $instanceId = array_shift($path);
-                $instance   = $this->getInstance(substr($instanceId, 1));
+                $instance   = $this->getService(substr($instanceId, 1));
                 break;
 
             case '#':
@@ -115,10 +119,7 @@ class Container
                 break;
 
             default:
-                $path       = array_filter(explode(self::CONFIG_PATH_SEPARATOR, $expression));
-                $instanceId = array_shift($path);
-                $instance   = $this->getService($instanceId);
-                break;
+                return $expression;
         }
 
         return $this->resolvePath($path, $instance);
